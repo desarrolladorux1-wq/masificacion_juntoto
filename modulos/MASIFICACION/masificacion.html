@@ -169,6 +169,13 @@
             <section class="detalle-proyecto" id="detalleProyecto" hidden>
               <header><div class="titulo-detalle-proyecto"><span class="icono-detalle-proyecto" aria-hidden="true">⌁</span><div><small>PROYECTO SELECCIONADO</small><h2 id="detalleNombre">—</h2><p>Seguimiento geográfico y avance de la red.</p></div></div><button id="cerrarDetalle" type="button" aria-label="Cerrar detalle">×</button></header>
               <dl id="datosProyecto"></dl>
+              <section class="resumen-grafico-proyecto" aria-labelledby="tituloResumenGraficoProyecto">
+                <header><div><small>INFORMACIÓN RESUMEN</small><h3 id="tituloResumenGraficoProyecto">Gráficos del proyecto</h3></div><span id="estadoGraficoProyecto">—</span></header>
+                <div class="graficos-proyecto">
+                  <article class="grafico-anillo-proyecto"><div id="anilloAvanceProyecto" class="anillo-avance-proyecto"><strong id="porcentajeAnilloProyecto">0%</strong><small>avance físico</small></div><p>Avance total</p></article>
+                  <article class="grafico-barras-proyecto"><small>Distribución de red</small><div class="fila-grafico-proyecto"><span>Troncal</span><i><b id="barraTroncalProyecto"></b></i><strong id="valorTroncalProyecto">0 km</strong></div><div class="fila-grafico-proyecto"><span>Ramales</span><i><b id="barraRamalesProyecto"></b></i><strong id="valorRamalesProyecto">0 km</strong></div><div class="fila-grafico-proyecto"><span>Por ejecutar</span><i><b id="barraPendienteProyecto"></b></i><strong id="valorPendienteProyecto">0%</strong></div></article>
+                </div>
+              </section>
               <section class="avance-ciudades avance-periodos-proyecto">
                 <h3>Avance del proyecto por periodo</h3><p>Evolución física acumulada de P1 a P5</p>
                 <div id="listaAvanceProyecto"></div>
@@ -238,6 +245,7 @@
         <button type="button" class="activo" data-tipo-supervision="diario"><span>Diario</span><small>IDT · END-FPY-FI-04</small></button>
         <button type="button" data-tipo-supervision="semanal"><span>Semanal</span><small>ISO · END-FPY-FI-05</small></button>
       </nav>
+      <button type="button" class="abrir-calendario-informes" id="abrirCalendarioInformes"><span>▣</span><b>Ver calendario de informes</b><small>Consulte la programación diaria y semanal.</small></button>
       <section class="supervision-configuracion">
         <label>Proyecto<select id="supervisionProyecto"></select></label>
         <label>N.° de informe<input id="supervisionNumero" value="END-IDT-RED-CU-259-G1-25-07-2026"></label>
@@ -287,6 +295,27 @@
       </section>
     </div>
     <footer class="supervision-acciones"><span id="estadoInformeSupervision">Edite los datos, revise las evidencias y genere el informe.</span><button type="button" data-cerrar-modal="modalInformesSupervision">Cancelar</button><button type="button" id="exportarSupervisionCsv">Exportar CSV</button><button type="button" class="principal" id="exportarSupervisionPdf">Generar PDF</button></footer>
+  </dialog>
+
+  <dialog class="modal-masificacion modal-calendario-informes" id="modalCalendarioInformes" aria-labelledby="tituloCalendarioInformes">
+    <header><div><small>PROGRAMACIÓN</small><h2 id="tituloCalendarioInformes">Calendario de informes</h2><p>Informes diarios y semanales programados para el proyecto.</p></div><button type="button" data-cerrar-modal="modalCalendarioInformes" aria-label="Cerrar">×</button></header>
+    <div class="modal-cuerpo">
+      <section class="calendario-informes-supervision">
+        <header>
+          <div><small>VISTA MENSUAL</small><h3>Agenda de supervisión</h3></div>
+          <div class="controles-calendario-informes" aria-label="Cambiar mes">
+            <button type="button" id="calendarioInformesAnterior" aria-label="Mes anterior">‹</button>
+            <strong id="mesCalendarioInformes"></strong>
+            <button type="button" id="calendarioInformesSiguiente" aria-label="Mes siguiente">›</button>
+          </div>
+        </header>
+        <div class="contenedor-calendario-informes">
+          <div class="cabecera-calendario-informes" aria-hidden="true"><span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span></div>
+          <div class="dias-calendario-informes" id="diasCalendarioInformes"></div>
+        </div>
+        <footer><span><i class="evento-calendario-punto diario"></i> Informe diario · IDT</span><span><i class="evento-calendario-punto semanal"></i> Informe semanal · ISO</span></footer>
+      </section>
+    </div>
   </dialog>
 
   <dialog class="modal-masificacion modal-subir-capa" id="modalSubirCapa" aria-labelledby="tituloSubirCapa">
@@ -388,7 +417,9 @@
             <select id="proyectoPadre" hidden aria-hidden="true"><option value="">Este proyecto es el macroproyecto (contenedor)</option></select>
             <section class="campo-ancho registro-convenio-proyecto" aria-label="Solicitud regional y convenio">
               <header><strong>Solicitud regional</strong></header>
+              <label>Número de documento / solicitud<input id="proyectoNumeroSolicitud" type="text" placeholder="Ej. OFICIO N.° 015-2026-GORE"></label>
               <label>Remitente de la solicitud<input id="proyectoRemitenteSolicitud" type="text" placeholder="Nombre y cargo de quien la envía"></label>
+              <label>Asunto<input id="proyectoAsuntoSolicitud" type="text" placeholder="Asunto de la solicitud regional"></label>
               <label>Código de convenio<input id="proyectoCodigoConvenio" type="text" placeholder="Ej. CONV-FISE-GORE-2026-001"></label>
               <label class="adjunto-convenio-proyecto">Convenio FISE – GORE<input id="proyectoArchivoConvenio" type="file" accept=".pdf" multiple hidden><span class="acciones-convenio-proyecto"><button id="subirConvenioProyecto" type="button">Adjuntar PDF firmado</button><button id="verConvenioProyecto" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.6"/></svg><span>Ver documentos</span></button></span><small id="estadoArchivoConvenio">Sin convenio adjunto.</small></label>
             </section>
@@ -397,9 +428,9 @@
               <div class="registro-gis-mapa"><span class="acciones-area-gis"><button id="abrirMapaUbicacionProyecto" type="button">Seleccionar y dibujar en el mapa</button><span class="beneficiarios-gis-enlinea"><small>Beneficiarios estimados por GIS</small><input id="proyectoBeneficiarios" type="number" min="0" placeholder="—" readonly aria-label="Beneficiarios estimados por GIS"></span><button id="asignarVisitaCampo" class="boton-asignar-visita" type="button">Asignar visita a campo</button><button id="abrirRequisitosTecnicosFise" class="boton-requisitos-fise" type="button" hidden>Revisar formato</button></span><small id="resumenAreaInfluenciaProyecto"></small><small id="estadoVisitaCampo" class="estado-visita-campo" aria-live="polite"></small><input id="proyectoVisitaUsuario" type="hidden" value=""><input id="proyectoVisitaFecha" type="hidden" value=""><input id="proyectoVisitaFormatoGuardado" type="hidden" value=""></div>
               <input id="proyectoGeometriaTerrenoB" type="hidden" value=""><input id="proyectoBeneficiariosTerrenoB" type="hidden" value="0">
             </section>
+            <section class="campo-ancho campo-pap-proyecto" aria-labelledby="tituloProyectoPap"><header><span>PAP</span><div><strong id="tituloProyectoPap">¿El proyecto está incluido en el PAP?</strong><small>Seleccione la condición aplicable antes de registrar el alcance.</small></div></header><select id="proyectoIncluidoPap" hidden aria-hidden="true"><option value=""></option><option>Sí</option><option>No</option></select><div class="opciones-pap-proyecto"><button type="button" data-valor-pap="Sí"><b aria-hidden="true">✓</b><span>Sí, está incluido</span></button><button type="button" data-valor-pap="No"><b aria-hidden="true">×</b><span>No está incluido</span></button></div></section>
             <label class="campo-ancho campo-alcance-proyecto">Alcance de intervención<textarea id="proyectoAlcance" rows="4" placeholder="Describa el alcance, frentes de trabajo, redes, conexiones, entregables y cualquier consideración relevante."></textarea></label>
             <label>Departamento<select id="proyectoDepartamento"><option value="">Seleccione departamento</option></select></label><label>Provincia<select id="proyectoProvincia"><option value="">Seleccione provincia</option></select></label><label>Distrito<select id="proyectoDistrito"><option value="">Seleccione distrito</option></select></label><label hidden>Área calculada<input id="proyectoAreaInfluencia" type="text" readonly></label><label hidden>Localización<input id="proyectoLocalizacion" type="text" readonly></label>
-            <div class="campo-fase-proyecto"><span>Fase del proyecto</span><select id="proyectoFase" hidden aria-hidden="true"><option>Anteproyecto</option><option>Proyecto</option><option>Construcción</option><option>Operación</option></select><input id="proyectoFasesCronologia" type="hidden" value="[]"><button type="button" id="abrirFasesProyecto"><strong>Definir fases del proyecto</strong><small>Seleccione fases y sus fechas</small></button></div>
             <label>Fecha de inicio<input id="proyectoFechaInicio" type="date"></label>
             <label>Fecha de fin<input id="proyectoFechaFin" type="date"></label>
             <label class="campo-responsable-lider">Responsable líder<select id="proyectoResponsableLider"><option>-- Seleccione --</option><option>Oliver Gonzales</option><option>María Quispe</option><option>Carlos Mendoza</option><option>Ana Torres</option></select></label>
@@ -411,6 +442,7 @@
             <label data-campo-posterior>Empresa contratista<input id="proyectoEmpresaContratista" type="text" placeholder="Se registra en la etapa contractual" autocomplete="organization"></label>
             <label data-campo-posterior>Empresa interventora<input id="proyectoInterventor" type="text" placeholder="Se registra en la etapa contractual"></label>
             <label class="campo-estado-proyecto">Estado<select id="proyectoEstado"><option>En evaluación</option><option>Aprobado</option><option>Observado</option><option>En campo</option><option>En ejecución</option></select></label>
+            <div class="campo-fase-proyecto campo-ancho"><span>Fase del proyecto</span><select id="proyectoFase" hidden aria-hidden="true"><option>Anteproyecto</option><option>Proyecto</option><option>Construcción</option><option>Operación</option></select><input id="proyectoFasesCronologia" type="hidden" value="[]"><button type="button" id="abrirFasesProyecto"><strong>Definir fases del proyecto</strong><small>Seleccione fases y sus fechas</small></button></div>
             <input id="proyectoFactorContrato" type="hidden" value="1">
             <input id="excelProyecto" type="file" accept=".xls,.xlsx,.csv" hidden><span class="boton-subir-beneficiarios" hidden aria-hidden="true"></span>
           </div>
@@ -433,8 +465,15 @@
                 <div><small>CONFIGURACIÓN DE COMPONENTES</small><strong id="tituloActoresCompartidos">¿Para los componentes, el contratista y el interventor son los mismos?</strong><p>Indique si los datos de ambos actores se reutilizan en Redes, PSR-GNL y Tuberías de conexión.</p></div>
                 <div class="opciones-actores-compartidos" role="radiogroup" aria-label="Actores compartidos entre componentes"><label><input type="radio" name="actoresCompartidosComponentes" value="si"> Sí, son los mismos</label><label><input type="radio" name="actoresCompartidosComponentes" value="no" checked> No, se registran por componente</label></div>
               </section>
+              <section class="datos-compartidos-contrato" id="datosCompartidosContrato" hidden>
+                <div><small>DATOS COMUNES DEL CONTRATO</small><strong>Actores y periodo aplicables a todos los componentes</strong><p>Seleccione al contratista e interventor y registre la fecha de inicio y fin del contrato común.</p></div>
+                <label>Contratista<select id="contratistaCompartidoContrato"><option value="">Seleccione contratista</option></select></label>
+                <label>Interventor<select id="interventorCompartidoContrato"><option value="">Seleccione interventor</option></select></label>
+                <label>Fecha de inicio<input id="fechaInicioCompartidaContrato" type="date"></label>
+                <label>Fecha de fin<input id="fechaFinCompartidaContrato" type="date"></label>
+              </section>
               <section class="tabla-documentos-maestros">
-                <header><div><small>DOCUMENTOS MAESTROS DEL CONTRATO</small><p>Adjunte la versión vigente de cada documento contractual.</p></div></header>
+                <header><div><small>DOCUMENTOS MAESTROS DEL CONTRATO</small><p>Adjunte la versión vigente de cada documento contractual.</p></div><button type="button" id="agregarDocumentoMaestroContrato">＋ Agregar documento</button></header>
                 <div class="tabla-documentos-maestros-scroll"><table><thead><tr><th>Documento</th><th>Versión / archivo</th></tr></thead><tbody>
                   <tr><td>Bases + TDR definitivos</td><td><div class="acciones-documento-contrato"><label class="carga-sustento-hito carga-documento-contrato"><input type="file" accept=".pdf,application/pdf" hidden><span>Agregar PDF</span><small>Sin archivo</small></label><button type="button" class="ver-documento-contrato" disabled>Ver</button><button type="button" class="eliminar-documento-contrato" hidden aria-label="Eliminar PDF" title="Eliminar PDF"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5"/></svg></button></div></td></tr>
                   <tr><td>Anexo 1 · Condiciones generales</td><td><div class="acciones-documento-contrato"><label class="carga-sustento-hito carga-documento-contrato"><input type="file" accept=".pdf,application/pdf" hidden><span>Agregar PDF</span><small>Sin archivo</small></label><button type="button" class="ver-documento-contrato" disabled>Ver</button><button type="button" class="eliminar-documento-contrato" hidden aria-label="Eliminar PDF" title="Eliminar PDF"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5"/></svg></button></div></td></tr>
@@ -526,7 +565,7 @@
     <div class="resumen-planificacion-tecnica"><article><span>Avance técnico</span><strong id="avancePlanificacionTecnica">0%</strong><i><em id="barraPlanificacionTecnica"></em></i></article><article><span>Cumplidos</span><strong id="cumplidosPlanificacionTecnica">0 de 13</strong><small>Requisitos inspeccionados</small></article><article><span>Observaciones</span><strong id="observadosPlanificacionTecnica">0</strong><small>Pendientes de subsanar</small></article><article><span>Resultado</span><strong id="resultadoPlanificacionTecnica">Sin evaluar</strong><small id="fechaPlanificacionTecnica">Sin fecha de inspección</small></article></div>
     <nav class="pestanas-planificacion-tecnica" aria-label="Secciones de planificación"><button class="activo" type="button" data-pestana-planificacion="requisitos">Requisitos</button><button type="button" data-pestana-planificacion="visita">Visita</button><button type="button" data-pestana-planificacion="evidencias">Evidencias</button><button type="button" data-pestana-planificacion="observaciones">Observaciones</button><button type="button" data-pestana-planificacion="cierre">Cierre</button></nav>
     <div class="cuerpo-planificacion-tecnica">
-      <section data-panel-planificacion="requisitos"><header class="cabecera-panel-planificacion"><div><h3>Requisitos técnicos mínimos FISE</h3><p>Complete la matriz y revise debajo la definición de cada requisito.</p></div><div class="acciones-matriz-requisitos"><button id="agregarRequisitoPlanificacion" type="button">+ Agregar requisito</button><button id="agregarLocalidadPlanificacion" type="button">+ Agregar localidad</button></div></header><p class="leyenda-colores-requisitos"><span class="si">Sí cumple requisito</span><span class="no">No cumple requisito</span><span class="pendiente">Pendiente</span></p><div class="tabla-planificacion-requisitos tabla-matriz-requisitos"><table><thead><tr class="grupos-matriz-requisitos"><th colspan="19">PAP 2025 FISE - REQUISITOS TÉCNICOS MÍNIMOS PARA PREDIOS</th><th colspan="3">REQUISITOS FISE</th><th colspan="2">ESTUDIOS REALIZADOS POR FISE</th><th rowspan="2">ACCIÓN</th></tr><tr><th>N.°</th><th>Provincia</th><th>Distrito</th><th>Localidad</th><th>i</th><th>ii</th><th>iii</th><th>iv</th><th>v</th><th>vi</th><th>vii</th><th>viii</th><th>ix</th><th>x</th><th>xi</th><th>xii</th><th>xiii</th><th>% avance</th><th>Resultado</th><th>TUPA PROV</th><th>TUPA DIST</th><th>ESCOMBRERA</th><th>DIA</th><th>CIRA</th></tr></thead><tbody id="tablaRequisitosPlanificacion"></tbody></table></div><section class="leyenda-requisitos-fise"><h4>Leyenda de requisitos técnicos</h4><div class="lista-definiciones-requisitos" id="listaDefinicionesRequisitos"></div></section></section>
+      <section data-panel-planificacion="requisitos"><header class="cabecera-panel-planificacion"><div><h3>Requisitos técnicos mínimos FISE</h3><p>Seleccione directamente Sí, No o Pendiente en cada requisito. Las opciones permanecen habilitadas para corregirlas cuando sea necesario.</p></div><div class="acciones-matriz-requisitos"><button id="agregarRequisitoPlanificacion" type="button">+ Agregar requisito</button><button id="agregarLocalidadPlanificacion" type="button">+ Agregar localidad</button></div></header><p class="leyenda-colores-requisitos"><span class="si">Sí cumple requisito</span><span class="no">No cumple requisito</span><span class="pendiente">Pendiente</span></p><div class="tabla-planificacion-requisitos tabla-matriz-requisitos"><table><thead><tr class="grupos-matriz-requisitos"><th colspan="19">PAP 2025 FISE - REQUISITOS TÉCNICOS MÍNIMOS PARA PREDIOS</th><th colspan="3">REQUISITOS FISE</th><th colspan="2">ESTUDIOS REALIZADOS POR FISE</th><th rowspan="2">ACCIÓN</th></tr><tr><th>N.°</th><th>Provincia</th><th>Distrito</th><th>Localidad</th><th>i</th><th>ii</th><th>iii</th><th>iv</th><th>v</th><th>vi</th><th>vii</th><th>viii</th><th>ix</th><th>x</th><th>xi</th><th>xii</th><th>xiii</th><th>% avance</th><th>Resultado</th><th>TUPA PROV</th><th>TUPA DIST</th><th>ESCOMBRERA</th><th>DIA</th><th>CIRA</th></tr></thead><tbody id="tablaRequisitosPlanificacion"></tbody></table></div><section class="leyenda-requisitos-fise"><h4>Leyenda de requisitos técnicos</h4><div class="lista-definiciones-requisitos" id="listaDefinicionesRequisitos"></div></section></section>
       <section data-panel-planificacion="visita" hidden><div class="formulario-visita-planificacion"><label>Fecha de inspección<input id="planificacionFecha" type="date"></label><label>Localidad<input id="planificacionLocalidad" type="text" placeholder="Ej. Sector Mucra"></label><label>Responsable FISE<input id="planificacionResponsable" type="text" placeholder="Nombre del responsable"></label><label>Asistentes<input id="planificacionAsistentes" type="text" placeholder="Municipalidad, DREM u otros"></label><label>Coordenadas / GIS<input id="planificacionCoordenadas" type="text" placeholder="Latitud, longitud"></label><label>Tipo de visita<select id="planificacionTipoVisita"><option>Inspección inicial</option><option>Seguimiento</option><option>Subsanación</option><option>Cierre</option></select></label><label class="campo-ancho">Ayuda de memoria<textarea id="planificacionAyudaMemoria" rows="5" placeholder="Acuerdos, participantes y próximos pasos"></textarea></label></div></section>
       <section data-panel-planificacion="evidencias" hidden><div class="carga-evidencias-planificacion"><label for="archivosPlanificacion"><strong>Adjuntar evidencias</strong><span>Fotos, planos, SUNARP, resoluciones, XLSX, DOCX, KML, SHP o DWG.</span><input id="archivosPlanificacion" type="file" multiple></label><div id="listaEvidenciasPlanificacion"><p>No hay evidencias adjuntas.</p></div></div></section>
       <section data-panel-planificacion="observaciones" hidden><header class="cabecera-panel-planificacion"><div><h3>Observaciones y subsanaciones</h3><p>Los requisitos que no cumplen se incorporan automáticamente.</p></div></header><div id="listaObservacionesPlanificacion" class="lista-observaciones-planificacion"></div></section>
@@ -564,6 +603,7 @@
 
   <dialog class="modal-requisitos-fise" id="modalRequisitosTecnicosFise" aria-labelledby="tituloRequisitosTecnicosFise">
     <header><div><small>FISE · EVALUACIÓN PREDIAL</small><h2 id="tituloRequisitosTecnicosFise">Requisitos técnicos mínimos FISE</h2><p>Evalúe cada condición técnica del predio e indique si cumple o no cumple.</p></div><button type="button" id="cerrarRequisitosTecnicosFise" aria-label="Cerrar">×</button></header>
+    <nav class="pestanas-terrenos-fise" aria-label="Terreno a evaluar"><button type="button" class="activa" data-terreno-fise="terreno1">Terreno 1</button><button type="button" data-terreno-fise="terreno2">Terreno 2</button></nav>
     <div class="requisitos-fise-verticales-modal" id="cuerpoRequisitosTecnicosFise" aria-label="Requisitos técnicos mínimos FISE"></div>
     <footer><button type="button" id="cerrarRequisitosTecnicosFisePie">Cerrar</button></footer>
   </dialog>
@@ -601,17 +641,19 @@
   </section>
 
   <dialog class="modal-masificacion modal-fases-proyecto" id="modalFasesProyecto" aria-labelledby="tituloFasesProyecto">
-    <header><div><small>PLAN DE FASES</small><h2 id="tituloFasesProyecto">Fases del proyecto</h2><p>Active las fases aplicables y registre el periodo previsto para cada una.</p></div><button type="button" id="cerrarFasesProyecto" aria-label="Cerrar">×</button></header>
+    <header><div><small>PLAN DE FASES</small><h2 id="tituloFasesProyecto">Fases del proyecto</h2></div><button type="button" id="cerrarFasesProyecto" aria-label="Cerrar">×</button></header>
     <div class="modal-cuerpo fases-proyecto-cuerpo">
       <div class="linea-tiempo-fases" id="lineaTiempoFasesProyecto" aria-label="Línea de tiempo de fases"></div>
-      <div class="lista-fases-proyecto">
-        <label class="fila-fase-proyecto" data-fase="Anteproyecto"><input type="checkbox" value="Anteproyecto"><span class="indicador-fase">1</span><strong>Anteproyecto</strong><span>Estudios, evaluación y definición inicial.</span><input type="date" data-fecha-inicio aria-label="Inicio de Anteproyecto"><input type="date" data-fecha-fin aria-label="Fin de Anteproyecto"></label>
-        <label class="fila-fase-proyecto" data-fase="Proyecto"><input type="checkbox" value="Proyecto"><span class="indicador-fase">2</span><strong>Proyecto</strong><span>Ingeniería, expedientes y aprobaciones.</span><input type="date" data-fecha-inicio aria-label="Inicio de Proyecto"><input type="date" data-fecha-fin aria-label="Fin de Proyecto"></label>
-        <label class="fila-fase-proyecto" data-fase="Construcción"><input type="checkbox" value="Construcción"><span class="indicador-fase">3</span><strong>Construcción</strong><span>Ejecución, supervisión y pruebas.</span><input type="date" data-fecha-inicio aria-label="Inicio de Construcción"><input type="date" data-fecha-fin aria-label="Fin de Construcción"></label>
-        <label class="fila-fase-proyecto" data-fase="Operación"><input type="checkbox" value="Operación"><span class="indicador-fase">4</span><strong>Operación</strong><span>Puesta en servicio y seguimiento.</span><input type="date" data-fecha-inicio aria-label="Inicio de Operación"><input type="date" data-fecha-fin aria-label="Fin de Operación"></label>
-      </div>
+      <div class="lista-fases-proyecto"></div>
+      <button type="button" class="agregar-fase-proyecto" id="agregarFaseProyecto">＋ Agregar fase</button>
     </div>
     <footer class="acciones-crear-proyecto"><button type="button" class="cancelar-crear-proyecto" id="cancelarFasesProyecto">Cancelar</button><button type="button" class="guardar-crear-proyecto" id="guardarFasesProyecto">Aplicar fases</button></footer>
+  </dialog>
+
+  <dialog class="modal-confirmar-eliminar" id="modalConfirmarEliminarFase" aria-labelledby="tituloConfirmarEliminarFase">
+    <header><div><small>CONFIRMACIÓN</small><h2 id="tituloConfirmarEliminarFase">Eliminar fase</h2></div><button type="button" id="cerrarConfirmarEliminarFase" aria-label="Cerrar">×</button></header>
+    <div><p>¿Está seguro de eliminar esta fase? Esta acción no se puede deshacer.</p></div>
+    <footer><button type="button" id="cancelarEliminarFase">Cancelar</button><button type="button" class="peligro" id="confirmarEliminarFase">Eliminar fase</button></footer>
   </dialog>
 
   <dialog class="modal-masificacion modal-recursos-cronograma" id="modalRecursosCronograma" aria-labelledby="tituloRecursosCronograma">
@@ -710,6 +752,12 @@
     <div class="cuerpo-archivos-actor"><div class="zona-arrastre-actor" id="zonaArrastreActor" tabindex="0"><input id="selectorArchivosActor" type="file" accept=".pdf,application/pdf" multiple hidden><span aria-hidden="true">⇧</span><strong>Arrastre uno o varios PDF aquí</strong><small>o selecciónelos desde su equipo</small><button type="button" id="buscarArchivosActor">Buscar archivos</button><em>Formato permitido: PDF.</em></div><p id="estadoArchivosActor">Aún no se han seleccionado archivos.</p></div>
     <footer><button type="button" id="cancelarArchivosActor">Cancelar</button></footer>
   </dialog>
+  <dialog class="modal-baremo" id="modalBaremo" aria-labelledby="tituloModalBaremo">
+    <header><div><small>PARÁMETROS CONTRACTUALES</small><h2 id="tituloModalBaremo">Baremo y precios unitarios</h2><p>Gestione los archivos aplicables en PDF, Excel o CSV.</p></div><button type="button" id="cerrarModalBaremo" aria-label="Cerrar">×</button></header>
+    <div class="acciones-modal-baremo"><button type="button" id="adjuntarBaremoModal" title="Adjuntar archivos" aria-label="Adjuntar archivos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0 4 4m-4-4-4 4M5 14v5h14v-5"/></svg></button><button type="button" id="verBaremoModal" title="Ver archivos cargados" aria-label="Ver archivos cargados"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></div>
+    <div class="lista-baremo-modal" id="listaBaremoModal"><p>Sin archivos de baremo adjuntos.</p></div><div class="vista-datos-baremo" id="vistaDatosBaremo" hidden></div>
+    <footer><button type="button" id="cerrarBaremoModal">Cerrar</button></footer>
+  </dialog>
   <dialog class="modal-vista-pdf modal-lista-pdf" id="modalVistaPdfConvenio" aria-labelledby="tituloVistaPdfConvenio">
     <header><div><small>CONVENIO FISE – GORE</small><h2 id="tituloVistaPdfConvenio">Vista previa del PDF</h2><p id="nombreVistaPdfConvenio">Convenio firmado</p></div><button type="button" id="cerrarVistaPdfConvenio" aria-label="Cerrar">×</button></header>
     <div class="cuerpo-vista-pdf"><div class="tabla-documentos-convenio"><table><thead><tr><th>Documento PDF</th><th>Acción</th></tr></thead><tbody id="listaDocumentosConvenio"></tbody></table></div><p id="estadoVistaPdfConvenio" hidden>No hay un PDF disponible para visualizar.</p></div>
@@ -721,8 +769,8 @@
     <footer><button type="button" id="volverListaPdfConvenio" hidden>Volver a documentos</button><button type="button" id="cancelarVisorPdfConvenio">Cerrar</button></footer>
   </dialog>
   <dialog class="modal-confirmar-eliminar" id="modalConfirmarEliminarFila" aria-labelledby="tituloConfirmarEliminarFila">
-    <header><div><small>CONFIRMACIÓN</small><h2 id="tituloConfirmarEliminarFila">Eliminar registro</h2></div><button type="button" id="cerrarConfirmarEliminarFila" aria-label="Cerrar">×</button></header>
-    <div><p>¿Seguro que deseas eliminar este registro?</p></div>
+    <header><div><small>CONFIRMACIÓN</small><h2 id="tituloConfirmarEliminarFila">¿Eliminar registro?</h2></div><button type="button" id="cerrarConfirmarEliminarFila" aria-label="Cerrar">×</button></header>
+    <div><p>¿Deseas eliminar este registro? Esta acción no se puede deshacer.</p></div>
     <footer><button type="button" id="cancelarConfirmarEliminarFila">Cancelar</button><button type="button" class="peligro" id="aceptarConfirmarEliminarFila">Eliminar</button></footer>
   </dialog>
   <dialog class="modal-confirmar-eliminar" id="modalEliminarRegistroLiquidacion" aria-labelledby="tituloEliminarRegistroLiquidacion">
