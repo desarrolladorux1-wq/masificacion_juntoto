@@ -7,6 +7,11 @@
   const vistaCronogramaProyecto = $('cronograma-proyecto');
   const vistaDashboardMasificacion = $('dashboard');
   const vistaBandejaMasificacion = $('bandeja-entrada');
+  const vistaPlaneamientoMasificacion = $('planeamiento');
+  const actualizarCabeceraSatcontrol = etiqueta => {
+    const titulo=document.querySelector('.cabecera-satcontrol-identidad strong');
+    if(titulo)titulo.innerHTML=etiqueta;
+  };
   document.querySelector('.contenido-principal')?.append(vistaCrearProyecto,vistaPlanificacionTecnica);
   vistaCrearProyecto.querySelector('.panel-formulario-proyecto')?.append(vistaCronogramaProyecto);
   const mostrarVistaCrearProyecto = () => {
@@ -16,6 +21,7 @@
     vistaCronogramaProyecto.hidden = true;
     vistaDashboardMasificacion.hidden = true;
     vistaBandejaMasificacion.hidden = true;
+    vistaPlaneamientoMasificacion.hidden = true;
     $('satcontrol').hidden = true;
     if(location.hash !== '#crear-proyectos') history.replaceState(null, '', '#crear-proyectos');
     document.querySelectorAll('.enlace-menu[data-etiqueta]').forEach(enlace =>
@@ -28,6 +34,7 @@
     vistaCronogramaProyecto.hidden = true;
     vistaDashboardMasificacion.hidden = true;
     vistaBandejaMasificacion.hidden = true;
+    vistaPlaneamientoMasificacion.hidden = true;
     $('satcontrol').hidden = true;
     window.scrollTo({top:0,behavior:'smooth'});
   };
@@ -43,6 +50,7 @@
     $('satcontrol').hidden = true;
     vistaDashboardMasificacion.hidden = false;
     vistaBandejaMasificacion.hidden = true;
+    vistaPlaneamientoMasificacion.hidden = true;
     if(location.hash !== '#dashboard')history.replaceState(null,'','#dashboard');
     document.querySelectorAll('.enlace-menu[data-etiqueta]').forEach(enlace=>enlace.classList.toggle('activo',enlace.getAttribute('href')==='#dashboard'));
     renderDashboardMasificacion();
@@ -55,6 +63,7 @@
     vistaDashboardMasificacion.hidden = true;
     $('satcontrol').hidden = true;
     vistaBandejaMasificacion.hidden = false;
+    vistaPlaneamientoMasificacion.hidden = true;
     if(location.hash !== '#bandeja-entrada')history.replaceState(null,'','#bandeja-entrada');
     document.querySelectorAll('.enlace-menu[data-etiqueta]').forEach(enlace=>enlace.classList.toggle('activo',enlace.getAttribute('href')==='#bandeja-entrada'));
     window.scrollTo({top:0,behavior:'smooth'});
@@ -65,12 +74,149 @@
     vistaCronogramaProyecto.hidden = true;
     vistaDashboardMasificacion.hidden = true;
     vistaBandejaMasificacion.hidden = true;
+    vistaPlaneamientoMasificacion.hidden = true;
     $('satcontrol').hidden = false;
+    actualizarCabeceraSatcontrol('MASIFICACIÓN');
     if(location.hash !== '#satcontrol')history.replaceState(null,'','#satcontrol');
     document.querySelectorAll('.enlace-menu[data-etiqueta]').forEach(enlace=>enlace.classList.toggle('activo',enlace.getAttribute('href')==='#satcontrol'));
     setTimeout(()=>mapa?.invalidateSize(),0);
     window.scrollTo({top:0,behavior:'smooth'});
   };
+  const requisitosPlaneamiento=[['Saneamiento físico legal',82],['Acceso terrestre disponible',96],['Área mínima 3,500 m²',74],['Geometría regular / frente suficiente',88],['Pendiente y compactación adecuada',68],['Estudio geotécnico / suelos',52],['Sin afectación por fajas o canales',91],['Disponibilidad de servicios básicos',79],['Ubicación adecuada respecto a centros urbanos',85],['Zonificación / habilitación urbana compatible',71],['Partida registral del titular público',63]];
+  const romanosPlaneamiento=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI'];
+  const renderizarMatrizPap=()=>{
+    const cabecera=$('cabeceraMatrizPap'),cuerpo=$('cuerpoMatrizPap');
+    if(!cabecera||!cuerpo)return;
+    cabecera.innerHTML=`<tr><th>N.°</th><th>Departamento</th><th>Provincia</th><th>Distrito / localidad</th>${romanosPlaneamiento.map(numero=>`<th>${numero}</th>`).join('')}<th>% avance</th><th>TUPA prov.</th><th>TUPA dist.</th><th>Escombrera</th><th>DIA</th><th>CIRA</th></tr>`;
+    cuerpo.innerHTML=ciudades.map((proyecto,indice)=>{
+      const variacion=(indice%4)*3;
+      const valores=requisitosPlaneamiento.map(([,valor],numero)=>Math.max(35,Math.min(100,valor-variacion-((numero+indice)%3)*4)));
+      const avance=Math.round(valores.filter(valor=>valor>=75).length/valores.length*100);
+      const celdas=valores.map(valor=>{const clase=valor>=75?'cumple':'pendiente';return `<td class="estado ${clase}" title="${valor}%" aria-label="${valor>=75?'Cumple requisito':'No cumple requisito'}"></td>`;}).join('');
+      return `<tr><td>${indice+1}</td><td>${proyecto.departamento||'—'}</td><td>${proyecto.provincia||'—'}</td><td><strong>${proyecto.distrito||'—'}</strong><small>${proyecto.nombre||''}</small></td>${celdas}<td class="avance-matriz ${avance>=70?'revision':'pendiente'}">${avance>=40?`${avance}%`:'NO APTO'}</td><td class="estado pendiente">–</td><td class="estado pendiente">–</td><td class="estado pendiente">–</td><td class="estudio-matriz">No realizado</td><td class="estudio-matriz">No realizado</td></tr>`;
+    }).join('');
+  };
+  let mapaPlaneamiento=null,capaPlaneamientoDistritos=null,capaPlaneamientoCumplidores=null,mapaFichaPredio=null,marcadorFichaPredio=null,modoProgramarPlaneamiento=false;
+  const limpiarCumplidoresPlaneamiento=()=>{
+    capaPlaneamientoCumplidores?.clearLayers();
+    $('elementosCumplenPlaneamiento').hidden=true;
+  };
+  const restablecerPlaneamiento=()=>{
+    const departamento=$('departamentoPlaneamiento'),provincia=$('provinciaPlaneamiento'),distrito=$('distritoPlaneamiento');
+    departamento.value='';provincia.value='';distrito.value='';
+    modoProgramarPlaneamiento=false;
+    $('programarPlaneamiento').classList.remove('activo');
+    $('programarPlaneamiento').textContent='＋ Programar nueva';
+    vistaPlaneamientoMasificacion.querySelector('.cabecera-planeamiento').hidden=false;
+    vistaPlaneamientoMasificacion.querySelector('.planeamiento-contenido').hidden=false;
+    $('fichaPredioPlaneamiento').hidden=true;
+    actualizarFiltrosPlaneamiento();
+    limpiarCumplidoresPlaneamiento();
+    mapaPlaneamiento?.setView([-9.19,-75.02],5);
+    setTimeout(()=>mapaPlaneamiento?.invalidateSize(),80);
+  };
+  const mostrarCumplidoresPlaneamiento=(requisito,valor,proyectos,numero)=>{
+    const cumplidores=proyectos.map((proyecto,indice)=>({proyecto,puntaje:Math.max(0,Math.min(100,valor-((indice*11+numero*3)%33)))})).filter(item=>item.puntaje>=70);
+    $('elementosCumplenPlaneamiento').hidden=false;
+    $('tituloCumplidoresPlaneamiento').textContent=`${requisito} · ${valor}%`;
+    $('listaCumplidoresPlaneamiento').innerHTML=cumplidores.length?cumplidores.map(item=>`<tr><td><strong>${item.proyecto.codigo}</strong><small>${item.proyecto.nombre}</small></td><td>${item.proyecto.distrito}</td><td><b>${item.puntaje}%</b></td></tr>`).join(''):'<tr class="sin-cumplidores-planeamiento"><td colspan="3">No se identificaron elementos que cumplan este requisito en el filtro actual.</td></tr>';
+    capaPlaneamientoCumplidores?.clearLayers();
+    const ubicaciones=[];
+    cumplidores.filter(item=>item.proyecto.lat&&item.proyecto.lng).forEach(item=>{
+      const ubicacion=[item.proyecto.lat,item.proyecto.lng];ubicaciones.push(ubicacion);
+      L.circleMarker(ubicacion,{radius:11,color:'#eafff2',weight:3,fillColor:'#2ec47d',fillOpacity:.96}).bindPopup(`<strong>${item.proyecto.nombre}</strong><br>${requisito}: ${item.puntaje}%`).addTo(capaPlaneamientoCumplidores);
+    });
+    if(ubicaciones.length===1)mapaPlaneamiento?.setView(ubicaciones[0],12);
+    else if(ubicaciones.length>1)mapaPlaneamiento?.fitBounds(ubicaciones,{padding:[45,45],maxZoom:11});
+  };
+  const actualizarFichaVisualPredio=proyecto=>{
+    const ficha=$('fichaPredioPlaneamiento');
+    let mapaFicha=ficha.querySelector('.ficha-mapa-predio'),kpis=ficha.querySelector('.ficha-kpis-predio');
+    if(!mapaFicha){
+      mapaFicha=document.createElement('section');mapaFicha.className='ficha-mapa-predio';mapaFicha.innerHTML='<header><span>UBICACIÓN DEL PREDIO</span><b>Mapa</b></header><div id="mapaFichaPredio" aria-label="Ubicación del predio seleccionado"></div>';
+      ficha.querySelector('header').insertAdjacentElement('afterend',mapaFicha);
+      kpis=document.createElement('section');kpis.className='ficha-kpis-predio';kpis.innerHTML='<article><i class="icono-kpi requisitos" aria-hidden="true">▣</i><strong id="totalRequisitosFicha">11</strong><span>requisitos técnicos</span></article><article class="cumple"><i class="icono-kpi cumple" aria-hidden="true">✓</i><strong id="cumplidosFicha">0</strong><span>cumplidos</span></article><article class="pendiente"><i class="icono-kpi pendiente" aria-hidden="true">◷</i><strong id="pendientesFicha">0</strong><span>pendientes</span></article><article><i class="icono-kpi documento" aria-hidden="true">▤</i><strong>DIA</strong><span>No realizado</span></article><article><i class="icono-kpi documento" aria-hidden="true">▤</i><strong>CIRA</strong><span>No realizado</span></article>';
+      ficha.querySelector('.ficha-predio-cabecera').insertAdjacentElement('afterend',kpis);
+    }
+    const porcentajes=[...$('listaRequisitosPlaneamiento').querySelectorAll('.dona-requisito-planeamiento b')].map(item=>Number(item.textContent.replace('%',''))),cumplidos=porcentajes.filter(valor=>valor>=75).length;
+    $('totalRequisitosFicha').textContent=porcentajes.length||11;$('cumplidosFicha').textContent=cumplidos;$('pendientesFicha').textContent=Math.max(0,porcentajes.length-cumplidos);
+    const pendientes=Math.max(0,porcentajes.length-cumplidos),cumplimiento=Math.round((cumplidos/Math.max(1,porcentajes.length))*100),graficos=$('donaFichaPredio').closest('.ficha-graficos-predio');
+    graficos.innerHTML=`<h3>5. Gráficos y visualizaciones</h3><div class="tres-graficos-ficha"><article class="grafico-dona-ficha"><h4>Cumplimiento de requisitos</h4><div class="dona-ficha-predio" style="--cumplimiento:${cumplimiento}%"><b>${cumplimiento}%</b></div><div><span class="leyenda-cumple">● Cumple <b>${cumplidos}</b></span><span class="leyenda-pendiente">● Pendiente <b>${pendientes}</b></span></div></article><article class="grafico-barras-ficha"><h4>Estado de requisitos</h4><div class="eje-barras-ficha"><span>0</span><span>4</span><span>8</span></div><div class="barras-ficha"><div><i style="height:${Math.max(12,cumplidos/Math.max(1,porcentajes.length)*100)}%"></i><b>${cumplidos}</b><span>Cumple</span></div><div><i style="height:${Math.max(12,pendientes/Math.max(1,porcentajes.length)*100)}%"></i><b>${pendientes}</b><span>Pendiente</span></div></div></article><article class="grafico-linea-ficha"><h4>Avance del proceso</h4><div class="pasos-proceso-ficha"><span class="completo">✓<b>Identificación</b></span><span class="activo">2<b>Evaluación técnica</b></span><span>3<b>Trámites</b></span><span>4<b>Estudios FISE</b></span><span>5<b>Aprobación final</b></span></div></article></div>`;
+    const romanos=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI'];
+    $('requisitosFichaPredio').querySelectorAll('article').forEach((fila,indice)=>{
+      if(fila.querySelector('.numero-romano-requisito'))return;
+      const numero=document.createElement('i');numero.className='numero-romano-requisito';numero.textContent=romanos[indice]||String(indice+1);
+      fila.prepend(numero);
+    });
+    setTimeout(()=>{
+      const lat=Number(proyecto?.lat)||-9.19,lng=Number(proyecto?.lng)||-75.02,zoom=proyecto?.lat&&proyecto?.lng?13:5;
+      if(!mapaFichaPredio){mapaFichaPredio=L.map('mapaFichaPredio',{zoomControl:true}).setView([lat,lng],zoom);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(mapaFichaPredio);}
+      mapaFichaPredio.invalidateSize();mapaFichaPredio.setView([lat,lng],zoom);
+      if(marcadorFichaPredio)marcadorFichaPredio.remove();
+      marcadorFichaPredio=L.marker([lat,lng]).addTo(mapaFichaPredio).bindPopup(`<strong>${proyecto?.nombre||'Predio seleccionado'}</strong><br>${proyecto?.distrito||'Ubicación pendiente'}`).openPopup();
+    },80);
+  };
+  const renderPlaneamientoDistrito=()=>{
+    const selector=$('distritoPlaneamiento'),distrito=selector.value,esResumenGeneral=!distrito,indice=Math.max(0,[...selector.options].findIndex(opcion=>opcion.value===distrito)-1),variacion=indice%4*3,datos=esResumenGeneral?ciudades:ciudades.filter(proyecto=>proyecto.distrito===distrito),kilometros=datos.reduce((total,proyecto)=>total+(Number(proyecto.longitud)||0),0);
+    const listaRequisitos=$('listaRequisitosPlaneamiento'),panelCumplidores=$('elementosCumplenPlaneamiento');
+    if(panelCumplidores.parentElement===listaRequisitos)listaRequisitos.after(panelCumplidores);
+    $('resumenDistritoPlaneamiento').innerHTML=esResumenGeneral?`<small>INFORMACIÓN GENERAL</small><strong>Todos los distritos</strong><span>${datos.length} proyecto(s) identificado(s) · ${kilometros.toFixed(1)} km de red referencial.</span>`:`<small>INFORMACIÓN DEL DISTRITO</small><strong>${distrito}</strong><span>${datos.length||1} proyecto(s) identificado(s) · ${kilometros.toFixed(1)} km de red referencial.</span>`;
+    const requisitos=requisitosPlaneamiento.map(([nombre,valor])=>[nombre,esResumenGeneral?valor:Math.max(35,Math.min(100,valor-variacion))]);
+    listaRequisitos.innerHTML=requisitos.map(([nombre,valor],numero)=>`<article class="requisito-planeamiento-accion" role="button" tabindex="0" aria-label="Ver elementos que cumplen ${nombre}: ${valor}%"><span>${String(numero+1).padStart(2,'0')}</span><strong>${nombre}</strong><i class="dona-requisito-planeamiento" style="--avance-requisito:${valor}%"><b>${valor}%</b></i></article>`).join('');
+    listaRequisitos.querySelectorAll('.requisito-planeamiento-accion').forEach((fila,numero)=>{const abrir=()=>{mostrarCumplidoresPlaneamiento(requisitos[numero][0],requisitos[numero][1],datos,numero);fila.insertAdjacentElement('afterend',panelCumplidores);};fila.addEventListener('click',abrir);fila.addEventListener('keydown',evento=>{if(evento.key==='Enter'||evento.key===' '){evento.preventDefault();abrir();}});});
+    const promedio=Math.round(requisitos.reduce((total,item)=>total+item[1],0)/requisitos.length);
+    $('avanceGeneralPlaneamiento').textContent=`${promedio}%`;
+    $('abrirFichaPredioPlaneamiento').disabled=!distrito;
+    $('abrirFichaPredioPlaneamiento').hidden=!distrito;
+    $('abrirFichaPredioPlaneamiento').dataset.distrito=distrito;
+    if(distrito){const proyecto=datos[0];if(proyecto?.lat&&proyecto?.lng)mapaPlaneamiento?.setView([proyecto.lat,proyecto.lng],10);}
+  };
+  const iniciarPlaneamiento=()=>{const selector=$('distritoPlaneamiento');const distritos=[...new Set(ciudades.map(proyecto=>proyecto.distrito).filter(Boolean))].sort();selector.replaceChildren(new Option('Seleccione un distrito',''),...distritos.map(distrito=>new Option(distrito,distrito)));if(!mapaPlaneamiento){mapaPlaneamiento=L.map('mapaPlaneamiento',{zoomControl:true}).setView([-9.19,-75.02],5);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(mapaPlaneamiento);capaPlaneamientoDistritos=L.layerGroup().addTo(mapaPlaneamiento);capaPlaneamientoCumplidores=L.layerGroup().addTo(mapaPlaneamiento);ciudades.filter(proyecto=>proyecto.lat&&proyecto.lng).forEach(proyecto=>L.circleMarker([proyecto.lat,proyecto.lng],{radius:8,color:'#75d0e8',weight:2,fillColor:'#2869a5',fillOpacity:.9}).bindTooltip(proyecto.distrito||proyecto.nombre).on('click',()=>{selector.value=proyecto.distrito||'';renderPlaneamientoDistrito();}).addTo(capaPlaneamientoDistritos));selector.addEventListener('change',renderPlaneamientoDistrito);$('limpiarCumplidoresPlaneamiento').addEventListener('click',limpiarCumplidoresPlaneamiento);$('abrirFichaPredioPlaneamiento').addEventListener('click',()=>{const distrito=selector.value,requisitos=[...$('listaRequisitosPlaneamiento').querySelectorAll('.dona-requisito-planeamiento b')].map(item=>Number(item.textContent.replace('%',''))),promedio=Math.round(requisitos.reduce((a,b)=>a+b,0)/requisitos.length);$('tituloFichaPredio').textContent=`Predio candidato · ${distrito}`;$('subtituloFichaPredio').textContent=`Distrito ${distrito} · evaluación preliminar territorial`;$('datosFichaPredio').innerHTML=`<span>Código<strong>PLN-${distrito.slice(0,3).toUpperCase()}-001</strong></span><span>Distrito<strong>${distrito}</strong></span><span>Responsable<strong>FISE / SATCONTROL</strong></span><span>Fecha de corte<strong>${new Date().toLocaleDateString('es-PE')}</strong></span>`;$('requisitosFichaPredio').innerHTML=requisitosPlaneamiento.map(([nombre],i)=>`<article><span>${nombre}</span><b class="${requisitos[i]>=75?'cumple':'pendiente'}">${requisitos[i]>=75?'Cumple':'Pendiente'}</b></article>`).join('');$('cumplimientoFichaPredio').textContent=`${promedio}%`;$('donaFichaPredio').style.setProperty('--cumplimiento',`${promedio}%`);$('donaFichaPredio').querySelector('b').textContent=`${promedio}%`;vistaPlaneamientoMasificacion.querySelector('.planeamiento-contenido').hidden=true;$('fichaPredioPlaneamiento').hidden=false;});$('volverPlaneamiento').addEventListener('click',()=>{vistaPlaneamientoMasificacion.querySelector('.planeamiento-contenido').hidden=false;$('fichaPredioPlaneamiento').hidden=true;setTimeout(()=>mapaPlaneamiento.invalidateSize(),80);});$('programarPlaneamiento').addEventListener('click',()=>{modoProgramarPlaneamiento=!modoProgramarPlaneamiento;$('programarPlaneamiento').classList.toggle('activo',modoProgramarPlaneamiento);$('programarPlaneamiento').textContent=modoProgramarPlaneamiento?'✓ Seleccione un punto en el mapa':'＋ Programar nueva';});}renderPlaneamientoDistrito();setTimeout(()=>mapaPlaneamiento.invalidateSize(),80);};
+  const actualizarFiltrosPlaneamiento=()=>{
+    const departamento=$('departamentoPlaneamiento'),provincia=$('provinciaPlaneamiento'),distrito=$('distritoPlaneamiento');
+    const provincias=[...new Set(ciudades.filter(item=>!departamento.value||item.departamento===departamento.value).map(item=>item.provincia).filter(Boolean))].sort();
+    if(!provincias.includes(provincia.value))provincia.value='';
+    provincia.replaceChildren(new Option('Todas las provincias',''),...provincias.map(item=>new Option(item,item)));
+    const distritos=[...new Set(ciudades.filter(item=>(!departamento.value||item.departamento===departamento.value)&&(!provincia.value||item.provincia===provincia.value)).map(item=>item.distrito).filter(Boolean))].sort();
+    if(!distritos.includes(distrito.value))distrito.value='';
+    distrito.replaceChildren(new Option('Todos los distritos',''),...distritos.map(item=>new Option(item,item)));
+    renderPlaneamientoDistrito();
+  };
+  const inicializarFiltrosPlaneamiento=()=>{
+    const departamento=$('departamentoPlaneamiento'),provincia=$('provinciaPlaneamiento'),distrito=$('distritoPlaneamiento');
+    if(departamento.dataset.inicializado)return actualizarFiltrosPlaneamiento();
+    const departamentos=[...new Set(ciudades.map(item=>item.departamento).filter(Boolean))].sort();
+    departamento.replaceChildren(new Option('Todos los departamentos',''),...departamentos.map(item=>new Option(item,item)));
+    departamento.dataset.inicializado='true';
+    departamento.addEventListener('change',()=>{provincia.value='';distrito.value='';actualizarFiltrosPlaneamiento();});
+    provincia.addEventListener('change',()=>{distrito.value='';actualizarFiltrosPlaneamiento();});
+    distrito.addEventListener('change',renderPlaneamientoDistrito);
+    document.addEventListener('keydown',evento=>{
+      if(evento.key!=='Escape'||vistaPlaneamientoMasificacion.hidden)return;
+      evento.preventDefault();
+      departamento.value='';provincia.value='';distrito.value='';
+      vistaPlaneamientoMasificacion.querySelector('.cabecera-planeamiento').hidden=false;
+      vistaPlaneamientoMasificacion.querySelector('.planeamiento-contenido').hidden=false;
+      $('fichaPredioPlaneamiento').hidden=true;
+      actualizarFiltrosPlaneamiento();
+      limpiarCumplidoresPlaneamiento();
+      mapaPlaneamiento?.setView([-9.19,-75.02],5);
+      setTimeout(()=>mapaPlaneamiento?.invalidateSize(),80);
+    });
+    actualizarFiltrosPlaneamiento();
+  };
+  const mostrarVistaPlaneamiento=()=>{vistaCrearProyecto.hidden=true;vistaPlanificacionTecnica.hidden=true;vistaCronogramaProyecto.hidden=true;vistaDashboardMasificacion.hidden=true;vistaBandejaMasificacion.hidden=true;$('satcontrol').hidden=true;vistaPlaneamientoMasificacion.hidden=false;vistaPlaneamientoMasificacion.querySelector('.cabecera-planeamiento').hidden=false;vistaPlaneamientoMasificacion.querySelector('.planeamiento-contenido').hidden=false;$('fichaPredioPlaneamiento').hidden=true;actualizarCabeceraSatcontrol('MASIFICACIÓN <i>·</i> PLANEAMIENTO');if(location.hash!=='#planeamiento')history.replaceState(null,'','#planeamiento');document.querySelectorAll('.enlace-menu[data-etiqueta]').forEach(enlace=>enlace.classList.toggle('activo',enlace.getAttribute('href')==='#planeamiento'));iniciarPlaneamiento();inicializarFiltrosPlaneamiento();window.scrollTo({top:0,behavior:'smooth'});};
+  $('abrirMatrizPap')?.addEventListener('click',()=>{renderizarMatrizPap();$('modalMatrizPap')?.showModal();});
+  $('restablecerPlaneamiento')?.addEventListener('click',restablecerPlaneamiento);
+  $('abrirFichaPredioPlaneamiento')?.addEventListener('click',()=>{
+    if($('abrirFichaPredioPlaneamiento').disabled)return;
+    vistaPlaneamientoMasificacion.querySelector('.cabecera-planeamiento').hidden=true;
+    modoProgramarPlaneamiento=false;
+    $('programarPlaneamiento').classList.remove('activo');
+    $('programarPlaneamiento').textContent='＋ Programar nueva';
+    setTimeout(()=>actualizarFichaVisualPredio(ciudades.find(proyecto=>proyecto.distrito===$('distritoPlaneamiento').value)||{}),0);
+  });
+  $('volverPlaneamiento')?.addEventListener('click',()=>vistaPlaneamientoMasificacion.querySelector('.cabecera-planeamiento').hidden=false);
   const cerrarVistaCrearProyecto = () => document.querySelector('.enlace-menu[href="#satcontrol"]')?.click();
   const botonResumenMasificacion = $('botonResumenMasificacion');
   const colores = { Proyectada: '#4e7de1', 'En ejecución': '#e5a510', Instalada: '#3fac79' };
@@ -1430,6 +1576,26 @@
     {id:'movil-6',src:'documentos/evidencias-movil/evidencia-6.jpg',titulo:'Área de trabajo',detalle:'Señalización y control de acceso',incluida:true}
   ];
   let evidenciasCargadasSupervision=[];
+  let reportesGeneradosSupervision=[];
+
+  function renderizarReportesSupervision() {
+    const lista=$('listaReportesSupervision');
+    if(!lista)return;
+    $('contadorReportesSupervision').textContent=`${reportesGeneradosSupervision.length} PDF${reportesGeneradosSupervision.length===1?'':'s'}`;
+    if(!reportesGeneradosSupervision.length){
+      lista.innerHTML='<tr class="sin-reportes-supervision"><td colspan="5">Aún no hay reportes PDF generados.</td></tr>';
+      return;
+    }
+    lista.innerHTML=reportesGeneradosSupervision.map((reporte,indice)=>`<tr><td><strong>${reporte.numero}</strong><small>${reporte.proyecto}</small></td><td><span class="tipo-reporte-supervision ${reporte.tipo}">${reporte.tipo==='diario'?'IDT diario':'ISO semanal'}</span></td><td>${reporte.fecha}</td><td><span class="estado-reporte-supervision">PDF generado</span></td><td><button type="button" class="ver-reporte-supervision" data-reporte-supervision="${indice}" aria-label="Ver ${reporte.numero}" title="Ver PDF">◉</button></td></tr>`).join('');
+    lista.querySelectorAll('[data-reporte-supervision]').forEach(boton=>boton.addEventListener('click',()=>{
+      const reporte=reportesGeneradosSupervision[Number(boton.dataset.reporteSupervision)];
+      if(!reporte)return;
+      $('tituloVistaPdfSupervision').textContent=reporte.numero;
+      $('subtituloVistaPdfSupervision').textContent=`${reporte.tipo==='diario'?'Informe diario IDT':'Informe semanal ISO'} · ${reporte.fecha}`;
+      $('visorPdfSupervision').src=reporte.url;
+      $('modalVistaPdfSupervision').showModal();
+    }));
+  }
 
   function renderizarGaleriaSupervision() {
     const galeria=$('galeriaFotosSupervision');
@@ -1501,6 +1667,7 @@
     selector.value=proyectoSeleccionado?.codigo||ciudades[0]?.codigo||'';
     configurarInformeSupervision('diario');
     renderizarGaleriaSupervision();
+    renderizarReportesSupervision();
     renderizarCalendarioInformes();
     $('modalInformesSupervision').showModal();
   }
@@ -1575,7 +1742,14 @@
     const seleccionadas=[...evidenciasMovilSupervision,...evidenciasCargadasSupervision].filter(f=>f.incluida);
     const imagenes=[];for(const f of seleccionadas){try{imagenes.push({...f,data:await recursoADataUrl(f)});}catch(error){console.warn('No se pudo cargar evidencia',f.src,error);}}
     for(let inicio=0;inicio<imagenes.length;inicio+=6){doc.addPage();cabecera(doc.getNumberOfPages(),'REGISTRO FOTOGRÁFICO GEOREFERENCIADO');const grupo=imagenes.slice(inicio,inicio+6);grupo.forEach((f,i)=>{const col=i%2,fila=Math.floor(i/2),x=16+col*91,yFoto=68+fila*67;doc.setDrawColor(125);doc.setFillColor(246,247,249);doc.rect(x,yFoto,87,60,'FD');try{doc.addImage(f.data,'JPEG',x+2,yFoto+2,83,45,undefined,'FAST');}catch{try{doc.addImage(f.data,'PNG',x+2,yFoto+2,83,45,undefined,'FAST');}catch{}}doc.setFillColor(...gris);doc.rect(x,yFoto+48,87,12,'F');doc.setTextColor(255);doc.setFont('helvetica','bold');doc.setFontSize(6);doc.text(`${inicio+i+1}. ${f.titulo}`.slice(0,46),x+2,yFoto+52);doc.setFont('helvetica','normal');doc.setFontSize(5);doc.text((f.detalle||'Evidencia de campo georreferenciada').slice(0,55),x+2,yFoto+56);});pie();}
-    doc.save(`informe-supervision-${tipo}-${valor('supervisionNumero').replace(/[^a-z0-9-]+/gi,'_')}.pdf`);
+    const nombreArchivo=`informe-supervision-${tipo}-${valor('supervisionNumero').replace(/[^a-z0-9-]+/gi,'_')}.pdf`;
+    const archivoPdf=doc.output('blob');
+    reportesGeneradosSupervision.unshift({
+      numero:valor('supervisionNumero'),tipo,fecha,proyecto:`${proyecto.codigo} · ${proyecto.nombre}`,
+      url:URL.createObjectURL(archivoPdf)
+    });
+    renderizarReportesSupervision();
+    doc.save(nombreArchivo);
     $('estadoInformeSupervision').textContent=`PDF generado con ${imagenes.length} fotografía(s) seleccionada(s).`;
   }
 
@@ -2163,7 +2337,7 @@
       if(!bloque||!tabla)return;
       const encabezados=tabla.tHead?.rows?.[0]?.cells;
       if(encabezados?.[4])encabezados[4].textContent='Estado';
-      tabla.tBodies[0].innerHTML=hitos.map(hito=>`<tr><td><span class="origen-hito">FISE</span></td><td>${valorFicha(hito.hito)}</td><td>${valorFicha(hito.porcentaje||'0')}%</td><td>${fechaFicha(hito.fecha)}</td><td><span class="estado-seguimiento ${claseEstadoFicha(hito.estado)}">${valorFicha(hito.estado||'Por iniciar')}</span></td><td>${sustentoFicha()}</td><td>${accionFilaRequisitos}</td></tr>${requisitosFilaFicha(hito)}`).join('');
+      tabla.tBodies[0].innerHTML=hitos.map(hito=>`<tr><td><span class="origen-hito">FISE</span></td><td class="hito-desplegable" role="button" tabindex="0" aria-label="Ver requisitos de ${valorFicha(hito.hito)}" aria-expanded="false"><span>${valorFicha(hito.hito)}</span><b aria-hidden="true">›</b></td><td>${valorFicha(hito.porcentaje||'0')}%</td><td>${fechaFicha(hito.fecha)}</td><td><span class="estado-seguimiento ${claseEstadoFicha(hito.estado)}">${valorFicha(hito.estado||'Por iniciar')}</span></td><td>${sustentoFicha()}</td><td>${accionFilaRequisitos}</td></tr>${requisitosFilaFicha(hito)}`).join('');
       bloque.querySelector('.requisitos-ficha-final')?.remove();
     });
     aplicarParametrosGuardados(documentos);
@@ -2786,11 +2960,13 @@
     });
     const iconoRequisitos='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v15H5zM16 3v4h4M8 11h8M8 15h5M8 19h5"/><path d="m8 8 1.5 1.5L12 7"/></svg>';
     const iconoVista='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg>';
-    // Los PDFs se cargan en la ficha del contratista. En esta etapa FISE solo
-    // ve si el archivo ya fue remitido; no puede adjuntarlo ni abrirlo aquí.
-    const prepararSustentoServicio=control=>{if(!control)return;const pendiente=document.createElement('span');pendiente.className='sustento-contratista-pendiente';pendiente.textContent='Pendiente de carga del contratista';control.replaceWith(pendiente);};
-    document.querySelectorAll('.tabla-servicios .carga-sustento-hito,.tabla-hitos-pago .carga-sustento-hito').forEach(prepararSustentoServicio);
-    document.querySelectorAll('.tabla-servicios th,.tabla-hitos-pago th').forEach(encabezado=>{if(encabezado.textContent.trim()==='Sustento')encabezado.textContent='Sustento del contratista';});
+    // En esta ficha FISE solo consulta quién debe remitir cada sustento.
+    // Los hitos se sustentan por el interventor; las subtareas por el contratista.
+    const prepararSustentoPorActor=(control,actor='contratista')=>{if(!control)return;const pendiente=document.createElement('span');pendiente.className=`sustento-${actor}-pendiente`;pendiente.textContent=`Pendiente de carga del ${actor}`;control.replaceWith(pendiente);};
+    document.querySelectorAll('.tabla-hitos-pago .carga-sustento-hito').forEach(control=>prepararSustentoPorActor(control,'interventor'));
+    document.querySelectorAll('.tabla-servicios .carga-sustento-hito').forEach(control=>prepararSustentoPorActor(control,'contratista'));
+    document.querySelectorAll('.tabla-hitos-pago th').forEach(encabezado=>{if(encabezado.textContent.trim()==='Sustento')encabezado.textContent='Sustento del interventor';});
+    document.querySelectorAll('.tabla-servicios th').forEach(encabezado=>{if(encabezado.textContent.trim()==='Sustento')encabezado.textContent='Sustento del contratista';});
     const agregarAccionEliminarFila=fila=>{if(fila.querySelector('.eliminar-fila-parametro'))return;const celda=document.createElement('td');celda.className='celda-eliminar-parametro';const tabla=fila.closest('table'),esHitoPago=tabla?.classList.contains('tabla-hitos-pago'),esServicio=tabla?.classList.contains('tabla-servicios'),esSeguimiento=esHitoPago||esServicio,etiqueta=esServicio?'Ver detalle del servicio':'Ver requisitos del hito';celda.innerHTML=`${esSeguimiento?`<button type="button" class="boton-requisitos-hito" title="${etiqueta}" aria-label="${etiqueta}" aria-expanded="false">${iconoRequisitos}</button>`:''}<button type="button" class="eliminar-fila-parametro" title="Eliminar registro" aria-label="Eliminar registro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button>`;fila.append(celda);};
     const prepararTablaEliminable=tabla=>{const encabezado=tabla?.tHead?.rows[0];if(encabezado&&!encabezado.querySelector('.columna-eliminar-parametro')){const th=document.createElement('th');th.className='columna-eliminar-parametro';th.textContent='Acción';encabezado.append(th);}tabla?.tBodies[0]&&[...tabla.tBodies[0].rows].forEach(agregarAccionEliminarFila);};
     document.querySelectorAll('.parametro-psr .tabla-parametros-contractuales table,.tabla-hitos-componente table,.tabla-hitos-fisicos table,.tabla-baremo-componentes table').forEach(prepararTablaEliminable);
@@ -2804,7 +2980,7 @@
       const existente=fila?.nextElementSibling;
       if(existente?.classList.contains('fila-requisitos-hito')){existente.remove();boton.setAttribute('aria-expanded','false');return;}
       const detalle=document.createElement('tr');detalle.className='fila-requisitos-hito';
-      detalle.innerHTML=`<td colspan="${fila.cells.length}"><section class="detalle-requisitos-hito"><div class="tabla-requisitos-hito"><table><thead><tr><th>Descripción</th><th>Unidad</th><th>Cantidad</th><th>Avance</th><th>Sustento</th></tr></thead><tbody><tr><td><input value="Documento de sustento del hito"></td><td><input value="Documento"></td><td><input type="number" min="0" step="0.01" value="1"></td><td><input type="number" min="0" max="100" step="0.01" value="0"></td><td>${controlSustentoSubtarea()}</td></tr></tbody></table></div></section></td>`;
+      detalle.innerHTML=`<td colspan="${fila.cells.length}"><section class="detalle-requisitos-hito"><div class="tabla-requisitos-hito"><table><thead><tr><th>Descripción</th><th>Unidad</th><th>Cantidad</th><th>Avance</th><th>Sustento del contratista</th></tr></thead><tbody><tr><td><input value="Documento de sustento del hito"></td><td><input value="Documento"></td><td><input type="number" min="0" step="0.01" value="1"></td><td><input type="number" min="0" max="100" step="0.01" value="0"></td><td>${controlSustentoSubtarea()}</td></tr></tbody></table></div></section></td>`;
       fila.insertAdjacentElement('afterend',detalle);
       prepararTablaEliminable(detalle.querySelector('.tabla-requisitos-hito table'));
       detalle.querySelector('.detalle-requisitos-hito').insertAdjacentHTML('beforeend','<button type="button" class="agregar-subtarea-hito">＋ Requisito</button>');
@@ -2833,7 +3009,7 @@
     document.querySelectorAll('[data-agregar-hito]').forEach(boton=>boton.addEventListener('click',()=>{
       const fila=document.createElement('tr');
       fila.innerHTML='<td><span class="origen-hito">FISE</span></td><td><input placeholder="Descripción del hito"></td><td><input type="number" min="0" max="100" placeholder="0"></td><td><input type="date"></td><td><span class="estado-seguimiento observado" title="Estado informado por el interventor">Observado</span></td><td><label class="carga-sustento-hito"><input type="file" accept=".pdf,application/pdf" hidden><span>Adjuntar PDF</span><small>Sin archivo</small></label></td>';
-      prepararSustentoServicio(fila.querySelector('.carga-sustento-hito'));
+      prepararSustentoPorActor(fila.querySelector('.carga-sustento-hito'),'interventor');
       agregarAccionEliminarFila(fila);
       $(boton.dataset.tablaHitos||'tablaHitosPsr').append(fila);
       fila.querySelector('input').focus();
@@ -2841,7 +3017,7 @@
     document.querySelectorAll('[data-agregar-hito-fisico]').forEach(boton=>boton.addEventListener('click',()=>{
       const fila=document.createElement('tr');
       fila.innerHTML='<td><span class="origen-hito">FISE</span></td><td><input placeholder="Descripción del servicio"></td><td><input placeholder="Ej. unidad, km, und"></td><td><input type="number" min="0" step="1" placeholder="0"></td><td><input type="number" min="0" max="100" step="0.01" placeholder="0 %"></td><td><span class="estado-seguimiento observado" title="Estado informado por el interventor">Observado</span></td><td><label class="carga-sustento-hito"><input type="file" accept=".pdf,application/pdf" hidden><span>Adjuntar PDF</span><small>Sin archivo</small></label></td>';
-      prepararSustentoServicio(fila.querySelector('.carga-sustento-hito'));
+      prepararSustentoPorActor(fila.querySelector('.carga-sustento-hito'),'contratista');
       agregarAccionEliminarFila(fila);
       boton.closest('.tabla-hitos-fisicos').querySelector('tbody').append(fila);
       fila.querySelector('input').focus();
@@ -2959,7 +3135,11 @@
     $('abrirTrazabilidad').addEventListener('click',()=>$('modalTrazabilidad').showModal());
     $('abrirInformesSupervision').addEventListener('click',abrirInformesSupervision);
     document.querySelectorAll('[data-tipo-supervision]').forEach(b=>b.addEventListener('click',()=>configurarInformeSupervision(b.dataset.tipoSupervision)));
-    $('abrirCalendarioInformes').addEventListener('click',()=>{
+    $('abrirReportesSupervision').addEventListener('click',()=>{
+      renderizarReportesSupervision();
+      $('modalReportesSupervision').showModal();
+    });
+    $('abrirCalendarioInformes')?.addEventListener('click',()=>{
       renderizarCalendarioInformes();
       $('modalCalendarioInformes').showModal();
     });
@@ -2992,6 +3172,7 @@
     document.querySelector('.enlace-menu[href="#dashboard"]')?.addEventListener('click',evento=>{evento.preventDefault();mostrarVistaDashboardMasificacion();});
     document.querySelector('.enlace-menu[href="#bandeja-entrada"]')?.addEventListener('click',evento=>{evento.preventDefault();mostrarVistaBandejaMasificacion();});
     document.querySelector('.enlace-menu[href="#satcontrol"]')?.addEventListener('click',evento=>{evento.preventDefault();mostrarVistaSatcontrol();});
+    document.querySelector('.enlace-menu[href="#planeamiento"]')?.addEventListener('click',evento=>{evento.preventDefault();mostrarVistaPlaneamiento();});
     document.querySelectorAll('[data-ir-satcontrol]').forEach(boton=>boton.addEventListener('click',mostrarVistaSatcontrol));
     // Este control debe funcionar incluso si el mapa aún está terminando de cargar.
     document.addEventListener('click',evento=>{
@@ -3014,6 +3195,7 @@
     const actualizarVistaPorRuta=()=>{
       if(location.hash==='#dashboard')mostrarVistaDashboardMasificacion();
       else if(location.hash==='#bandeja-entrada')mostrarVistaBandejaMasificacion();
+      else if(location.hash==='#planeamiento')mostrarVistaPlaneamiento();
       else if(location.hash==='#satcontrol')mostrarVistaSatcontrol();
     };
     window.addEventListener('hashchange',actualizarVistaPorRuta);
@@ -3056,13 +3238,17 @@
         $('modalEliminarRegistroLiquidacion').showModal();
         return;
       }
+      const alternarRequisitosFila=control=>{const fila=control.closest('tr'),detalle=fila?.nextElementSibling;if(!detalle?.classList.contains('fila-requisitos-ficha'))return;detalle.hidden=!detalle.hidden;const expandido=String(!detalle.hidden);fila.querySelector('.ver-requisitos-fila')?.setAttribute('aria-expanded',expandido);fila.querySelector('.hito-desplegable')?.setAttribute('aria-expanded',expandido);fila.querySelector('.hito-desplegable')?.classList.toggle('abierto',!detalle.hidden);};
       const requisitosFila=evento.target.closest('.ver-requisitos-fila');
-      if(requisitosFila){const detalle=requisitosFila.closest('tr')?.nextElementSibling;if(detalle?.classList.contains('fila-requisitos-ficha')){detalle.hidden=!detalle.hidden;requisitosFila.setAttribute('aria-expanded',String(!detalle.hidden));}return;}
+      if(requisitosFila){alternarRequisitosFila(requisitosFila);return;}
+      const hitoDesplegable=evento.target.closest('.hito-desplegable');
+      if(hitoDesplegable){alternarRequisitosFila(hitoDesplegable);return;}
       const requisitos=evento.target.closest('.ver-requisitos-ficha');
       if(requisitos){const bloque=requisitos.closest('td')?.closest('div')?.querySelector(':scope > .requisitos-ficha-final');if(bloque){bloque.hidden=!bloque.hidden;requisitos.setAttribute('aria-expanded',String(!bloque.hidden));}return;}
       const ver=evento.target.closest('.ver-documento-liquidacion');
       if(ver){if(ver.classList.contains('ver-pdf-ficha'))abrirPdfReferencial();$('estadoGuardadoPaso').textContent=`Vista previa disponible: ${ver.title||ver.textContent.trim()||'PDF adjunto'}.`;}
     });
+    $('contenidoResumenProyecto').addEventListener('keydown',evento=>{const hito=evento.target.closest('.hito-desplegable');if(!hito||!['Enter',' '].includes(evento.key))return;evento.preventDefault();hito.click();});
     const cerrarEliminarRegistroLiquidacion=()=>{$('modalEliminarRegistroLiquidacion').close();filaLiquidacionResumenPendiente=null;};
     $('cerrarEliminarRegistroLiquidacion').addEventListener('click',cerrarEliminarRegistroLiquidacion);
     $('cancelarEliminarRegistroLiquidacion').addEventListener('click',cerrarEliminarRegistroLiquidacion);

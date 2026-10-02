@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="" crossorigin="anonymous">
   <link rel="stylesheet" href="../../estilos_generales.css?v=20260902-1">
   <link rel="stylesheet" href="../../estilos_asistente_ia.css?v=20260902-1">
-<link rel="stylesheet" href="estilos_masificacion.css?v=20260928-documentos-ojo-3">
+<link rel="stylesheet" href="estilos_masificacion.css?v=20261002-planeamiento-restablecer-39">
 <link rel="stylesheet" href="../../temas.css?v=20260902-2">
 </head>
 <body class="pagina-masificacion">
@@ -33,6 +33,9 @@
             </a>
             <a class="enlace-menu" href="#satcontrol" data-etiqueta="SATCONTROL">
               <span class="menu-icono" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5 9 3l6 2.5L20 3v15.5L15 21l-6-2.5L4 21V5.5Z"/><path d="M9 3v15.5M15 5.5V21"/><circle cx="12" cy="11.5" r="2.2"/></svg></span><span class="enlace-texto">SATCONTROL</span>
+            </a>
+            <a class="enlace-menu" href="#planeamiento" data-etiqueta="Planeamiento">
+              <span class="menu-icono" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 17l4-5 3 3 5-7"/><path d="M5 4h14v16H5z"/></svg></span><span class="enlace-texto">Planeamiento</span>
             </a>
           </section>
         </nav>
@@ -216,6 +219,17 @@
         </div>
       </section>
 
+      <section class="vista-planeamiento-masificacion" id="planeamiento" data-seccion-modulo aria-labelledby="tituloPlaneamientoMasificacion" hidden>
+        <header class="cabecera-planeamiento"><div><div class="filtros-planeamiento filtros-planeamiento-cabecera"><label>Departamento<select id="departamentoPlaneamiento"><option value="">Todos los departamentos</option></select></label><label>Provincia<select id="provinciaPlaneamiento"><option value="">Todas las provincias</option></select></label><label>Distrito<select id="distritoPlaneamiento"><option value="">Todos los distritos</option></select></label></div></div><div class="acciones-planeamiento"><button type="button" class="boton-restablecer-planeamiento" id="restablecerPlaneamiento">↺ Restablecer</button><button type="button" class="boton-matriz-pap" id="abrirMatrizPap">▦ Matriz PAP</button><button type="button" id="programarPlaneamiento">＋ Programar nueva</button></div></header>
+        <div class="planeamiento-contenido">
+          <section class="mapa-planeamiento-panel"><div id="mapaPlaneamiento" aria-label="Mapa de planeamiento territorial"></div><div class="ayuda-planeamiento" id="ayudaPlaneamiento">Seleccione un distrito o un punto del mapa para consultar su planeamiento.</div></section>
+          <aside class="panel-planeamiento"><section class="resumen-distrito-planeamiento" id="resumenDistritoPlaneamiento"><small>INFORMACIÓN GENERAL</small><strong>Todos los distritos</strong><span>Se mostrarán sus indicadores de planeamiento.</span></section><button type="button" class="boton-ficha-predio" id="abrirFichaPredioPlaneamiento" disabled hidden><span>Ver ficha del predio</span><b aria-hidden="true">→</b></button><section class="requisitos-planeamiento"><header><div><small>REQUISITOS TÉCNICOS MÍNIMOS</small><h2>Avance por requisito</h2></div><span id="avanceGeneralPlaneamiento">0%</span></header><div id="listaRequisitosPlaneamiento"></div></section><section class="elementos-cumplen-planeamiento" id="elementosCumplenPlaneamiento" hidden><header><div><small>ELEMENTOS QUE CUMPLEN</small><strong id="tituloCumplidoresPlaneamiento">Requisito seleccionado</strong></div><button type="button" id="limpiarCumplidoresPlaneamiento" aria-label="Limpiar selección">×</button></header><div class="tabla-cumplidores-planeamiento"><table><thead><tr><th>Código / proyecto</th><th>Distrito</th><th>Cumplimiento</th></tr></thead><tbody id="listaCumplidoresPlaneamiento"></tbody></table></div></section></aside>
+        </div>
+        <section class="ficha-predio-planeamiento" id="fichaPredioPlaneamiento" hidden><header><div><button type="button" id="volverPlaneamiento">← Planeamiento</button><small>FICHA FUNCIONAL DEL PREDIO</small><h2 id="tituloFichaPredio">Predio</h2><p id="subtituloFichaPredio">Evaluación territorial</p></div><span>En evaluación</span></header><div class="ficha-predio-cabecera" id="datosFichaPredio"></div><div class="ficha-predio-cuadricula"><section class="ficha-resumen-predio"><h3>1. Resumen del predio</h3><p>Predio identificado como alternativa para infraestructura de masificación. Requiere validación documental y técnica para definir su aptitud final.</p><div><article><small>Aptitud preliminar</small><strong>Predio a calificar</strong></article><article><small>Prioridad</small><strong>Media</strong></article><article><small>Tipo de evaluación</small><strong>Predio de gobierno local</strong></article></div></section><section class="ficha-requisitos-predio"><header><h3>2. Requisitos técnicos mínimos</h3><b id="cumplimientoFichaPredio">0%</b></header><div id="requisitosFichaPredio"></div></section><section class="ficha-tramites-predio"><h3>3. Requisitos FISE y trámites</h3><div><article><strong>TUPA provincial</strong><span>Pendiente</span></article><article><strong>TUPA distrital</strong><span>Pendiente</span></article><article><strong>Escombrera</strong><span>Pendiente</span></article></div></section><section class="ficha-estudios-predio"><h3>4. Estudios realizados por FISE</h3><div><article>DIA <span>No realizado</span></article><article>CIRA <span>No realizado</span></article><p>Los estudios se habilitan al aprobarse la evaluación del predio.</p></div></section><section class="ficha-graficos-predio"><h3>5. Gráficos y visualizaciones</h3><div class="dona-ficha-predio" id="donaFichaPredio"><b>0%</b></div><p>Cumplimiento de requisitos técnicos</p></section><section class="ficha-observaciones-predio"><h3>6. Observaciones y acciones recomendadas</h3><ul><li>Regularizar saneamiento físico legal.</li><li>Gestionar disponibilidad de servicios básicos.</li><li>Confirmar compatibilidad urbanística.</li></ul></section></div><footer><button type="button" id="descargarFichaPredio">⇩ Descargar ficha</button><button type="button" id="editarFichaPredio">✎ Editar evaluación</button><button type="button" id="registrarObservacionPredio">＋ Registrar observación</button></footer></section>
+      </section>
+
+      <dialog class="modal-masificacion modal-matriz-pap" id="modalMatrizPap" aria-labelledby="tituloMatrizPap"><header><div><small>PLANEAMIENTO TERRITORIAL</small><h2 id="tituloMatrizPap">Matriz PAP · Requisitos técnicos mínimos</h2><p>Estado consolidado de requisitos FISE, trámites y estudios por predio.</p></div><button type="button" data-cerrar-modal="modalMatrizPap" aria-label="Cerrar">×</button></header><div class="modal-cuerpo"><div class="leyenda-matriz-pap"><span class="cumple">Sí cumple requisito</span><span class="pendiente">No cumple requisito: no entregó información</span><span class="desarrollo">Actividad en desarrollo</span><span class="revision">En revisión FISE</span></div><div class="tabla-matriz-pap-contenedor"><table><thead id="cabeceraMatrizPap"></thead><tbody id="cuerpoMatrizPap"></tbody></table></div><details class="leyenda-requisitos-pap"><summary>Leyenda de requisitos técnicos (I – XII)</summary><ol><li><b>I</b> Terreno sin ocupación ni cargas, con saneamiento físico y legal vigente.</li><li><b>II</b> Vías de acceso terrestre disponibles para camiones cisterna.</li><li><b>III</b> Área mínima de 3,500 m² y geometría rectangular preferente.</li><li><b>IV</b> Nivelación, perfilado y compactación adecuada; pendiente no mayor a 5%.</li><li><b>V</b> Estudios geotécnicos de suelos conformes para la instalación.</li><li><b>VI</b> Sin cauces, interferencias, cruces de río, canales o torrenteras.</li><li><b>VII</b> No considerado reserva paisajística, arqueológica o similar.</li><li><b>VIII</b> Acceso a electricidad, agua y alcantarillado.</li><li><b>IX</b> Ubicación periférica, hasta 5 km del centro de consumo.</li><li><b>X</b> Zonificación y habilitación urbana apropiada.</li><li><b>XI</b> Partida registral a nombre del gobierno regional, provincial o distrital.</li><li><b>XII</b> Otras indicaciones establecidas por el FISE.</li></ol></details></div></dialog>
+
       <section class="vista-dashboard-masificacion" id="dashboard" data-seccion-modulo aria-labelledby="tituloDashboardMasificacion" hidden>
         <header class="cabecera-dashboard-masificacion"><div><small>CONTROL EJECUTIVO</small><h1 id="tituloDashboardMasificacion">Dashboard de proyectos de Masificación</h1><p>Seguimiento consolidado de avance, red y liquidaciones por cada proyecto registrado.</p></div><span id="periodoDashboard">Datos de ejemplo</span></header>
         <div class="kpis-dashboard-masificacion">
@@ -245,13 +259,14 @@
         <button type="button" class="activo" data-tipo-supervision="diario"><span>Diario</span><small>IDT · END-FPY-FI-04</small></button>
         <button type="button" data-tipo-supervision="semanal"><span>Semanal</span><small>ISO · END-FPY-FI-05</small></button>
       </nav>
-      <button type="button" class="abrir-calendario-informes" id="abrirCalendarioInformes"><span>▣</span><b>Ver calendario de informes</b><small>Consulte la programación diaria y semanal.</small></button>
+      <button type="button" class="abrir-reportes-supervision" id="abrirReportesSupervision"><span>▣</span><b>Reportes generados</b><small>Visualice los PDF IDT e ISO disponibles.</small></button>
       <section class="supervision-configuracion">
         <label>Proyecto<select id="supervisionProyecto"></select></label>
         <label>N.° de informe<input id="supervisionNumero" value="END-IDT-RED-CU-259-G1-25-07-2026"></label>
         <label id="campoFechaSupervision">Fecha de ejecución<input id="supervisionFecha" type="date" value="2026-07-25"></label>
         <label id="campoPeriodoSupervision" hidden>Periodo<input id="supervisionPeriodo" value="03/08/2026 – 09/08/2026"></label>
       </section>
+      <section class="calendario-informes-supervision calendario-integrado"><header><div><small>VISTA MENSUAL</small><h3>Calendario de informes</h3><p>Programación diaria y semanal del proyecto.</p></div><div class="controles-calendario-informes" aria-label="Cambiar mes"><button type="button" id="calendarioInformesAnterior" aria-label="Mes anterior">‹</button><strong id="mesCalendarioInformes"></strong><button type="button" id="calendarioInformesSiguiente" aria-label="Mes siguiente">›</button></div></header><div class="contenedor-calendario-informes"><div class="cabecera-calendario-informes" aria-hidden="true"><span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span></div><div class="dias-calendario-informes" id="diasCalendarioInformes"></div></div><footer><span><i class="evento-calendario-punto diario"></i> Informe diario · IDT</span><span><i class="evento-calendario-punto semanal"></i> Informe semanal · ISO</span></footer></section>
       <details class="supervision-editor" open>
         <summary>Editar contenido del informe</summary>
         <div class="supervision-editor-grid">
@@ -297,7 +312,17 @@
     <footer class="supervision-acciones"><span id="estadoInformeSupervision">Edite los datos, revise las evidencias y genere el informe.</span><button type="button" data-cerrar-modal="modalInformesSupervision">Cancelar</button><button type="button" id="exportarSupervisionCsv">Exportar CSV</button><button type="button" class="principal" id="exportarSupervisionPdf">Generar PDF</button></footer>
   </dialog>
 
-  <dialog class="modal-masificacion modal-calendario-informes" id="modalCalendarioInformes" aria-labelledby="tituloCalendarioInformes">
+  <dialog class="modal-masificacion modal-vista-pdf-supervision" id="modalVistaPdfSupervision" aria-labelledby="tituloVistaPdfSupervision">
+    <header><div><small>VISTA PREVIA</small><h2 id="tituloVistaPdfSupervision">Informe de supervisión</h2><p id="subtituloVistaPdfSupervision">Documento PDF generado.</p></div><button type="button" data-cerrar-modal="modalVistaPdfSupervision" aria-label="Cerrar">×</button></header>
+    <div class="modal-cuerpo"><iframe id="visorPdfSupervision" title="Vista previa del informe PDF"></iframe></div>
+  </dialog>
+
+  <dialog class="modal-masificacion modal-reportes-supervision" id="modalReportesSupervision" aria-labelledby="tituloReportesSupervision">
+    <header><div><small>SUPERVISIÓN DE OBRA</small><h2 id="tituloReportesSupervision">Reportes generados</h2><p>Visualice los PDF de informes diarios IDT e informes semanales ISO.</p></div><button type="button" data-cerrar-modal="modalReportesSupervision" aria-label="Cerrar">×</button></header>
+    <div class="modal-cuerpo"><section class="tabla-reportes-supervision"><header><div><small>ARCHIVO DOCUMENTAL</small><h3>PDF de informes de supervisión</h3><p>Seleccione el ojo para abrir la vista previa del documento.</p></div><span id="contadorReportesSupervision">0 PDF</span></header><div class="tabla-reportes-supervision-contenedor"><table><thead><tr><th>Informe</th><th>Tipo</th><th>Fecha / periodo</th><th>Estado</th><th>Ver</th></tr></thead><tbody id="listaReportesSupervision"><tr class="sin-reportes-supervision"><td colspan="5">Aún no hay reportes PDF generados.</td></tr></tbody></table></div></section></div>
+  </dialog>
+
+  <template id="plantillaCalendarioInformes">
     <header><div><small>PROGRAMACIÓN</small><h2 id="tituloCalendarioInformes">Calendario de informes</h2><p>Informes diarios y semanales programados para el proyecto.</p></div><button type="button" data-cerrar-modal="modalCalendarioInformes" aria-label="Cerrar">×</button></header>
     <div class="modal-cuerpo">
       <section class="calendario-informes-supervision">
@@ -316,7 +341,7 @@
         <footer><span><i class="evento-calendario-punto diario"></i> Informe diario · IDT</span><span><i class="evento-calendario-punto semanal"></i> Informe semanal · ISO</span></footer>
       </section>
     </div>
-  </dialog>
+  </template>
 
   <dialog class="modal-masificacion modal-subir-capa" id="modalSubirCapa" aria-labelledby="tituloSubirCapa">
     <header>
@@ -1025,7 +1050,7 @@ Que el Informe Técnico Legal recomienda aprobar la liquidación parcial a favor
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js" integrity="" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js" crossorigin="anonymous"></script>
 <script src="../../scripts_generales.js?v=20260831-1"></script>
-<script src="masificacion.js?v=20260928-documentos-ojo-14"></script>
+<script src="masificacion.js?v=20261002-planeamiento-restablecer-19"></script>
 <script src="liquidacion_contratista_masificacion.js?v=20260928-1"></script>
 <script src="nc_ficha_masificacion.js?v=20260928-7"></script>
   <script src="../../asistente_ia.js?v=20260813-3"></script>
