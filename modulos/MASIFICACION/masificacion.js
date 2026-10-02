@@ -2963,10 +2963,10 @@
     // En esta ficha FISE solo consulta quién debe remitir cada sustento.
     // Los hitos se sustentan por el interventor; las subtareas por el contratista.
     const prepararSustentoPorActor=(control,actor='contratista')=>{if(!control)return;const pendiente=document.createElement('span');pendiente.className=`sustento-${actor}-pendiente`;pendiente.textContent=`Pendiente de carga del ${actor}`;control.replaceWith(pendiente);};
-    document.querySelectorAll('.tabla-hitos-pago .carga-sustento-hito').forEach(control=>prepararSustentoPorActor(control,'interventor'));
-    document.querySelectorAll('.tabla-servicios .carga-sustento-hito').forEach(control=>prepararSustentoPorActor(control,'contratista'));
-    document.querySelectorAll('.tabla-hitos-pago th').forEach(encabezado=>{if(encabezado.textContent.trim()==='Sustento')encabezado.textContent='Sustento del interventor';});
-    document.querySelectorAll('.tabla-servicios th').forEach(encabezado=>{if(encabezado.textContent.trim()==='Sustento')encabezado.textContent='Sustento del contratista';});
+    document.querySelectorAll('.tabla-hitos-pago .carga-sustento-hito,.tabla-servicios .carga-sustento-hito').forEach(control=>prepararSustentoPorActor(control,'interventor'));
+    const actualizarEncabezadoSustento=(selector,texto)=>document.querySelectorAll(`${selector} th`).forEach(encabezado=>{if(/sustento/i.test(encabezado.textContent))encabezado.textContent=texto;});
+    actualizarEncabezadoSustento('.tabla-hitos-pago','Sustento del interventor');
+    actualizarEncabezadoSustento('.tabla-servicios','Sustento del interventor');
     const agregarAccionEliminarFila=fila=>{if(fila.querySelector('.eliminar-fila-parametro'))return;const celda=document.createElement('td');celda.className='celda-eliminar-parametro';const tabla=fila.closest('table'),esHitoPago=tabla?.classList.contains('tabla-hitos-pago'),esServicio=tabla?.classList.contains('tabla-servicios'),esSeguimiento=esHitoPago||esServicio,etiqueta=esServicio?'Ver detalle del servicio':'Ver requisitos del hito';celda.innerHTML=`${esSeguimiento?`<button type="button" class="boton-requisitos-hito" title="${etiqueta}" aria-label="${etiqueta}" aria-expanded="false">${iconoRequisitos}</button>`:''}<button type="button" class="eliminar-fila-parametro" title="Eliminar registro" aria-label="Eliminar registro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button>`;fila.append(celda);};
     const prepararTablaEliminable=tabla=>{const encabezado=tabla?.tHead?.rows[0];if(encabezado&&!encabezado.querySelector('.columna-eliminar-parametro')){const th=document.createElement('th');th.className='columna-eliminar-parametro';th.textContent='Acción';encabezado.append(th);}tabla?.tBodies[0]&&[...tabla.tBodies[0].rows].forEach(agregarAccionEliminarFila);};
     document.querySelectorAll('.parametro-psr .tabla-parametros-contractuales table,.tabla-hitos-componente table,.tabla-hitos-fisicos table,.tabla-baremo-componentes table').forEach(prepararTablaEliminable);
@@ -3017,7 +3017,7 @@
     document.querySelectorAll('[data-agregar-hito-fisico]').forEach(boton=>boton.addEventListener('click',()=>{
       const fila=document.createElement('tr');
       fila.innerHTML='<td><span class="origen-hito">FISE</span></td><td><input placeholder="Descripción del servicio"></td><td><input placeholder="Ej. unidad, km, und"></td><td><input type="number" min="0" step="1" placeholder="0"></td><td><input type="number" min="0" max="100" step="0.01" placeholder="0 %"></td><td><span class="estado-seguimiento observado" title="Estado informado por el interventor">Observado</span></td><td><label class="carga-sustento-hito"><input type="file" accept=".pdf,application/pdf" hidden><span>Adjuntar PDF</span><small>Sin archivo</small></label></td>';
-      prepararSustentoPorActor(fila.querySelector('.carga-sustento-hito'),'contratista');
+      prepararSustentoPorActor(fila.querySelector('.carga-sustento-hito'),'interventor');
       agregarAccionEliminarFila(fila);
       boton.closest('.tabla-hitos-fisicos').querySelector('tbody').append(fila);
       fila.querySelector('input').focus();
