@@ -38,6 +38,9 @@
     insertarCierreMasificacion(ficha);
   };
   const crearFichaSupervisor=proyecto=>{
+    // El supervisor ya accede a la ficha desde el proyecto desplegable del menú.
+    // Evitamos crear una segunda entrada debajo de "Abrir app móvil".
+    if(document.title.includes('Supervisor PETROPERÚ'))return;
     if(!proyecto||document.getElementById('ficha-compartida-supervisor'))return;
     const menu=document.querySelector('.menu nav'),inicio=document.getElementById('inicio');if(!menu||!inicio)return;
     menu.insertAdjacentHTML('beforeend','<button data-vista="ficha-compartida-supervisor" class="enlace-ficha-compartida">▤ <span>Ficha de proyecto</span></button>');
@@ -46,6 +49,11 @@
     document.head.insertAdjacentHTML('beforeend','<style>.enlace-ficha-compartida{width:100%;padding:13px 18px;border:0;color:inherit;text-align:left;background:transparent;font:inherit;cursor:pointer}.ficha-compartida{display:grid;gap:16px;padding:22px;border:1px solid #405987;border-radius:16px;background:#14213d;color:#edf5ff}.ficha-compartida header{padding:18px;border-radius:12px;background:linear-gradient(110deg,#1e365f,#294f73)}.ficha-compartida h2{margin:5px 0}.ficha-compartida p,.ficha-compartida small{color:#b7cde3}.ficha-compartida .estado{display:inline-block;margin-top:10px;padding:5px 9px;border-radius:99px;background:#285d80}.ficha-compartida .datos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.ficha-compartida .datos article,.ficha-compartida section{padding:14px;border:1px solid #354f7e;border-radius:12px;background:#18294a}.ficha-compartida .datos small,.ficha-compartida .etapas small{display:block;color:#a8bad0}.ficha-compartida .datos strong{display:block;margin-top:5px}.ficha-compartida .etapas{display:grid;gap:8px}.ficha-compartida .etapas article{display:flex;justify-content:space-between;gap:10px}.ficha-compartida .etapas b{color:#78cdeb}.cierre-ficha-compartida{grid-column:1/-1;padding:0!important;background:transparent!important}.cierre-ficha-compartida nav{display:flex;gap:8px;border-bottom:1px solid #405987}.cierre-ficha-compartida nav button{padding:11px 14px;border:1px solid #405987;border-bottom:0;border-radius:10px 10px 0 0;color:#b8cce5;background:#172747;font:800 .72rem inherit;cursor:pointer}.cierre-ficha-compartida nav button.activa{color:#fff;border-color:#63bedc;background:#2c537d}.cierre-ficha-compartida [data-cierre-panel]{margin-top:12px}.cierre-intro{margin:0 0 12px;font-size:.76rem}.componentes-cierre{display:grid;gap:9px}.componentes-cierre article{position:relative;display:grid;gap:3px;padding:13px 46px 13px 14px;border:1px solid #405987;border-radius:11px;background:#1d3155}.componentes-cierre article small{font-size:.58rem;font-weight:900}.componentes-cierre article strong{font-size:.82rem}.componentes-cierre article span{color:#a9c0db;font-size:.68rem}.componentes-cierre article b{position:absolute;right:16px;top:50%;font-size:1.1rem;transform:translateY(-50%)}.nc-vacio{display:grid;gap:4px;padding:18px;border:1px solid #744c5c;border-radius:11px;background:#302838}.nc-vacio span{color:#d6bfca;font-size:.72rem}@media(max-width:700px){.ficha-compartida .datos{grid-template-columns:1fr}}</style>');
   };
   const actualizarSupervisor=proyecto=>{
+    if(document.title.includes('Supervisor PETROPERÚ')){
+      document.querySelector('[data-vista="ficha-compartida-supervisor"]')?.remove();
+      document.getElementById('ficha-compartida-supervisor')?.remove();
+      return;
+    }
     crearFichaSupervisor(proyecto);
     const ficha=document.getElementById('ficha-compartida-supervisor');if(!ficha||!proyecto)return;
     ficha.querySelector('h2').textContent=texto(proyecto.nombre,'Proyecto de masificación');ficha.querySelector('.estado').textContent=texto(proyecto.estado,'En evaluación');
