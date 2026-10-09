@@ -299,7 +299,7 @@
   let mapa, capaBase, capaProyectos, capaGis, capaManzanas, capaPredios, capaInfluencia, proyectoSeleccionado=null, datosGeo=[], manzanasUrbanas=[], estratosInei=[], filtroEstratoActivo='todos';
   let mapaUbicacionProyecto=null,mapaResumenProyecto=null,capaPoligonoUbicacion=null,capaTerritorialUbicacion=null,puntosPoligonoUbicacion=[],circuloDibujoUbicacion=null,modoDibujoAreaProyecto='poligono',herramientaDibujoAreaActiva=false,origenMapaCrearProyecto=false,nivelMapaProyecto='pais',departamentoMapaProyecto=null,provinciaMapaProyecto=null,distritoMapaProyecto=null,terrenoActivoProyecto='A';
   const geoUbicacionCache={};
-  let herramientaActiva=null,capaDibujo,puntosDibujo=[],centroCirculo=null,figuraTemporal=null,dibujoProyectoPendiente=null,geometriaProyectoBorrador=null;
+  let herramientaActiva=null,capaDibujo,puntosDibujo=[],centroCirculo=null,figuraTemporal=null,dibujoProyectoPendiente=null,geometriaProyectoBorrador=null,elementoAtributosActivo=null,elementoMapaActivo=null;
   let seleccionMapa=[],beneficiarioSeleccionadoMasificacion=null,datosExportacionActual=[],registrosProyectoPosicionados=[];
   let proyectoEdicionSeleccionado=null, proyectoPendienteEliminar=null, liquidacionProyectoVinculado=null, filaLiquidacionResumenPendiente=null;
   let cronogramaBorrador=[];
@@ -874,7 +874,8 @@
     const zonaClick=L.polyline(puntos,{pane:estilo.pane||'troncalPane',color:'#15304a',opacity:.01,weight:Math.max(18,(estilo.weight||4)+12)});
     zonaClick.bindTooltip(`${detalle.codigo} · ${detalle.tipo}`,{sticky:true});
     zonaClick.on('click',e=>{
-      if(['poligono','circulo'].includes(herramientaActiva)){
+      if(herramientaActiva==='atributos'){if(e.originalEvent)L.DomEvent.stopPropagation(e.originalEvent);abrirAtributosPlano(zonaClick,e.latlng);return;}
+      if(['poligono','circulo','punto','polilinea'].includes(herramientaActiva)){
         if(e.originalEvent)L.DomEvent.stopPropagation(e.originalEvent);
         clickDibujo(e);return;
       }
@@ -925,7 +926,8 @@
     const valvula=L.circleMarker([puntoValvula.lat,puntoValvula.lng],{radius:9,color:'#fff',weight:3,fillColor:'#e27612',fillOpacity:1,pane:'beneficiariosPane'})
       .bindTooltip(`${detalleValvula.codigo} · ${detalleValvula.tipo}`,{sticky:true});
     valvula.on('click',e=>{
-      if(['poligono','circulo'].includes(herramientaActiva)){
+      if(herramientaActiva==='atributos'){if(e.originalEvent)L.DomEvent.stopPropagation(e.originalEvent);abrirAtributosPlano(valvula,e.latlng);return;}
+      if(['poligono','circulo','punto','polilinea'].includes(herramientaActiva)){
         if(e.originalEvent)L.DomEvent.stopPropagation(e.originalEvent);
         clickDibujo(e);return;
       }
@@ -1065,12 +1067,30 @@
     $('detalleSeleccion').hidden=true;$('detalleProyecto').hidden=true;$('detalleBeneficiario').hidden=true;$('resumenMasificacion').hidden=false;
     $('panelDerecho').scrollTo({top:0,behavior:'smooth'});
   }
+  function abrirAtributosPlano(elemento=null,latlng=null){
+    elementoAtributosActivo=elemento;
+    const formulario=$('formularioAtributosPlano'),datos=elemento?.options?.atributosPlano||{};
+    formulario.nombre.value=datos.nombre||'';formulario.tipo.value=datos.tipo||'Tubería';formulario.clasificacion.value=datos.clasificacion||'Personalizado';formulario.material.value=datos.material||'';formulario.descripcion.value=datos.descripcion||'';
+    const coordenada=latlng||elemento?.getLatLng?.()||mapa?.getCenter();
+    $('subtituloAtributosPlano').textContent=coordenada?`Ubicación: ${coordenada.lat.toFixed(6)}, ${coordenada.lng.toFixed(6)}`:'Complete los datos técnicos del elemento.';
+    $('estadoAtributosPlano').textContent=elemento?'Edite o complete los atributos del elemento seleccionado.':'Nuevo elemento de referencia en el plano.';
+    $('modalAtributosPlano').showModal();
+  }
+  function mostrarPanelHerramientaMapa(nombre,latlng){
+    const textos={punto:['PUNTO','Agregar punto','Suelte para crear un punto de referencia en el plano.'],polilinea:['POLILÍNEA','Dibujar polilínea','Suelte para iniciar el trazado; haga clic para añadir vértices y doble clic para finalizar.'],poligono:['POLÍGONO','Dibujar polígono','Suelte para iniciar el polígono; añada vértices y haga doble clic para cerrar.'],'area-proyecto':['ÁREA','Dibujar área','Suelte para iniciar el área de influencia y continúe dibujando sobre el mapa.'],circulo:['CÍRCULO','Dibujar círculo','Suelte para fijar el centro y haga clic para definir el radio.'],atributos:['ATRIBUTOS','Atributos','Suelte sobre un elemento o haga clic en el mapa para consultar sus atributos.']}[nombre]||['HERRAMIENTA','Herramienta del mapa','Configure las propiedades del elemento.'];
+    $('categoriaHerramientaMapa').textContent=textos[0];$('tituloHerramientaMapa').textContent=textos[1];$('ayudaHerramientaMapa').textContent=textos[2];$('panelHerramientaMapa').hidden=false;
+    if(latlng)$('ayudaHerramientaMapa').textContent+=` Ubicación inicial: ${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}.`;
+  }
   function clickDibujo(e){
+    if(herramientaActiva==='atributos'){abrirAtributosPlano(null,e.latlng);return;}
     if(herramientaActiva==='poligono'){puntosDibujo.push(e.latlng);if(figuraTemporal)figuraTemporal.setLatLngs(puntosDibujo);else figuraTemporal=L.polyline(puntosDibujo,{pane:'dibujoPane',color:'#d98b24',weight:3}).addTo(capaDibujo);}
     else if(herramientaActiva==='circulo'&&!centroCirculo){centroCirculo=e.latlng;figuraTemporal=L.circle(centroCirculo,{pane:'dibujoPane',radius:100,color:'#7657c7',fillColor:'#9a7de0',fillOpacity:.16,weight:3}).addTo(capaDibujo);}
+    else if(herramientaActiva==='punto'){const punto=L.circleMarker(e.latlng,{pane:'dibujoPane',radius:8,color:'#fff',weight:2,fillColor:'#2fa8c8',fillOpacity:1});punto.on('click',evento=>{if(herramientaActiva==='atributos')abrirAtributosPlano(punto,evento.latlng);});punto.bindTooltip('Punto del plano').addTo(capaDibujo);elementoMapaActivo=punto;}
+    else if(herramientaActiva==='polilinea'){puntosDibujo.push(e.latlng);if(figuraTemporal)figuraTemporal.setLatLngs(puntosDibujo);else{figuraTemporal=L.polyline(puntosDibujo,{pane:'dibujoPane',color:'#35b7c5',weight:4});figuraTemporal.on('click',evento=>{if(herramientaActiva==='atributos')abrirAtributosPlano(figuraTemporal,evento.latlng);});figuraTemporal.addTo(capaDibujo);elementoMapaActivo=figuraTemporal;}}
   }
   function moverDibujo(e){
     if(herramientaActiva==='poligono'&&puntosDibujo.length&&figuraTemporal)figuraTemporal.setLatLngs([...puntosDibujo,e.latlng]);
+    if(herramientaActiva==='polilinea'&&puntosDibujo.length&&figuraTemporal)figuraTemporal.setLatLngs([...puntosDibujo,e.latlng]);
     if(herramientaActiva==='circulo'&&centroCirculo&&figuraTemporal)figuraTemporal.setRadius(mapa.distance(centroCirculo,e.latlng));
   }
   function desactivarHerramientasMapa(limpiarDibujo=false) {
@@ -1150,6 +1170,7 @@
   function cerrarDibujo(e){
     if(herramientaActiva==='poligono'&&puntosDibujo.length>=3){const puntos=[...puntosDibujo];capaDibujo.clearLayers();const figura=L.polygon(puntos,{pane:'dibujoPane',color:'#d98b24',fillColor:'#f2ad50',fillOpacity:.18,weight:3}).addTo(capaDibujo);if(dibujoProyectoPendiente?.modo==='captura')prepararGeometriaProyecto('poligono',{puntos},figura);else{mostrarSeleccion(registrosSeleccionables().filter(r=>puntoEnPoligono(r,puntos)),'Selección por polígono');desactivarHerramientasMapa(false);}}
     else if(herramientaActiva==='circulo'&&centroCirculo&&figuraTemporal){const centro=centroCirculo,radio=mapa.distance(centro,e.latlng);figuraTemporal.setRadius(radio);if(dibujoProyectoPendiente?.modo==='captura')prepararGeometriaProyecto('circulo',{centro,radio},figuraTemporal);else{mostrarSeleccion(registrosSeleccionables().filter(r=>mapa.distance(centro,L.latLng(r.lat,r.lng))<=radio),'Selección por círculo');desactivarHerramientasMapa(false);}}
+    else if(herramientaActiva==='polilinea'&&puntosDibujo.length>=2){figuraTemporal?.bindTooltip('Polilínea del plano');puntosDibujo=[];figuraTemporal=null;}
   }
   function activarTabLiquidacion(nombre){
     document.querySelectorAll('[data-tab-liquidacion]').forEach(boton=>{
@@ -1380,6 +1401,7 @@
       mapa.doubleClickZoom.disable();mapa.getContainer().classList.add('modo-dibujo');return;
     }
     if(nombre==='liquidaciones'){vincularLiquidacionProyecto(proyectoSeleccionado?.codigo);activarTabLiquidacion('liquidacion');$('modalLiquidaciones').showModal();return;}
+    if(nombre==='configurar-elementos'){$('modalConfigurarElementos').showModal();return;}
     if(nombre==='nc-petroperu'){$('modalNcPetroperu').showModal();return;}
     if(nombre==='nc-fise'){$('modalNcFise').showModal();return;}
     if(nombre==='inspeccion-terreno'){$('modalInspeccionTerreno').showModal();return;}
@@ -1391,7 +1413,7 @@
     herramientaActiva=herramientaActiva===nombre?null:nombre;
     document.querySelectorAll('[data-herramienta]').forEach(b=>b.classList.toggle('activo',b.dataset.herramienta===herramientaActiva));
     puntosDibujo=[];centroCirculo=null;figuraTemporal=null;capaDibujo.clearLayers();
-    const dibujando=['poligono','circulo'].includes(herramientaActiva);
+    const dibujando=['poligono','circulo','punto','polilinea','atributos'].includes(herramientaActiva);
     if(dibujando)mapa.doubleClickZoom.disable();else mapa.doubleClickZoom.enable();
     mapa.getContainer().classList.toggle('modo-dibujo',dibujando);
   }
@@ -2886,7 +2908,7 @@
       i:[{nombre:'Evidencia fotográfica del predio.png',tipo:'Imagen',comentario:'Registro fotográfico del área propuesta para el terreno.',url:'../../img/evidencia-eat-predio.png'}],
       ii:[{nombre:'Plano y geometría del terreno.png',tipo:'Imagen',comentario:'Plano de ubicación y geometría validada en campo.',url:'../../img/evidencia-panel-eat.png'}],
       iii:[{nombre:'Medición de pendiente.png',tipo:'Imagen',comentario:'Medición tomada durante la inspección técnica.',url:'../../img/evidencia-eat-medidor.png'}],
-      iv:[{nombre:'Informe de verificación técnica.pdf',tipo:'PDF',comentario:'Informe pendiente de validación final por FISE.',url:'../../INTERVENTOR/documentos/NC_250002_FIRMADA.pdf'}],
+      iv:[{nombre:'Informe de verificación técnica.pdf',tipo:'PDF',comentario:'Informe pendiente de validación final por FISE.',url:'../INTERVENTOR/documentos/NC_250002_FIRMADA.pdf'}],
       v:[{nombre:'Partida registral del predio.png',tipo:'Imagen',comentario:'Documento registral presentado para revisión.',url:'../../img/evidencia-eat-dni.png'}]
     };
     const areaTerrenoRequisitoFise=()=>{try{const campo=terrenoFiseActivo==='terreno2'?'proyectoGeometriaTerrenoB':'proyectoGeometria',geometria=JSON.parse($(campo)?.value||'{}'),area=Number(geometria.areaM2)||0;return area?`${area.toLocaleString('es-PE',{maximumFractionDigits:2})} m²`:'3,500 m² (referencial)';}catch(error){return '3,500 m² (referencial)';}};
@@ -3641,8 +3663,39 @@
     $('cerrarBeneficiario').addEventListener('click',volverAlProyecto);
     $('volverProyecto').addEventListener('click',volverAlProyecto);
     botonResumenMasificacion.addEventListener('click', alternarResumenMasificacion);
-    $('abrirHerramientas').addEventListener('click',()=>{const abrir=$('grupoHerramientas').hidden;$('grupoHerramientas').hidden=!abrir;$('abrirHerramientas').setAttribute('aria-expanded',String(abrir));});
-    document.querySelectorAll('[data-herramienta]').forEach(b=>b.addEventListener('click',()=>activarHerramienta(b.dataset.herramienta,b)));
+    $('abrirHerramientas').addEventListener('click',()=>{const abrir=$('grupoHerramientas').hidden;if(abrir)$('barraHerramientas').classList.remove('ampliada');$('grupoHerramientas').hidden=!abrir;$('abrirHerramientas').setAttribute('aria-expanded',String(abrir));actualizarCarruselHerramientas();});
+    let paginaCarruselHerramientas=0;
+    const botonesCarruselHerramientas=[...document.querySelectorAll('#grupoHerramientas [data-herramienta]')].filter(b=>!['opciones','mover','ampliar'].includes(b.dataset.herramienta));
+    const actualizarCarruselHerramientas=()=>{
+      const ampliada=$('barraHerramientas').classList.contains('ampliada'),porPagina=3,totalPaginas=Math.ceil(botonesCarruselHerramientas.length/porPagina);
+      botonesCarruselHerramientas.forEach((boton,indice)=>boton.classList.toggle('herramienta-carrusel-oculta',!ampliada&&(indice< paginaCarruselHerramientas*porPagina||indice>=(paginaCarruselHerramientas+1)*porPagina)));
+      const opciones=document.querySelector('#grupoHerramientas [data-herramienta="opciones"]');
+      if(opciones){opciones.title=ampliada?'Más opciones':`Siguientes herramientas (${paginaCarruselHerramientas+1}/${totalPaginas})`;opciones.setAttribute('aria-label',opciones.title);}
+    };
+    actualizarCarruselHerramientas();
+    document.querySelectorAll('[data-herramienta]').forEach(b=>b.addEventListener('click',()=>{
+      if(b.dataset.herramienta==='opciones'){paginaCarruselHerramientas=(paginaCarruselHerramientas+1)%Math.ceil(botonesCarruselHerramientas.length/3);actualizarCarruselHerramientas();return;}
+      activarHerramienta(b.dataset.herramienta,b);
+      if(b.closest('.barra-dibujo-mapa-principal'))mostrarPanelHerramientaMapa(b.dataset.herramienta);
+      if(b.dataset.herramienta==='ampliar')actualizarCarruselHerramientas();
+    }));
+    const barraDibujoMapa=document.querySelector('.barra-dibujo-mapa-principal'),contenedorMapa=$('mapaMasificacion');
+    const activarHerramientaSoltada=(nombre,latlng)=>{const boton=barraDibujoMapa.querySelector(`[data-herramienta="${CSS.escape(nombre)}"]`);activarHerramienta(nombre,boton);if(nombre==='atributos')abrirAtributosPlano(null,latlng);else if(nombre==='punto'||nombre==='polilinea'||nombre==='poligono'||nombre==='area-proyecto'||nombre==='circulo')clickDibujo({latlng});mostrarPanelHerramientaMapa(nombre,latlng);};
+    barraDibujoMapa?.querySelectorAll('[draggable="true"]').forEach(boton=>{
+      boton.addEventListener('dragstart',evento=>{evento.dataTransfer.effectAllowed='copy';evento.dataTransfer.setData('text/plain',boton.dataset.herramienta);boton.classList.add('arrastrando');contenedorMapa.classList.add('zona-soltar-herramienta');});
+      boton.addEventListener('dragend',()=>{boton.classList.remove('arrastrando');contenedorMapa.classList.remove('zona-soltar-herramienta');});
+    });
+    contenedorMapa?.addEventListener('dragover',evento=>{if(!evento.dataTransfer.types.includes('text/plain'))return;evento.preventDefault();evento.dataTransfer.dropEffect='copy';contenedorMapa.classList.add('zona-soltar-herramienta');});
+    contenedorMapa?.addEventListener('dragleave',evento=>{if(!contenedorMapa.contains(evento.relatedTarget))contenedorMapa.classList.remove('zona-soltar-herramienta');});
+    contenedorMapa?.addEventListener('drop',evento=>{evento.preventDefault();contenedorMapa.classList.remove('zona-soltar-herramienta');const nombre=evento.dataTransfer.getData('text/plain');if(!['punto','polilinea','poligono','area-proyecto','circulo','atributos'].includes(nombre))return;const rect=contenedorMapa.getBoundingClientRect(),latlng=mapa.containerPointToLatLng([evento.clientX-rect.left,evento.clientY-rect.top]);activarHerramientaSoltada(nombre,latlng);});
+    $('cerrarPanelHerramientaMapa')?.addEventListener('click',()=>{$('panelHerramientaMapa').hidden=true;});
+    $('guardarHerramientaMapa')?.addEventListener('click',()=>{if(elementoMapaActivo){elementoMapaActivo.options.atributosPlano={...(elementoMapaActivo.options.atributosPlano||{}),nombre:$('nombreHerramientaMapa').value,material:$('propiedadHerramientaMapa').value};elementoMapaActivo.bindTooltip($('nombreHerramientaMapa').value||'Elemento del plano');}$('ayudaHerramientaMapa').textContent='Propiedades sincronizadas con el elemento del mapa.';});
+    const tipoElementoPlano=$('tipoElementoPlano'),clasificacionElementoPlano=$('clasificacionElementoPlano'),formularioConfigurarElementos=$('formularioConfigurarElementos');
+    const actualizarClasificacionesElemento=()=>{const opciones={Tubería:['Troncal','Conexión'],Válvula:['Seccionamiento','Regulación','Control'],Manguera:['Flexible','Conexión temporal'],Otro:['Personalizado']}[tipoElementoPlano.value]||['Personalizado'];clasificacionElementoPlano.replaceChildren(...opciones.map(opcion=>new Option(opcion)));};
+    tipoElementoPlano?.addEventListener('change',actualizarClasificacionesElemento);
+    formularioConfigurarElementos?.addEventListener('submit',evento=>{evento.preventDefault();const datos=Object.fromEntries(new FormData(formularioConfigurarElementos));$('estadoConfigurarElementos').textContent=`${datos.nombre} creado: ${datos.tipo} · ${datos.clasificacion}${datos.material?` · ${datos.material}`:''}. Seleccione Punto o Polilínea para ubicarlo en el mapa.`;});
+    $('abrirNuevoAtributoPlano')?.addEventListener('click',()=>{$('modalAtributosPlano').close();formularioConfigurarElementos?.reset();actualizarClasificacionesElemento();$('modalConfigurarElementos').showModal();});
+    $('formularioAtributosPlano')?.addEventListener('submit',evento=>{evento.preventDefault();const datos=Object.fromEntries(new FormData(evento.currentTarget));if(elementoAtributosActivo){elementoAtributosActivo.options.atributosPlano=datos;elementoAtributosActivo.bindTooltip(`${datos.tipo||'Elemento'} · ${datos.nombre||datos.clasificacion||'Sin nombre'}`);}$('estadoAtributosPlano').textContent='Atributos guardados correctamente.';});
     $('limpiarSeleccion').addEventListener('click',limpiarSeleccion);
     mapa.on('click',clickDibujo);mapa.on('mousemove',moverDibujo);mapa.on('dblclick',evento=>{
       if(herramientaActiva){cerrarDibujo(evento);return;}

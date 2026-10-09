@@ -12,10 +12,10 @@
   <link rel="stylesheet" href="../INTERVENTOR/recursos-globales/estilos_generales.css?v=20260907-1">
   <link rel="stylesheet" href="../INTERVENTOR/SATCONTROL/estilos_masificacion.css?v=20260907-1">
   <link rel="stylesheet" href="../INTERVENTOR/recursos-globales/temas.css?v=20260907-1">
-  <link rel="stylesheet" href="estilos.css?v=20260910-menu-informes-1">
+  <link rel="stylesheet" href="estilos.css?v=20261002-sustentos-rol-2">
   <link rel="stylesheet" href="no_conformidades_contratista.css?v=20260928-1">
   <link rel="stylesheet" href="evidencias_contratista.css?v=20260928-1">
-  <link rel="stylesheet" href="liquidacion_contratista.css?v=20260928-12">
+  <link rel="stylesheet" href="liquidacion_contratista.css?v=20261002-roles-sustentos-13">
   <style>.enlace-app-movil{text-decoration:none}.enlace-app-movil .menu-icono svg{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.ficha-cusco-mapa:before,.ficha-cusco-mapa:after{display:none!important}.ficha-cusco-mapa .leaflet-control-zoom a{color:#17345c!important}</style>
   <style>
     /* Apariencia Paulet: el contenido del informe acompaña al panel oscuro. */
@@ -101,7 +101,7 @@
     @media(max-width:700px){.ficha-cusco-mapa.mapa-ampliado{inset:3vh 3vw!important;min-height:94vh!important}.cerrar-mapa-ficha:not([hidden]){top:calc(3vh + 10px);right:calc(3vw + 10px)}}
   </style>
 </head>
-<body class="paulet-contratista">
+<body class="paulet-contratista" data-rol-liquidacion="contratista">
   <div class="aplicacion">
     <aside class="menu-lateral panel-lateral" id="panelLateral" aria-label="Menú principal">
       <header class="menu-cabecera">
@@ -119,7 +119,7 @@
         <button class="enlace-menu" type="button" data-vista="cronograma-actividades" data-etiqueta="Cronograma y actividades"><span class="menu-icono"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg></span><span class="enlace-texto">Cronograma y actividades</span></button>
         <a class="enlace-menu enlace-app-movil" href="../INTERVENTOR/appmovil/index.html" data-etiqueta="Aplicativo móvil"><span class="menu-icono"><svg viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2"/><path d="M10 18.3h4"/></svg></span><span class="enlace-texto">Aplicativo móvil</span></a>
       </section></nav></div>
-      <footer class="menu-pie"><button class="enlace-menu perfil-usuario" type="button" data-etiqueta="Perfil"><span class="menu-icono">◉</span><span class="enlace-texto">Perfil</span></button><a class="enlace-menu cerrar-sesion" href="../index.html" data-etiqueta="Cerrar sesión"><span class="menu-icono">↪</span><span class="enlace-texto">Cerrar sesión</span></a></footer>
+      <footer class="menu-pie"><button class="enlace-menu perfil-usuario" type="button" data-etiqueta="Perfil"><span class="menu-icono">◉</span><span class="enlace-texto">Perfil</span></button><a class="enlace-menu cerrar-sesion" href="../../index.html" data-etiqueta="Cerrar sesión"><span class="menu-icono">↪</span><span class="enlace-texto">Cerrar sesión</span></a></footer>
     </aside>
 
     <main class="contenido-principal">
@@ -235,12 +235,12 @@ Asimismo, se precisa que a la fecha se ha culminado la ejecución de las obras d
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="../INTERVENTOR/recursos-globales/scripts_generales.js?v=20260907-1"></script>
-  <script src="app.js?v=20260923-mapa-cusco-4"></script>
+  <script src="app.js?v=20261002-sustentos-rol-5"></script>
   <script src="capturar_cronograma.js?v=20260928-1"></script>
   <script src="no_conformidades_contratista.js?v=20260928-3"></script>
   <script src="reubicar_no_conformidades.js?v=20260928-3"></script>
-  <script src="../ficha_compartida.js?v=20260927-9"></script>
-  <script src="../nc_ficha_compartida.js?v=20260928-6"></script>
-  <script src="liquidacion_contratista.js?v=20260928-12"></script>
+  <script src="../../ficha_compartida.js?v=20260927-9"></script>
+  <script src="../../nc_ficha_compartida.js?v=20260928-6"></script>
+  <script src="liquidacion_contratista.js?v=20261002-roles-sustentos-13"></script>
 </body>
 </html>

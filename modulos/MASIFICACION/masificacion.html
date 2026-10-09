@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="" crossorigin="anonymous">
   <link rel="stylesheet" href="../../estilos_generales.css?v=20260902-1">
   <link rel="stylesheet" href="../../estilos_asistente_ia.css?v=20260902-1">
-<link rel="stylesheet" href="estilos_masificacion.css?v=20261006-formularios-informes-visibles-4">
+<link rel="stylesheet" href="estilos_masificacion.css?v=20261009-barra-mapa-colores-1">
 <link rel="stylesheet" href="../../temas.css?v=20260902-2">
 </head>
 <body class="pagina-masificacion">
@@ -86,6 +86,15 @@
           </aside>
           <section class="mapa-panel" aria-label="Mapa de proyectos de masificación">
             <div id="mapaMasificacion"></div>
+            <nav class="barra-dibujo-mapa-principal" aria-label="Herramientas de dibujo del mapa">
+              <button draggable="true" type="button" data-herramienta="punto" data-etiqueta="Dibujar punto" aria-label="Dibujar punto"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v3M21 12h-3M12 21v-3M3 12h3"/></svg></button>
+              <button draggable="true" type="button" data-herramienta="polilinea" data-etiqueta="Dibujar polilínea" aria-label="Dibujar polilínea"><svg viewBox="0 0 24 24"><path d="m4 17 5-9 6 8 5-10"/><circle cx="4" cy="17" r="1.2"/><circle cx="9" cy="8" r="1.2"/><circle cx="15" cy="16" r="1.2"/><circle cx="20" cy="6" r="1.2"/></svg></button>
+              <button draggable="true" type="button" data-herramienta="poligono" data-etiqueta="Dibujar polígono" aria-label="Dibujar polígono"><svg viewBox="0 0 24 24"><path d="m6 5 12 3-2 11-12-4L6 5Z"/><circle cx="6" cy="5" r="1.5"/><circle cx="18" cy="8" r="1.5"/><circle cx="16" cy="19" r="1.5"/></svg></button>
+              <button draggable="true" type="button" data-herramienta="area-proyecto" data-etiqueta="Dibujar área" aria-label="Dibujar área"><svg viewBox="0 0 24 24"><path d="M4 20l4.2-1 10.9-10.9a2.2 2.2 0 0 0-3.1-3.1L5.1 15.9 4 20Z"/><path d="m14.6 6.4 3 3M5.1 15.9l3 3"/></svg></button>
+              <button draggable="true" type="button" data-herramienta="circulo" data-etiqueta="Dibujar círculo" aria-label="Dibujar círculo"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg></button>
+              <button draggable="true" type="button" data-herramienta="atributos" data-etiqueta="Atributos" aria-label="Consultar atributos"><svg viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v5h4M8 13h8M8 17h5"/></svg></button>
+            </nav>
+            <aside class="panel-herramienta-mapa" id="panelHerramientaMapa" hidden aria-live="polite"><header><div><small id="categoriaHerramientaMapa">HERRAMIENTA</small><strong id="tituloHerramientaMapa">Herramienta del mapa</strong></div><button type="button" id="cerrarPanelHerramientaMapa" aria-label="Cerrar">×</button></header><p id="ayudaHerramientaMapa"></p><label>Nombre del elemento<input id="nombreHerramientaMapa" placeholder="Nombre del elemento"></label><label>Propiedad / material<input id="propiedadHerramientaMapa" placeholder="Ej. PEAD, DN 63 mm"></label><footer><button type="button" id="guardarHerramientaMapa">Guardar propiedades</button></footer></aside>
             <aside class="acciones-geometria-mapa" id="accionesGeometriaMapa" hidden aria-live="polite"><div><strong>Edición de vértices</strong><small>Arrastre los puntos para modificar el área.</small></div><span><button type="button" id="finalizarEdicionGeometria">Finalizar edición</button></span></aside>
             <div class="controles-mapa">
               <button id="botonMapas" type="button" aria-expanded="false">
@@ -828,24 +837,60 @@
   <div class="barra-herramientas-fise herramientas-masificacion" id="barraHerramientas">
     <button class="abrir-herramientas-fise boton-herramientas-icono" id="abrirHerramientas" type="button" aria-expanded="false" aria-label="Abrir herramientas" title="Herramientas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4.2 4.2 0 0 0-5.4 5.4L3.8 17.2a2.1 2.1 0 0 0 3 3l5.5-5.5a4.2 4.2 0 0 0 5.4-5.4l-2.6 2.6-3-3 2.6-2.6Z"/></svg></button>
     <div class="grupo-herramientas-masificacion" id="grupoHerramientas" hidden>
+      <section class="seccion-herramientas-masificacion seccion-formularios-masificacion" aria-labelledby="tituloFormulariosHerramientas">
+        <h3 id="tituloFormulariosHerramientas">Formularios</h3>
+        <div class="acciones-herramientas-masificacion">
+          <button type="button" data-herramienta="nc-petroperu" title="Formulario NC Petroperú"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5Z"/><path d="M15 3v5h4M8 12h8M8 16h5"/><path d="m9 9 1.5 1.5L13 8"/></svg><span>Formulario NC<br>Petroperú</span></button>
+          <button type="button" data-herramienta="nc-fise" title="Registro de no conformidad FISE"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5Z"/><path d="M15 3v5h4M8 12h8M8 16h5"/><path d="m9 9 1.5 1.5L13 8"/></svg><span>Registro NC<br>FISE</span></button>
+          <button type="button" data-herramienta="inspeccion-terreno" title="Formulario inspección terreno"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 17l4-5 3 3 5-7"/><path d="M5 4h14v16H5z"/><circle cx="8" cy="8" r="1"/></svg><span>Formulario<br>inspección terreno</span></button>
+          <button type="button" data-herramienta="control-avance" title="Formulario control de avance"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 16l4-4 3 2 5-7"/><path d="M5 4h14v16H5z"/></svg><span>Formulario<br>control de avance</span></button>
+          <button type="button" data-herramienta="informe-diario" title="Informe diario IDT"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5Z"/><path d="M15 3v5h4M8 12h8M8 16h8"/><path d="m8 8 1 1 2-2"/></svg><span>Informe diario<br>IDT</span></button>
+          <button type="button" data-herramienta="informe-semanal" title="Informe semanal ISO"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5Z"/><path d="M15 3v5h4M8 12h8M8 16h8"/><path d="m8 8 1 1 2-2"/></svg><span>Informe semanal<br>ISO</span></button>
+          <button type="button" data-herramienta="informes" title="Informes técnicos"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6Z"/><path d="M15 3v5h4M9 12h7M9 16h7"/><path d="m8 8 1 1 2-2"/></svg><span>Informes</span></button>
+        </div>
+      </section>
+      <section class="seccion-herramientas-masificacion seccion-utilitarios-masificacion" aria-labelledby="tituloUtilitariosHerramientas">
+        <h3 id="tituloUtilitariosHerramientas">Utilitarios</h3>
+        <div class="acciones-herramientas-masificacion">
       <button type="button" data-herramienta="seleccionar" title="Seleccionar"><svg viewBox="0 0 24 24"><path d="M5 3.5 18.5 13l-6.1 1.1-3.3 5.4L5 3.5Z"/></svg><span>Seleccionar</span></button>
       <button type="button" data-herramienta="poligono" title="Dibujar polígono"><svg viewBox="0 0 24 24"><path d="m6 5 12 3-2 11-12-4L6 5Z"/><circle cx="6" cy="5" r="1.5"/><circle cx="18" cy="8" r="1.5"/><circle cx="16" cy="19" r="1.5"/></svg><span>Polígono</span></button>
       <button type="button" data-herramienta="circulo" title="Dibujar círculo"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg><span>Círculo</span></button>
+      <button type="button" data-herramienta="punto" title="Agregar punto"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v3M21 12h-3M12 21v-3M3 12h3"/></svg><span>Punto</span></button>
+      <button type="button" data-herramienta="polilinea" title="Dibujar polilínea"><svg viewBox="0 0 24 24"><path d="m4 17 5-9 6 8 5-10"/><circle cx="4" cy="17" r="1.2"/><circle cx="9" cy="8" r="1.2"/><circle cx="15" cy="16" r="1.2"/><circle cx="20" cy="6" r="1.2"/></svg><span>Polilínea</span></button>
       <button type="button" data-herramienta="area-proyecto" title="Dibujar y editar área"><svg viewBox="0 0 24 24"><path d="M4 20l4.2-1 10.9-10.9a2.2 2.2 0 0 0-3.1-3.1L5.1 15.9 4 20Z"/><path d="m14.6 6.4 3 3M5.1 15.9l3 3"/></svg><span>Área</span></button>
       <button type="button" data-herramienta="liquidaciones" title="Liquidaciones Excel"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5Z"/><path d="M15 3v5h4M8 12h8M8 16h8M10 9v10"/></svg><span>Liquidaciones</span></button>
-      <button type="button" data-herramienta="nc-petroperu" title="Formulario NC Petroperú"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5Z"/><path d="M15 3v5h4M8 12h8M8 16h5"/><path d="m9 9 1.5 1.5L13 8"/></svg><span>Formulario NC<br>Petroperú</span></button>
-      <button type="button" data-herramienta="nc-fise" title="Registro de no conformidad FISE"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5Z"/><path d="M15 3v5h4M8 12h8M8 16h5"/><path d="m9 9 1.5 1.5L13 8"/></svg><span>Registro NC<br>FISE</span></button>
-      <button type="button" data-herramienta="inspeccion-terreno" title="Formulario inspección terreno"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 17l4-5 3 3 5-7"/><path d="M5 4h14v16H5z"/><circle cx="8" cy="8" r="1"/></svg><span>Formulario<br>inspección terreno</span></button>
-      <button type="button" data-herramienta="control-avance" title="Formulario control de avance"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 16l4-4 3 2 5-7"/><path d="M5 4h14v16H5z"/></svg><span>Formulario<br>control de avance</span></button>
-      <button type="button" data-herramienta="informe-diario" title="Informe diario IDT"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5Z"/><path d="M15 3v5h4M8 12h8M8 16h8"/><path d="m8 8 1 1 2-2"/></svg><span>Informe diario<br>IDT</span></button>
-      <button type="button" data-herramienta="informe-semanal" title="Informe semanal ISO"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5Z"/><path d="M15 3v5h4M8 12h8M8 16h8"/><path d="m8 8 1 1 2-2"/></svg><span>Informe semanal<br>ISO</span></button>
-      <button type="button" data-herramienta="informes" title="Informes técnicos"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6Z"/><path d="M15 3v5h4M9 12h7M9 16h7"/><path d="m8 8 1 1 2-2"/></svg><span>Informes</span></button>
-      <i></i>
+      <button type="button" data-herramienta="configurar-elementos" title="Configurar elementos del plano"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="11" cy="18" r="2"/></svg><span>Configurar<br>elementos</span></button>
       <button type="button" data-herramienta="opciones" title="Más opciones"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg><span>Opciones</span></button>
       <button type="button" data-herramienta="ampliar" title="Ampliar"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5M10.5 7.5v6M7.5 10.5h6"/></svg><span>Ampliar</span></button>
       <button type="button" data-herramienta="mover" title="Mover"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3 9.5 5.5M12 3l2.5 2.5M21 12l-2.5-2.5M21 12l-2.5 2.5M12 21l-2.5-2.5M12 21l2.5-2.5M3 12l2.5-2.5M3 12l2.5 2.5"/></svg><span>Mover</span></button>
+        </div>
+      </section>
     </div>
   </div>
+
+  <dialog class="modal-masificacion modal-configurar-elementos" id="modalConfigurarElementos" aria-labelledby="tituloConfigurarElementos">
+    <header><div><small>CONFIGURACIÓN DEL PLANO</small><h2 id="tituloConfigurarElementos">Crear atributo de elemento</h2><p>Defina el tipo, clasificación e ícono de los elementos a registrar en el mapa.</p></div><button type="button" data-cerrar-modal="modalConfigurarElementos" aria-label="Cerrar">×</button></header>
+    <form id="formularioConfigurarElementos" class="formulario-configurar-elementos">
+      <label>Nombre del elemento<input name="nombre" required placeholder="Ej. Manguera de derivación"></label>
+      <label>Tipo de elemento<select name="tipo" id="tipoElementoPlano"><option value="Tubería">Tubería</option><option value="Válvula">Válvula</option><option value="Manguera">Manguera</option><option value="Otro">Otro</option></select></label>
+      <label>Clasificación<select name="clasificacion" id="clasificacionElementoPlano"><option>Troncal</option><option>Conexión</option></select></label>
+      <label>Material<input name="material" placeholder="Ej. PEAD"></label>
+      <fieldset><legend>Ícono en el plano</legend><label><input type="radio" name="icono" value="Punto" checked> ● Punto</label><label><input type="radio" name="icono" value="Línea"> ╱ Línea</label><label><input type="radio" name="icono" value="Válvula"> ◉ Válvula</label></fieldset>
+      <output id="estadoConfigurarElementos">Atributos disponibles para el siguiente elemento del plano.</output>
+      <footer><button type="reset">Limpiar</button><button class="principal" type="submit">Crear elemento</button></footer>
+    </form>
+  </dialog>
+
+  <dialog class="modal-masificacion modal-atributos-plano" id="modalAtributosPlano" aria-labelledby="tituloAtributosPlano">
+    <header><div><small>ELEMENTO DEL PLANO</small><h2 id="tituloAtributosPlano">Atributos</h2><p id="subtituloAtributosPlano">Seleccione una línea, punto o figura del mapa.</p></div><div class="acciones-cabecera-atributos"><button type="button" id="abrirNuevoAtributoPlano" title="Nuevo atributo" aria-label="Crear nuevo atributo"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></button><button type="button" data-cerrar-modal="modalAtributosPlano" aria-label="Cerrar">×</button></div></header>
+    <form id="formularioAtributosPlano" class="formulario-configurar-elementos">
+      <label>Nombre<input name="nombre" placeholder="Nombre del elemento"></label><label>Tipo<select name="tipo"><option>Tubería</option><option>Válvula</option><option>Manguera</option><option>Punto de referencia</option><option>Otro</option></select></label>
+      <label>Clasificación<select name="clasificacion"><option>Troncal</option><option>Conexión</option><option>Seccionamiento</option><option>Personalizado</option></select></label><label>Material<input name="material" placeholder="PEAD, acero, PVC…"></label>
+      <label style="grid-column:1/-1">Descripción<textarea name="descripcion" rows="3" placeholder="Detalle técnico del elemento"></textarea></label>
+      <output id="estadoAtributosPlano">Haga clic en un elemento del mapa para visualizar sus datos.</output>
+      <footer><button type="button" data-cerrar-modal="modalAtributosPlano">Cancelar</button><button class="principal" type="submit">Guardar atributos</button></footer>
+    </form>
+  </dialog>
 
   <dialog class="modal-masificacion" id="modalLiquidaciones">
     <header><div><small>AUTOMATIZACIÓN DE REPORTES</small><h2>Liquidaciones</h2><p>Liquidación de inversiones en bienes de capital con recursos FISE.</p></div><button type="button" data-cerrar-modal="modalLiquidaciones">×</button></header>

@@ -1,6 +1,6 @@
 (()=>{
   const $=id=>document.getElementById(id);
-  const destinos={masificacion:'modulos/MASIFICACION/masificacion.html',contratista:'CONTRATISTA/index.html',interventor:'INTERVENTOR/index.html',supervisor:'SUPERVISOR_PETROPERU/index.html'};
+  const destinos={masificacion:'modulos/MASIFICACION/masificacion.html',contratista:'modulos/CONTRATISTA/index.html',interventor:'modulos/INTERVENTOR/index.html',supervisor:'modulos/SUPERVISOR_PETROPERU/index.html'};
   const clave='paulet-masificacion-usuarios';
   const iniciales=[{nombre:'Usuario Masificación',usuario:'masificacion',clave:'123456',rol:'masificacion'},{nombre:'Usuario Contratista',usuario:'contratista',clave:'123456',rol:'contratista'},{nombre:'Usuario Interventor',usuario:'interventor',clave:'123456',rol:'interventor'},{nombre:'Supervisor PETROPERÚ',usuario:'supervisor',clave:'123456',rol:'supervisor'}];
   const leer=()=>{
