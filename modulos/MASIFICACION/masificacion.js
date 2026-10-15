@@ -1685,6 +1685,7 @@
     $('vistaInformeSemanal').hidden=tipo!=='semanal';
     $('campoFechaSupervision').hidden=tipo!=='diario';
     $('campoPeriodoSupervision').hidden=tipo!=='semanal';
+    document.querySelectorAll('[data-campo-informe]').forEach(campo=>campo.hidden=campo.dataset.campoInforme!==tipo);
     $('supervisionNumero').value=tipo==='diario'?'END-IDT-RED-CU-259-G1-25-07-2026':'ISO-CU-REDES-039';
     $('estadoInformeSupervision').textContent=tipo==='diario'?'Informe diario listo para editar.':'Informe semanal listo para editar.';
   }
@@ -1826,9 +1827,17 @@
       doc.setFillColor(...azul);doc.rect(14,56,182,5,'F');doc.setTextColor(255);doc.setFontSize(6);doc.text(subtitulo,105,59.5,{align:'center'});
     };
     const pie=()=>{doc.setDrawColor(170);doc.line(14,284,196,284);doc.setTextColor(80);doc.setFontSize(5.5);doc.text(`${valor('supervisionSupervisor')} · ${valor('supervisionCliente')}`,14,288);doc.text(valor('supervisionNumero'),196,288,{align:'right'});};
+    const controlesEspecificos=tipo==='diario' ? [
+      ['RNC abiertas / cerradas',`${valor('supervisionRncAbiertas')} / ${valor('supervisionRncCerradas')}`,'Presión / temperatura',`${valor('supervisionPresion')} bar / ${valor('supervisionTemperatura')} °C`],
+      ['Red instalada',`${valor('supervisionRedInstalada')} ml`,'Red gasificada',`${valor('supervisionRedGasificada')} ml`]
+    ] : [
+      ['Plazo contractual',valor('supervisionPlazo'),'Monto contractual',valor('supervisionMontoContractual')],
+      ['Avance fase 1 + 2',valor('supervisionAvanceFases'),'Avance hermeticidad',valor('supervisionAvanceHermeticidad')],
+      ['Reposición semanal',`${valor('supervisionReposicionSemanal')} ml`,'Reposición acumulada',valor('supervisionReposicionAcumulada')]
+    ];
     cabecera(1);
     doc.autoTable({startY:64,margin:{left:14,right:14},theme:'grid',styles:{fontSize:6,cellPadding:2,textColor:[22,30,45],lineColor:[170,176,185]},headStyles:{fillColor:azul,textColor:255,fontStyle:'bold'},head:[['DATOS GENERALES','VALOR','DATOS DE CONTROL','VALOR']],body:[
-      ['Supervisión',valor('supervisionSupervisor'),'Lugar',valor('supervisionLugar')],['Cliente',valor('supervisionCliente'),'Avance civil',valor('supervisionAvanceCivil')],['Contratista',valor('supervisionContratista'),'Avance mecánico',valor('supervisionAvanceMecanico')],['Proyecto',proyecto.codigo,'Personal / equipos',`${valor('supervisionPersonal')} / ${valor('supervisionEquipos')}`],['Fecha / periodo',fecha,'Incidentes / accidentes',`${valor('supervisionIncidentes')} / ${valor('supervisionAccidentes')}`]
+      ['Supervisión',valor('supervisionSupervisor'),'Lugar',valor('supervisionLugar')],['Cliente',valor('supervisionCliente'),'Avance civil',valor('supervisionAvanceCivil')],['Contratista',valor('supervisionContratista'),'Avance mecánico',valor('supervisionAvanceMecanico')],['Proyecto',proyecto.codigo,'Personal / equipos',`${valor('supervisionPersonal')} / ${valor('supervisionEquipos')}`],['Fecha / periodo',fecha,'Incidentes / accidentes',`${valor('supervisionIncidentes')} / ${valor('supervisionAccidentes')}`],...controlesEspecificos
     ]});
     let y=doc.lastAutoTable.finalY+6;
     doc.setFillColor(...azul);doc.rect(14,y,182,6,'F');doc.setTextColor(255);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('RESUMEN EJECUTIVO Y CONTROL DE OBRA',17,y+4);y+=8;
@@ -1836,11 +1845,21 @@
     doc.autoTable({startY:y,margin:{left:14,right:14},theme:'grid',styles:{fontSize:6,cellPadding:2,textColor:[22,30,45]},headStyles:{fillColor:naranja,textColor:255},head:[['Sección','Indicador','Valor','Estado']],body:filas});
     y=doc.lastAutoTable.finalY+7;
     const bloque=(etiqueta,texto)=>{doc.setFillColor(...claro);doc.setDrawColor(175);doc.roundedRect(14,y,182,27,1.5,1.5,'FD');doc.setTextColor(...azul);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text(etiqueta,17,y+5);doc.setTextColor(30);doc.setFont('helvetica','normal');doc.setFontSize(6.3);doc.text(doc.splitTextToSize(texto||'Sin información registrada.',174),17,y+10);y+=31;};
-    bloque('OBSERVACIONES',valor('supervisionObservaciones'));bloque('CONCLUSIONES / RESTRICCIONES',valor('supervisionConclusiones'));
+    bloque('OBSERVACIONES',valor('supervisionObservaciones'));bloque(tipo==='diario'?'ACTIVIDAD Y SEGURIDAD':'RESTRICCIONES Y COMPROMISOS',tipo==='diario'?`${valor('supervisionActividadDiaria')}\n${valor('supervisionCharlaSeguridad')}`:`${valor('supervisionRestriccionesSemanal')}\n${valor('supervisionCompromisosSemanal')}`);bloque('CONCLUSIONES / RESTRICCIONES',valor('supervisionConclusiones'));
     doc.setDrawColor(80);doc.line(28,268,88,268);doc.line(122,268,182,268);doc.setFontSize(6);doc.setTextColor(40);doc.text('SUPERVISIÓN',58,272,{align:'center'});doc.text('CLIENTE FISE',152,272,{align:'center'});pie();
     const seleccionadas=[...evidenciasMovilSupervision,...evidenciasCargadasSupervision].filter(f=>f.incluida);
     const imagenes=[];for(const f of seleccionadas){try{imagenes.push({...f,data:await recursoADataUrl(f)});}catch(error){console.warn('No se pudo cargar evidencia',f.src,error);}}
     for(let inicio=0;inicio<imagenes.length;inicio+=6){doc.addPage();cabecera(doc.getNumberOfPages(),'REGISTRO FOTOGRÁFICO GEOREFERENCIADO');const grupo=imagenes.slice(inicio,inicio+6);grupo.forEach((f,i)=>{const col=i%2,fila=Math.floor(i/2),x=16+col*91,yFoto=68+fila*67;doc.setDrawColor(125);doc.setFillColor(246,247,249);doc.rect(x,yFoto,87,60,'FD');try{doc.addImage(f.data,'JPEG',x+2,yFoto+2,83,45,undefined,'FAST');}catch{try{doc.addImage(f.data,'PNG',x+2,yFoto+2,83,45,undefined,'FAST');}catch{}}doc.setFillColor(...gris);doc.rect(x,yFoto+48,87,12,'F');doc.setTextColor(255);doc.setFont('helvetica','bold');doc.setFontSize(6);doc.text(`${inicio+i+1}. ${f.titulo}`.slice(0,46),x+2,yFoto+52);doc.setFont('helvetica','normal');doc.setFontSize(5);doc.text((f.detalle||'Evidencia de campo georreferenciada').slice(0,55),x+2,yFoto+56);});pie();}
+    const camposCapturados=[...document.querySelectorAll('#modalInformesSupervision .supervision-editor label')].filter(etiqueta=>!etiqueta.closest('[hidden]')).map(etiqueta=>{
+      const control=etiqueta.querySelector('input:not([type="file"]),textarea,select');
+      const nombre=[...etiqueta.childNodes].find(nodo=>nodo.nodeType===Node.TEXT_NODE)?.textContent.trim()||'';
+      return [nombre,control?.value?.trim()||'—'];
+    }).filter(([nombre])=>nombre);
+    if(camposCapturados.length){
+      doc.addPage();cabecera(doc.getNumberOfPages(),'ANEXO · CAMPOS COMPLETOS DEL FORMULARIO');
+      doc.autoTable({startY:65,margin:{left:14,right:14,bottom:16},theme:'grid',styles:{fontSize:6,cellPadding:2,textColor:[22,30,45],overflow:'linebreak'},headStyles:{fillColor:azul,textColor:255,fontStyle:'bold'},head:[['Campo registrado','Valor']],body:camposCapturados,columnStyles:{0:{cellWidth:58},1:{cellWidth:124}}});
+      pie();
+    }
     const nombreArchivo=`informe-supervision-${tipo}-${valor('supervisionNumero').replace(/[^a-z0-9-]+/gi,'_')}.pdf`;
     const archivoPdf=doc.output('blob');
     reportesGeneradosSupervision.unshift({
