@@ -28,6 +28,7 @@
   let herramientaActiva=null,capaDibujo,puntosDibujo=[],centroCirculo=null,figuraTemporal=null,dibujoProyectoPendiente=null,geometriaProyectoBorrador=null;
   let seleccionMapa=[],beneficiarioSeleccionadoMasificacion=null,datosExportacionActual=[],registrosProyectoPosicionados=[];
   let proyectoEdicionSeleccionado=null, proyectoPendienteEliminar=null;
+  let proyectoBaseRegistrado=false;
   let cronogramaBorrador=[];
   let planificacionBorrador=null;
   const requisitosTerrenoBase=[
@@ -1660,6 +1661,7 @@ Asimismo, se precisa que a la fecha se ha culminado la ejecución de las obras d
   function cargarProyectoEnFormulario(proyecto) {
     if(!proyecto)return;
     proyectoEdicionSeleccionado=proyecto;
+    proyectoBaseRegistrado=true;
     $('etiquetaCrearProyecto').textContent='MODIFICAR PROYECTO';
     $('tituloCrearProyecto').textContent='Modificar proyecto';
     $('descripcionCrearProyecto').textContent='Actualice los datos, el equipo, el área y los beneficiarios asociados al proyecto.';
@@ -1690,9 +1692,11 @@ Asimismo, se precisa que a la fecha se ha culminado la ejecución de las obras d
     renderListaProyectosEdicion();
     cargarBeneficiariosDelProyecto(proyecto.codigo);
     planificacionBorrador=crearPlanificacionProyecto(proyecto.planificacionTecnica);
+    actualizarEstadoRegistroInicial();
   }
   function limpiarFormularioProyecto() {
     proyectoEdicionSeleccionado=null;
+    proyectoBaseRegistrado=false;
     $('etiquetaCrearProyecto').textContent='NUEVO PROYECTO';
     $('tituloCrearProyecto').textContent='Crear proyecto';
     $('descripcionCrearProyecto').textContent='Registre los datos, el equipo, el área y los beneficiarios del nuevo proyecto.';
@@ -1722,6 +1726,54 @@ Asimismo, se precisa que a la fecha se ha culminado la ejecución de las obras d
     actualizarResumenEquipoProyecto();
     limpiarBeneficiariosProyecto();
     planificacionBorrador=crearPlanificacionProyecto();
+    actualizarEstadoRegistroInicial();
+  }
+  function actualizarEstadoRegistroInicial() {
+    const registrado=Boolean(proyectoBaseRegistrado&&proyectoEdicionSeleccionado);
+    const estado=$('estadoRegistroInicialProyecto'),tarjeta=$('registroInicialProyecto');
+    if(!estado||!tarjeta)return;
+    estado.textContent=registrado
+      ? `Proyecto registrado: ${proyectoEdicionSeleccionado.codigo} · Ya puede guardar cada sección por separado.`
+      : 'Registre el código y el nombre para habilitar los datos del proyecto.';
+    tarjeta.classList.toggle('registrado',registrado);
+    const bloqueables=[
+      ...document.querySelectorAll('#modalCrearProyecto .campos-crear-proyecto input:not(#proyectoCodigo):not(#proyectoNombre), #modalCrearProyecto .campos-crear-proyecto select'),
+      $('abrirCronogramaProyecto'),$('abrirPlanificacionProyecto'),$('guardarCrearProyecto'),$('excelProyecto')
+    ].filter(Boolean);
+    bloqueables.forEach(control=>control.disabled=!registrado);
+    $('agregarBeneficiarioProyecto').disabled=!registrado;
+    document.querySelector('.tarjeta-beneficiarios-proyecto')?.classList.toggle('control-bloqueado',!registrado);
+    document.querySelector('.boton-subir-excel-proyecto')?.classList.toggle('control-bloqueado',!registrado);
+    $('registrarProyecto').hidden=registrado;
+  }
+  function registrarProyectoBasico() {
+    const codigo=normalizarTexto($('proyectoCodigo').value),nombre=normalizarTexto($('proyectoNombre').value);
+    const estado=$('estadoRegistroInicialProyecto');
+    if(!codigo||!nombre){
+      estado.textContent='Complete el código y el nombre para registrar el proyecto.';
+      estado.parentElement.classList.remove('registrado');
+      (!codigo?$('proyectoCodigo'):$('proyectoNombre')).focus();
+      return;
+    }
+    if(ciudades.some(proyecto=>proyecto.codigo.toLowerCase()===codigo.toLowerCase())){
+      estado.textContent='El código indicado ya pertenece a un proyecto. Use otro código o edite el proyecto existente.';
+      estado.parentElement.classList.remove('registrado');
+      $('proyectoCodigo').focus();
+      return;
+    }
+    const datos=obtenerDatosFormularioProyecto();
+    prepararVersionesProyecto(datos);
+    Object.assign(datos.versiones[versionCartograficaActiva],{estado:datos.estado,avance:datos.avance,longitud:datos.longitud,elementos:datos.elementos});
+    aplicarVersionCartografica(datos,versionCartograficaActiva);
+    ciudades.unshift(datos);
+    proyectoEdicionSeleccionado=datos;
+    proyectoBaseRegistrado=true;
+    actualizarFiltros();actualizar();renderListaProyectosEdicion();cargarBeneficiariosDelProyecto(datos.codigo);
+    $('etiquetaCrearProyecto').textContent='PROYECTO REGISTRADO';
+    $('tituloCrearProyecto').textContent='Completar proyecto';
+    $('descripcionCrearProyecto').textContent='El registro básico está creado. Ahora puede guardar los datos de cada sección.';
+    $('contadorMapa').textContent=`Proyecto registrado: ${datos.codigo} · complete las secciones pendientes.`;
+    actualizarEstadoRegistroInicial();
   }
   function obtenerDatosFormularioProyecto() {
     const [latitudTexto,longitudTexto]=String($('proyectoLocalizacion').value||'').split(',').map(valor=>Number(valor.trim()));
@@ -2166,6 +2218,7 @@ Asimismo, se precisa que a la fecha se ha culminado la ejecución de las obras d
     $('abrirCrearProyecto').addEventListener('click',abrirCrearProyecto);
     $('cerrarCrearProyecto').addEventListener('click',()=>modalCrearProyecto.close());
     $('cancelarCrearProyecto').addEventListener('click',()=>modalCrearProyecto.close());
+    $('registrarProyecto').addEventListener('click',registrarProyectoBasico);
     $('abrirPlanificacionProyecto').addEventListener('click',()=>abrirPlanificacionTecnica(proyectoEdicionSeleccionado));
     $('abrirPlanificacionDetalle').addEventListener('click',()=>abrirPlanificacionTecnica(proyectoSeleccionado));
     const cerrarPlanificacion=()=>$('modalPlanificacionTecnica').close();
@@ -2302,6 +2355,10 @@ Asimismo, se precisa que a la fecha se ha culminado la ejecución de las obras d
     });
     $('guardarCronogramaProyecto').addEventListener('click',()=>{
       leerCronogramaProyecto();
+      if(proyectoEdicionSeleccionado){
+        proyectoEdicionSeleccionado.cronograma=structuredClone(cronogramaBorrador);
+        $('contadorMapa').textContent=`Cronograma guardado para ${proyectoEdicionSeleccionado.codigo}.`;
+      }
       $('modalCronogramaProyecto').close();
     });
     $('buscarProyectoEdicion')?.addEventListener('input',renderListaProyectosEdicion);
@@ -2338,6 +2395,10 @@ Asimismo, se precisa que a la fecha se ha culminado la ejecución de las obras d
     $('tablaBeneficiariosProyecto').addEventListener('input',actualizarIndicesBeneficiariosProyecto);
     $('excelProyecto').addEventListener('change',e=>cargarBeneficiariosDesdeExcelProyecto(e.target.files[0]));
     $('guardarCrearProyecto').addEventListener('click',()=>{
+      if(!proyectoBaseRegistrado||!proyectoEdicionSeleccionado){
+        $('estadoRegistroInicialProyecto').textContent='Primero registre el código y el nombre del proyecto.';
+        return;
+      }
       const datos=obtenerDatosFormularioProyecto();
       if(!datos.codigo||!datos.nombre)return;
       const codigoAnterior=proyectoEdicionSeleccionado?.codigo||'';

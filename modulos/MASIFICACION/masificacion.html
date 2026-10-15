@@ -10,6 +10,10 @@
   <link rel="stylesheet" href="../../estilos_asistente_ia.css?v=20260902-1">
 <link rel="stylesheet" href="estilos_masificacion.css?v=20261009-barra-mapa-colores-1">
 <link rel="stylesheet" href="../../temas.css?v=20260902-2">
+  <style>
+    button.evento-calendario-informe{width:100%;border:0;cursor:pointer;text-align:left;font:inherit}button.evento-calendario-informe::before{display:none}button.evento-calendario-informe svg{width:13px;height:13px;flex:0 0 13px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linejoin:round;stroke-linecap:round}button.evento-calendario-informe span{min-width:0;overflow:hidden;text-overflow:ellipsis}button.evento-calendario-informe:hover{filter:brightness(1.12);outline:1px solid currentColor}button.evento-calendario-informe:focus-visible{outline:2px solid #65c4e8;outline-offset:2px}
+    .modal-supervision .calendario-integrado .cabecera-calendario-informes span,.modal-supervision .calendario-integrado .dia-calendario-informe .numero-dia-calendario{color:#111827!important}.modal-supervision .calendario-integrado button.evento-calendario-informe.diario,.modal-supervision .calendario-integrado button.evento-calendario-informe.diario span{color:#0f3f60!important}.modal-supervision .calendario-integrado button.evento-calendario-informe.semanal,.modal-supervision .calendario-integrado button.evento-calendario-informe.semanal span{color:#174a2c!important}
+  </style>
 </head>
 <body class="pagina-masificacion">
   <div class="aplicacion">
@@ -281,7 +285,6 @@
         <button type="button" class="activo" data-tipo-supervision="diario"><span>Diario</span><small>IDT · END-FPY-FI-04</small></button>
         <button type="button" data-tipo-supervision="semanal"><span>Semanal</span><small>ISO · END-FPY-FI-05</small></button>
       </nav>
-      <button type="button" class="abrir-reportes-supervision" id="abrirReportesSupervision"><span>▣</span><b>Reportes generados</b><small>Visualice los PDF IDT e ISO disponibles.</small></button>
       <section class="supervision-configuracion">
         <label>Proyecto<select id="supervisionProyecto"></select></label>
         <label>N.° de informe<input id="supervisionNumero" value="END-IDT-RED-CU-259-G1-25-07-2026"></label>
@@ -331,7 +334,7 @@
         <div class="supervision-tablas"><section><h4>Avance por especialidad</h4><table><thead><tr><th>Especialidad</th><th>Estado</th></tr></thead><tbody><tr><td>Civil</td><td>En cierre</td></tr><tr><td>Mecánica</td><td>Concluida</td></tr><tr><td>Hermeticidad</td><td>100%</td></tr></tbody></table></section><section><h4>Compromisos</h4><table><thead><tr><th>Actividad</th><th>Seguimiento</th></tr></thead><tbody><tr><td>Reposición observada</td><td>En proceso</td></tr><tr><td>Cierre de RNC</td><td>Por validar</td></tr><tr><td>Gasificación pendiente</td><td>Programada</td></tr></tbody></table></section></div>
       </section>
     </div>
-    <footer class="supervision-acciones"><span id="estadoInformeSupervision">Edite los datos, revise las evidencias y genere el informe.</span><button type="button" data-cerrar-modal="modalInformesSupervision">Cancelar</button><button type="button" id="exportarSupervisionCsv">Exportar CSV</button><button type="button" class="principal" id="exportarSupervisionPdf">Generar PDF</button></footer>
+    <footer class="supervision-acciones"><span id="estadoInformeSupervision">Seleccione un informe del calendario para abrir su PDF.</span><button type="button" data-cerrar-modal="modalInformesSupervision">Cerrar</button></footer>
   </dialog>
 
   <dialog class="modal-masificacion modal-vista-pdf-supervision" id="modalVistaPdfSupervision" aria-labelledby="tituloVistaPdfSupervision">
@@ -1178,7 +1181,7 @@ Que el Informe Técnico Legal recomienda aprobar la liquidación parcial a favor
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js" crossorigin="anonymous"></script>
 <script src="../../scripts_generales.js?v=20260831-1"></script>
-<script src="masificacion.js?v=20261006-formularios-informes-visibles-48"></script>
+<script src="masificacion.js?v=20261015-pdf-calendario-real-1"></script>
 <script src="liquidacion_contratista_masificacion.js?v=20260928-1"></script>
 <script src="nc_ficha_masificacion.js?v=20260928-7"></script>
   <script src="../../asistente_ia.js?v=20260813-3"></script>

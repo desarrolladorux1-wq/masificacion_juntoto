@@ -1690,6 +1690,10 @@
   }
 
   let mesCalendarioInformes=new Date(2026,8,1);
+  const archivosEjemploInformes={
+    diario:'documentos/informes-ejemplo/ejemplo-informe-diario-idt.pdf',
+    semanal:'documentos/informes-ejemplo/ejemplo-informe-semanal-iso.pdf'
+  };
   const eventosCalendarioInformes=[
     ['2026-09-01','IDT diario','diario'],['2026-09-02','IDT diario','diario'],['2026-09-04','ISO semanal','semanal'],
     ['2026-09-07','IDT diario','diario'],['2026-09-08','IDT diario','diario'],['2026-09-11','ISO semanal','semanal'],
@@ -1700,6 +1704,29 @@
 
   function claveFechaCalendario(anio,mes,dia) {
     return `${anio}-${String(mes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+  }
+
+  const iconoPdfCalendario='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5M8.5 16.5h7M8.5 13h7"/></svg>';
+  function fechaCalendarioLegible(fecha) {
+    const [anio,mes,dia]=fecha.split('-').map(Number);
+    return new Intl.DateTimeFormat('es-PE',{day:'2-digit',month:'long',year:'numeric'}).format(new Date(anio,mes-1,dia));
+  }
+  function abrirVistaPreviaInformeCalendario(evento) {
+    const reporte=reportesGeneradosSupervision.find(item=>item.tipo===evento.tipo&&(item.fecha===evento.fecha||String(item.fecha).includes(evento.fecha)));
+    const esDiario=evento.tipo==='diario';
+    const titulo=esDiario?'Informe diario IDT':'Informe semanal ISO';
+    $('tituloVistaPdfSupervision').textContent=`${titulo} · ${fechaCalendarioLegible(evento.fecha)}`;
+    $('subtituloVistaPdfSupervision').textContent=reporte?'PDF generado disponible para consulta.':'PDF de ejemplo basado en el formato entregado.';
+    const visor=$('visorPdfSupervision');
+    const archivo=reporte?.url||archivosEjemploInformes[evento.tipo];
+    if(archivo){
+      visor.removeAttribute('srcdoc');
+      visor.src=archivo;
+    }else{
+      visor.removeAttribute('src');
+      visor.srcdoc=`<!doctype html><html lang="es"><head><meta charset="utf-8"><style>body{margin:0;padding:42px;font-family:Arial,sans-serif;color:#1d2b3d;background:#edf1f5}.hoja{max-width:760px;min-height:900px;margin:auto;padding:44px;background:#fff;box-shadow:0 8px 28px #aab5c255}.cabecera{display:flex;justify-content:space-between;gap:24px;padding-bottom:18px;border-bottom:3px solid #215b86}.marca{color:#dc761b;font-size:28px;font-weight:800}.tipo{color:#215b86;font-size:20px;font-weight:800}.meta{margin:28px 0;padding:16px;background:#f1f6fa;border-left:5px solid #3b91ba}.meta p{margin:7px 0}.seccion{margin-top:25px}.seccion h2{margin:0 0 10px;color:#215b86;font-size:16px}.linea{height:12px;margin:9px 0;border-radius:3px;background:linear-gradient(90deg,#dce6ee 68%,transparent 68%)}.nota{margin-top:42px;padding:15px;border:1px dashed #9db4c7;border-radius:6px;color:#526b80;font-size:13px;line-height:1.5}</style></head><body><main class="hoja"><div class="cabecera"><div class="marca">FISE</div><div><div class="tipo">${esDiario?'INFORME DIARIO DE TRABAJO – IDT':'INFORME SEMANAL DE TRABAJO – ISO'}</div><small>${esDiario?'END-FPY-FI-04':'END-FPY-FI-05'}</small></div></div><div class="meta"><p><b>Fecha programada:</b> ${fechaCalendarioLegible(evento.fecha)}</p><p><b>Proyecto:</b> ${proyectoSeleccionado?.codigo||'Proyecto de Masificación'} · ${proyectoSeleccionado?.nombre||'Seguimiento de obra'}</p><p><b>Estado:</b> Programado para revisión</p></div><section class="seccion"><h2>Resumen de supervisión</h2><div class="linea"></div><div class="linea"></div><div class="linea"></div></section><section class="seccion"><h2>Avance y evidencias</h2><div class="linea"></div><div class="linea"></div><div class="linea"></div></section><p class="nota">Esta es la vista previa del informe programado. Al generar el PDF desde el formulario, este mismo acceso mostrará el documento final.</p></main></body></html>`;
+    }
+    $('modalVistaPdfSupervision').showModal();
   }
 
   function renderizarCalendarioInformes() {
@@ -1717,7 +1744,11 @@
       const eventos=eventosCalendarioInformes.filter(evento=>evento.fecha===claveFechaCalendario(fecha.getFullYear(),fecha.getMonth(),fecha.getDate()));
       const dia=document.createElement('article');
       dia.className=`dia-calendario-informe${esDelMes?'':' fuera-mes'}${fecha.toDateString()===hoy.toDateString()?' hoy':''}`;
-      dia.innerHTML=`<span class="numero-dia-calendario">${fecha.getDate()}</span>${eventos.map(evento=>`<span class="evento-calendario-informe ${evento.tipo}" title="${evento.titulo}">${evento.titulo}</span>`).join('')}`;
+      dia.innerHTML=`<span class="numero-dia-calendario">${fecha.getDate()}</span>${eventos.map(evento=>`<button type="button" class="evento-calendario-informe ${evento.tipo}" data-informe-fecha="${evento.fecha}" data-informe-tipo="${evento.tipo}" title="Abrir PDF · ${evento.titulo}">${iconoPdfCalendario}<span>${evento.titulo}</span></button>`).join('')}`;
+      dia.querySelectorAll('[data-informe-fecha]').forEach(boton=>boton.addEventListener('click',()=>{
+        const evento=eventosCalendarioInformes.find(item=>item.fecha===boton.dataset.informeFecha&&item.tipo===boton.dataset.informeTipo);
+        if(evento)abrirVistaPreviaInformeCalendario(evento);
+      }));
       return dia;
     }));
   }
@@ -3208,7 +3239,7 @@
     $('abrirInformeDiarioSupervision').addEventListener('click',()=>abrirInformesSupervision('diario',true));
     $('abrirInformeSemanalSupervision').addEventListener('click',()=>abrirInformesSupervision('semanal',true));
     document.querySelectorAll('[data-tipo-supervision]').forEach(b=>b.addEventListener('click',()=>configurarInformeSupervision(b.dataset.tipoSupervision)));
-    $('abrirReportesSupervision').addEventListener('click',()=>{
+    $('abrirReportesSupervision')?.addEventListener('click',()=>{
       renderizarReportesSupervision();
       $('modalReportesSupervision').showModal();
     });
@@ -3230,8 +3261,8 @@
       renderizarGaleriaSupervision();
       $('estadoInformeSupervision').textContent='6 fotografías sincronizadas desde SUP-CUSCO-04.';
     });
-    $('exportarSupervisionCsv').addEventListener('click',exportarSupervisionCsv);
-    $('exportarSupervisionPdf').addEventListener('click',exportarSupervisionPdf);
+    $('exportarSupervisionCsv')?.addEventListener('click',exportarSupervisionCsv);
+    $('exportarSupervisionPdf')?.addEventListener('click',exportarSupervisionPdf);
     $('abrirExportacionMasificacion').addEventListener('click',abrirModalExportacion);
     $('exportarPotencial').addEventListener('click',abrirModalExportacion);
     $('confirmarExportacionMasificacion').addEventListener('click',confirmarExportacionMasificacion);

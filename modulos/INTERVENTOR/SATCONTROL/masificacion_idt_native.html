@@ -10,6 +10,9 @@
   <link rel="stylesheet" href="../recursos-globales/estilos_asistente_ia.css?v=20260907-1">
   <link rel="stylesheet" href="estilos_masificacion.css?v=20260907-1">
 <link rel="stylesheet" href="../recursos-globales/temas.css?v=20260907-1">
+  <style>
+    .registro-inicial-proyecto{grid-column:1/-1;display:flex;gap:10px;align-items:center;padding:11px 12px;border:1px solid #4b668f;border-radius:12px;color:#d9e8ff;background:#182a4a}.registro-inicial-proyecto>span{display:grid;place-items:center;flex:0 0 25px;width:25px;height:25px;border-radius:50%;color:#fff;background:#3f8fc4;font-size:.72rem;font-weight:900}.registro-inicial-proyecto strong,.registro-inicial-proyecto small{display:block}.registro-inicial-proyecto strong{font-size:.68rem}.registro-inicial-proyecto small{margin-top:2px;color:#aebddb;font-size:.61rem;font-weight:700;line-height:1.35}.registro-inicial-proyecto.registrado{border-color:#4d9d73;background:#173a31}.registro-inicial-proyecto.registrado>span{background:#3eaa71}.registrar-proyecto{color:#fff!important;background:linear-gradient(110deg,#2e789e,#3f9f78)!important}.registrar-proyecto[hidden]{display:none}.acciones-crear-proyecto button:disabled,.tarjeta-beneficiarios-proyecto.control-bloqueado button,.boton-subir-excel-proyecto.control-bloqueado{cursor:not-allowed!important;opacity:.46}.tarjeta-beneficiarios-proyecto.control-bloqueado{position:relative;opacity:.68}.tarjeta-beneficiarios-proyecto.control-bloqueado::after{content:'Registre primero el código y el nombre del proyecto';position:absolute;inset:0;display:grid;place-items:center;padding:20px;border-radius:16px;color:#c7ddf3;background:rgba(10,22,45,.74);font-size:.72rem;font-weight:850;text-align:center;pointer-events:none}
+  </style>
 </head>
 <body class="pagina-masificacion">
   <div class="aplicacion">
@@ -340,6 +343,9 @@
           <div class="campos-crear-proyecto">
             <label>Código de proyecto<input id="proyectoCodigo" type="text" placeholder="Ej. MAS-011" autocomplete="off"></label>
             <label>Nombre del proyecto<input id="proyectoNombre" type="text" placeholder="Ej. Nuevo corredor de masificación" autocomplete="off"></label>
+            <aside class="registro-inicial-proyecto" id="registroInicialProyecto" aria-live="polite">
+              <span>1</span><div><strong>Registro inicial</strong><small id="estadoRegistroInicialProyecto">Registre el código y el nombre para habilitar los datos del proyecto.</small></div>
+            </aside>
             <label>Proyecto padre / subproyecto<select id="proyectoPadre"><option value="">Proyecto principal (sin padre)</option></select><small>Al elegir un padre se crea un subproyecto; el código y nombre se proponen automáticamente y se pueden editar.</small></label>
             <label>Fase del proyecto<select id="proyectoFase"><option>Anteproyecto</option><option>Proyecto</option><option>Construcción</option><option>Operación</option></select></label>
             <label>Fecha de inicio<input id="proyectoFechaInicio" type="date"></label>
@@ -385,7 +391,8 @@
       <button type="button" class="abrir-cronograma-proyecto" id="abrirCronogramaProyecto">Cronograma</button>
       <button type="button" class="abrir-planificacion-proyecto" id="abrirPlanificacionProyecto">Planificación técnica</button>
       <button type="button" class="cancelar-crear-proyecto" id="cancelarCrearProyecto">Cancelar</button>
-      <button type="button" class="guardar-crear-proyecto" id="guardarCrearProyecto">Guardar cambios</button>
+      <button type="button" class="registrar-proyecto" id="registrarProyecto">Registrar</button>
+      <button type="button" class="guardar-crear-proyecto" id="guardarCrearProyecto">Guardar detalles</button>
     </footer>
   </dialog>
 
