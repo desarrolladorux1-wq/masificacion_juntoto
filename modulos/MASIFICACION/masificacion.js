@@ -302,6 +302,7 @@
   let herramientaActiva=null,capaDibujo,puntosDibujo=[],centroCirculo=null,figuraTemporal=null,dibujoProyectoPendiente=null,geometriaProyectoBorrador=null,elementoAtributosActivo=null,elementoMapaActivo=null;
   let seleccionMapa=[],beneficiarioSeleccionadoMasificacion=null,datosExportacionActual=[],registrosProyectoPosicionados=[];
   let proyectoEdicionSeleccionado=null, proyectoPendienteEliminar=null, liquidacionProyectoVinculado=null, filaLiquidacionResumenPendiente=null;
+  let registroBasicoProyecto=false;
   let cronogramaBorrador=[];
   let pasoAsistenteProyecto=1;
   let planificacionBorrador=null;
@@ -524,7 +525,50 @@
       return {componente,hitos};
     });
   }
+  function actualizarRegistroBasicoProyecto(mensaje=''){
+    const boton=$('registrarProyectoBasico'),estado=$('estadoRegistroBasicoProyecto'),acciones=boton?.closest('.registro-basico-acciones');
+    if(!boton||!estado)return;
+    boton.disabled=registroBasicoProyecto;
+    boton.textContent=registroBasicoProyecto?'Registrado':'Registrar';
+    estado.textContent=mensaje||(registroBasicoProyecto
+      ? `Proyecto base registrado: ${$('proyectoCodigo').value} · ya puede guardar cada sección.`
+      : 'Registre código y nombre antes de guardar las secciones.');
+    acciones?.classList.toggle('registrado',registroBasicoProyecto);
+  }
+  function registrarProyectoBasico(){
+    const codigo=normalizarTexto($('proyectoCodigo').value),nombre=normalizarTexto($('proyectoNombre').value);
+    if(!codigo||!nombre){
+      actualizarRegistroBasicoProyecto('Complete el código y el nombre para registrar el proyecto.');
+      (!codigo?$('proyectoCodigo'):$('proyectoNombre')).focus();
+      return;
+    }
+    const existente=ciudades.find(proyecto=>proyecto.codigo===codigo);
+    if(existente&&existente!==proyectoEdicionSeleccionado){
+      actualizarRegistroBasicoProyecto('Ese código ya está registrado. Use un código diferente.');
+      $('proyectoCodigo').focus();
+      return;
+    }
+    if(proyectoEdicionSeleccionado){
+      proyectoEdicionSeleccionado.codigo=codigo;
+      proyectoEdicionSeleccionado.nombre=nombre;
+    }else{
+      const referencia=proyectoReferenciaFicha();
+      const proyectoBase=prepararVersionesProyecto({...referencia,codigo,nombre,pasosSatcontrol:{}});
+      ciudades.unshift(proyectoBase);
+      proyectoEdicionSeleccionado=proyectoBase;
+      proyectoSeleccionado=proyectoBase;
+    }
+    registroBasicoProyecto=true;
+    guardarProyectoSatcontrol(proyectoEdicionSeleccionado);
+    actualizarFiltros();actualizar();renderBarraProyectos();renderListaProyectosEdicion();
+    actualizarRegistroBasicoProyecto();
+    $('contadorMapa').textContent=`Proyecto base registrado: ${codigo} · continúe guardando cada sección.`;
+  }
   function guardarPasoSatcontrol(paso){
+    if(!registroBasicoProyecto){
+      actualizarRegistroBasicoProyecto('Registre primero el código y el nombre del proyecto.');
+      return;
+    }
     let destino=proyectoEdicionSeleccionado||proyectoSeleccionado;
     if(!destino){
       const ejemplo=proyectoReferenciaFicha(),datos=obtenerDatosFormularioProyecto();
@@ -2122,6 +2166,7 @@
   function cargarProyectoEnFormulario(proyecto) {
     if(!proyecto)return;
     proyectoEdicionSeleccionado=proyecto;
+    registroBasicoProyecto=true;
     $('etiquetaCrearProyecto').textContent='MODIFICAR PROYECTO';
     $('tituloCrearProyecto').textContent='Modificar proyecto';
     $('descripcionCrearProyecto').textContent='Actualice los datos, el equipo, el área y los beneficiarios asociados al proyecto.';
@@ -2177,14 +2222,17 @@
     renderListaProyectosEdicion();
     cargarBeneficiariosDelProyecto(proyecto.codigo);
     planificacionBorrador=crearPlanificacionProyecto(proyecto.planificacionTecnica);
+    actualizarRegistroBasicoProyecto();
   }
   function limpiarFormularioProyecto() {
     proyectoEdicionSeleccionado=null;
+    registroBasicoProyecto=false;
     $('etiquetaCrearProyecto').textContent='NUEVO PROYECTO';
     $('tituloCrearProyecto').textContent='Crear macroproyecto';
     $('descripcionCrearProyecto').textContent='Delimite el área GIS, defina las fechas, el equipo y el alcance. Los beneficiarios se estiman automáticamente.';
     $('proyectoCodigo').value='';
     $('proyectoNombre').value='';
+    actualizarRegistroBasicoProyecto();
     actualizarSeleccionPap('');
     $('proyectoNumeroSolicitud').value='';
     $('proyectoRemitenteSolicitud').value='';
@@ -3343,6 +3391,7 @@
     });
     $('continuarAsistenteProyecto').addEventListener('click',()=>{if(pasoAsistenteProyecto===1){mostrarPasoAsistenteProyecto(2);return;}if(pasoAsistenteProyecto===2){mostrarPasoAsistenteProyecto(3);return;}if(pasoAsistenteProyecto===3){mostrarPasoAsistenteProyecto(4);return;}if(pasoAsistenteProyecto===4){mostrarPasoAsistenteProyecto(5);return;}if(pasoAsistenteProyecto===5){renderCronogramaProyecto();mostrarPasoAsistenteProyecto(6);}});
     $('anteriorAsistenteProyecto').addEventListener('click',()=>{if(pasoAsistenteProyecto===2)mostrarPasoAsistenteProyecto(1);else if(pasoAsistenteProyecto===3)mostrarPasoAsistenteProyecto(2);else if(pasoAsistenteProyecto===4)mostrarPasoAsistenteProyecto(3);else if(pasoAsistenteProyecto===5)mostrarPasoAsistenteProyecto(4);else if(pasoAsistenteProyecto===7){renderCronogramaProyecto();mostrarPasoAsistenteProyecto(6);}});
+    $('registrarProyectoBasico').addEventListener('click',registrarProyectoBasico);
     $('guardarBorradorProyecto').addEventListener('click',()=>{$('contadorMapa').textContent='Borrador del proyecto conservado en el asistente.';});
     $('guardarPasoProyecto').addEventListener('click',()=>guardarPasoSatcontrol(pasoAsistenteProyecto));
     document.querySelectorAll('[data-guardar-hoja]').forEach(boton=>boton.addEventListener('click',()=>guardarPasoSatcontrol(pasoAsistenteProyecto)));

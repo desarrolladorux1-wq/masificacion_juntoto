@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="" crossorigin="anonymous">
   <link rel="stylesheet" href="../../estilos_generales.css?v=20260902-1">
   <link rel="stylesheet" href="../../estilos_asistente_ia.css?v=20260902-1">
-<link rel="stylesheet" href="estilos_masificacion.css?v=20261009-barra-mapa-colores-1">
+<link rel="stylesheet" href="estilos_masificacion.css?v=20261015-registro-inicial-1">
 <link rel="stylesheet" href="../../temas.css?v=20260902-2">
   <style>
     button.evento-calendario-informe{width:100%;border:0;cursor:pointer;text-align:left;font:inherit}button.evento-calendario-informe::before{display:none}button.evento-calendario-informe svg{width:13px;height:13px;flex:0 0 13px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linejoin:round;stroke-linecap:round}button.evento-calendario-informe span{min-width:0;overflow:hidden;text-overflow:ellipsis}button.evento-calendario-informe:hover{filter:brightness(1.12);outline:1px solid currentColor}button.evento-calendario-informe:focus-visible{outline:2px solid #65c4e8;outline-offset:2px}
@@ -487,6 +487,7 @@
           <div class="campos-crear-proyecto">
             <label>Código de proyecto<input id="proyectoCodigo" type="text" placeholder="Ej. MAS-011" autocomplete="off"></label>
             <label>Nombre del proyecto<input id="proyectoNombre" type="text" placeholder="Ej. Nuevo corredor de masificación" autocomplete="off"></label>
+            <div class="registro-basico-acciones" aria-label="Registro inicial del proyecto"><button id="registrarProyectoBasico" type="button">Registrar</button><small id="estadoRegistroBasicoProyecto" aria-live="polite">Registre código y nombre antes de guardar las secciones.</small></div>
             <select id="proyectoPadre" hidden aria-hidden="true"><option value="">Este proyecto es el macroproyecto (contenedor)</option></select>
             <section class="campo-ancho registro-convenio-proyecto" aria-label="Solicitud regional y convenio">
               <header><strong>Solicitud regional</strong></header>
