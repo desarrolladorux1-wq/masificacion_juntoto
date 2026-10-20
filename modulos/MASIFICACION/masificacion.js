@@ -116,7 +116,7 @@
     }).join('');
     cuerpo.onclick=evento=>{const boton=evento.target.closest('[data-evidencia-pap]');if(boton)abrirEvidenciaPap(boton.dataset.evidenciaPap,Number(boton.dataset.requisitoPap),boton.dataset.estadoPap);};
   };
-  let mapaPlaneamiento=null,capaPlaneamientoDistritos=null,capaPlaneamientoCumplidores=null,mapaFichaPredio=null,marcadorFichaPredio=null,modoProgramarPlaneamiento=false,proyectoPlaneamientoSeleccionado=null,puntoProgramacionPlaneamiento=null,marcadorProgramacionPlaneamiento=null,fichaRequisitosEnEdicion=false,requisitoDocumentosAbierto=null;
+  let mapaPlaneamiento=null,capaPlaneamientoDistritos=null,capaPlaneamientoCumplidores=null,mapaFichaPredio=null,marcadorFichaPredio=null,modoProgramarPlaneamiento=false,proyectoPlaneamientoSeleccionado=null,puntoProgramacionPlaneamiento=null,marcadorProgramacionPlaneamiento=null,fichaRequisitosEnEdicion=false,requisitoDocumentosAbierto=null,documentoEvaluacionAbierto=null;
   const limpiarCumplidoresPlaneamiento=()=>{
     capaPlaneamientoCumplidores?.clearLayers();
     $('elementosCumplenPlaneamiento').hidden=true;
@@ -192,9 +192,11 @@
   };
   const renderPlaneamientoDistrito=()=>{
     const selector=$('distritoPlaneamiento'),distrito=selector.value,esResumenGeneral=!distrito,indice=Math.max(0,[...selector.options].findIndex(opcion=>opcion.value===distrito)-1),variacion=indice%4*3,proyectos=proyectosPlaneamientoSatcontrol(),datos=esResumenGeneral?proyectos:proyectos.filter(proyecto=>proyecto.distrito===distrito),kilometros=datos.reduce((total,proyecto)=>total+(Number(proyecto.longitud)||0),0);
+    if(distrito&&(!proyectoPlaneamientoSeleccionado||proyectoPlaneamientoSeleccionado.distrito!==distrito))proyectoPlaneamientoSeleccionado=datos[0]||null;
+    const predioSeleccionado=!esResumenGeneral?proyectoPlaneamientoSeleccionado:null;
     const listaRequisitos=$('listaRequisitosPlaneamiento'),panelCumplidores=$('elementosCumplenPlaneamiento');
     if(panelCumplidores.parentElement===listaRequisitos)listaRequisitos.after(panelCumplidores);
-    $('resumenDistritoPlaneamiento').innerHTML=esResumenGeneral?`<small>INFORMACIÓN GENERAL</small><strong>Todos los distritos</strong><span>${datos.length} proyecto(s) identificado(s) · ${kilometros.toFixed(1)} km de red referencial.</span>`:`<small>INFORMACIÓN DEL DISTRITO</small><strong>${distrito}</strong><span>${datos.length||1} proyecto(s) identificado(s) · ${kilometros.toFixed(1)} km de red referencial.</span>`;
+    $('resumenDistritoPlaneamiento').innerHTML=esResumenGeneral?`<small>INFORMACIÓN GENERAL</small><strong>Todos los distritos</strong><span>${datos.length} proyecto(s) identificado(s) · ${kilometros.toFixed(1)} km de red referencial.</span>`:`<small>INFORMACIÓN DEL PREDIO</small><strong>${escapePlanificacion(predioSeleccionado?.nombre||distrito)}</strong><span>${escapePlanificacion(predioSeleccionado?.codigo||'Sin código')} · ${distrito} · ${kilometros.toFixed(1)} km de red referencial.</span>`;
     const requisitos=requisitosPlaneamiento.map(([nombre,valor])=>[nombre,esResumenGeneral?valor:Math.max(35,Math.min(100,valor-variacion))]);
     listaRequisitos.innerHTML=requisitos.map(([nombre,valor],numero)=>`<article class="requisito-planeamiento-accion" role="button" tabindex="0" aria-label="Ver elementos que cumplen ${nombre}: ${valor}%"><span>${String(numero+1).padStart(2,'0')}</span><strong>${nombre}</strong><i class="dona-requisito-planeamiento" style="--avance-requisito:${valor}%"><b>${valor}%</b></i></article>`).join('');
     listaRequisitos.querySelectorAll('.requisito-planeamiento-accion').forEach((fila,numero)=>{const abrir=()=>{mostrarCumplidoresPlaneamiento(requisitos[numero][0],requisitos[numero][1],datos,numero);fila.insertAdjacentElement('afterend',panelCumplidores);};fila.addEventListener('click',abrir);fila.addEventListener('keydown',evento=>{if(evento.key==='Enter'||evento.key===' '){evento.preventDefault();abrir();}});});
@@ -203,8 +205,7 @@
     $('abrirFichaPredioPlaneamiento').disabled=!distrito;
     $('abrirFichaPredioPlaneamiento').hidden=!distrito;
     $('abrirFichaPredioPlaneamiento').dataset.distrito=distrito;
-    $('abrirFichaPredioPlaneamiento').querySelector('span').textContent='Ver ficha del proyecto';
-    if(distrito&&!proyectoPlaneamientoSeleccionado)proyectoPlaneamientoSeleccionado=datos[0]||null;
+    $('abrirFichaPredioPlaneamiento').querySelector('span').textContent='Ver ficha del predio';
     if(distrito){const proyecto=datos[0];if(proyecto?.lat&&proyecto?.lng)mapaPlaneamiento?.setView([proyecto.lat,proyecto.lng],10);}
     vincularPuntosPlaneamiento();
   };
@@ -236,7 +237,9 @@
     $('programacionDepartamento').value=puntoProgramacionPlaneamiento.departamento;
     $('programacionProvincia').value=puntoProgramacionPlaneamiento.provincia;
     $('programacionDistrito').value=puntoProgramacionPlaneamiento.distrito;
-    $('programacionResponsable').value=usuarioResponsableSistema();
+    const responsable=usuarioResponsableSistema(),selectorResponsable=$('programacionResponsable');
+    if(![...selectorResponsable.options].some(opcion=>opcion.value===responsable))selectorResponsable.add(new Option(responsable,responsable),0);
+    selectorResponsable.value=responsable;
     $('programacionCoordenadas').value=`${punto.lat.toFixed(6)}, ${punto.lng.toFixed(6)}`;
     $('modalNuevaProgramacionPlaneamiento').showModal();
     $('programacionNombreProyecto').focus();
@@ -253,7 +256,7 @@
     if(!nombre){$('programacionNombreProyecto').focus();return;}
     const punto=puntoProgramacionPlaneamiento;
     if(!punto)return;
-    const proyecto=prepararVersionesProyecto({...proyectoReferenciaFicha(),codigo:$('programacionCodigoProyecto').value,nombre,departamento:punto.departamento,provincia:punto.provincia,distrito:punto.distrito,lat:punto.lat,lng:punto.lng,localizacion:`${punto.lat.toFixed(6)}, ${punto.lng.toFixed(6)}`,responsableLider:usuarioResponsableSistema(),estado:'En evaluación',avance:0,longitud:0,equipo:[]});
+    const proyecto=prepararVersionesProyecto({...proyectoReferenciaFicha(),codigo:$('programacionCodigoProyecto').value,nombre,departamento:punto.departamento,provincia:punto.provincia,distrito:punto.distrito,lat:punto.lat,lng:punto.lng,localizacion:`${punto.lat.toFixed(6)}, ${punto.lng.toFixed(6)}`,responsableLider:$('programacionResponsable').value,estado:'En evaluación',avance:0,longitud:0,equipo:[]});
     ciudades.unshift(proyecto);guardarProyectoSatcontrol(proyecto);proyectoPlaneamientoSeleccionado=proyecto;
     if(marcadorProgramacionPlaneamiento){marcadorProgramacionPlaneamiento.remove();marcadorProgramacionPlaneamiento=null;}
     cerrarFichaInicialPlaneamiento();iniciarPlaneamientoSatcontrol();
@@ -361,6 +364,20 @@
     requisitoDocumentosAbierto=requisito;renderDocumentosRequisitoModal(proyecto);$('modalDocumentosRequisito').showModal();
   };
   const cerrarDocumentosRequisito=()=>{requisitoDocumentosAbierto=null;$('modalDocumentosRequisito')?.close();};
+  const renderDocumentosEvaluacionModal=proyecto=>{
+    const {grupo,indice}=documentoEvaluacionAbierto||{},nombres=grupo==='tramites'?['TUPA provincial','TUPA distrital','Escombrera']:['DIA','CIRA'],nombre=nombres?.[indice]||'Evaluación técnica',archivos=documentosEvaluacionProyecto(proyecto)[grupo]?.[indice]||[];
+    $('tituloDocumentosEvaluacion').textContent=`Documentos · ${nombre}`;
+    $('subtituloDocumentosEvaluacion').textContent=fichaRequisitosEnEdicion?'Modo edición: agregue o elimine documentos de sustento.':(archivos.length?`${archivos.length} archivo(s) disponibles para consulta.`:'No hay documentos registrados.');
+    $('listaDocumentosEvaluacion').innerHTML=archivos.length?archivos.map((archivo,archivoIndice)=>`<article><span class="tipo-documento-requisito ${archivo.tipo}">${archivo.tipo==='img'?'IMG':'PDF'}</span><div><small>${archivo.tipo==='img'?'IMAGEN DE EVIDENCIA':'DOCUMENTO DE SUSTENTO'}</small><strong>${escapePlanificacion(archivo.nombre)}</strong><span>${archivo.tipo==='img'?'Registro fotográfico disponible para consulta.':'Archivo PDF disponible para consulta.'}</span></div><button type="button" class="boton-ver-evidencia" data-ver-documento-evaluacion="${archivoIndice}" aria-label="Ver ${escapePlanificacion(archivo.nombre)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.6"/></svg></button>${fichaRequisitosEnEdicion?`<button type="button" class="eliminar-documento-modal" data-eliminar-documento-evaluacion="${archivoIndice}" aria-label="Eliminar ${escapePlanificacion(archivo.nombre)}">×</button>`:''}</article>`).join(''):'<p class="sin-documentos-modal">Aún no se registraron documentos para este elemento.</p>';
+    $('agregarDocumentoEvaluacionModal').hidden=!fichaRequisitosEnEdicion;
+  };
+  const abrirDocumentosEvaluacion=(proyecto,grupo,indice)=>{documentoEvaluacionAbierto={grupo,indice};renderDocumentosEvaluacionModal(proyecto);$('modalDocumentosEvaluacion').showModal();};
+  const cerrarDocumentosEvaluacion=()=>{documentoEvaluacionAbierto=null;$('modalDocumentosEvaluacion')?.close();};
+  const agregarDocumentoEvaluacion=(proyecto,grupo,indice)=>{
+    const selector=document.createElement('input');selector.type='file';selector.accept='application/pdf,image/*';selector.hidden=true;
+    selector.addEventListener('change',()=>{const archivo=selector.files?.[0];if(!archivo)return;const documentos=documentosEvaluacionProyecto(proyecto);documentos[grupo][indice].push({nombre:archivo.name,tipo:archivo.type.startsWith('image/')?'img':'pdf'});guardarProyectoSatcontrol(proyecto);renderBloquesEvaluacionPredio(proyecto);renderDocumentosEvaluacionModal(proyecto);selector.remove();},{once:true});
+    document.body.append(selector);selector.click();
+  };
   const agregarDocumentoRequisito=(proyecto,requisito)=>{
     const selector=document.createElement('input');
     selector.type='file';selector.accept='application/pdf,image/*';selector.hidden=true;
@@ -382,6 +399,14 @@
     return proyecto.evaluacionPredioPlaneamiento;
   };
   const opcionesEvaluacion=(valor,opciones,atributo)=>fichaRequisitosEnEdicion?`<select ${atributo}>${opciones.map(opcion=>`<option${opcion===valor?' selected':''}>${opcion}</option>`).join('')}</select>`:`<span class="${valor==='Cumple'||valor==='Realizado'?'cumple':valor==='No cumple'?'no-cumple':'pendiente'}">${escapePlanificacion(valor)}</span>`;
+  const documentosEvaluacionProyecto=proyecto=>{
+    if(!proyecto.documentosEvaluacionPlaneamiento){
+      proyecto.documentosEvaluacionPlaneamiento={tramites:[[{nombre:'Solicitud TUPA provincial.pdf',tipo:'pdf'}],[{nombre:'Constancia TUPA distrital.pdf',tipo:'pdf'}],[{nombre:'Ubicación de escombrera.jpg',tipo:'img'}]],estudios:[[{nombre:'Informe DIA preliminar.pdf',tipo:'pdf'}],[{nombre:'Constancia CIRA.pdf',tipo:'pdf'}]]};
+      guardarProyectoSatcontrol(proyecto);
+    }
+    return proyecto.documentosEvaluacionPlaneamiento;
+  };
+  const botonDocumentosEvaluacion=(proyecto,grupo,indice,nombre)=>`<button type="button" class="boton-evidencia-requisito" data-documentos-evaluacion="${grupo}" data-indice-evaluacion="${indice}" aria-label="Ver documentos de ${escapePlanificacion(nombre)}" title="Ver documentos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11l2 2.4h4.5A2.5 2.5 0 0 1 20 7.9v8.6a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><path d="m8 15 2.1-2.2 1.8 1.7 2.8-3 2.3 3.5"/><circle cx="9" cy="9" r="1.1"/></svg></button>`;
   const renderDatosEvaluacionPredio=proyecto=>{
     const evaluacion=evaluacionPredioProyecto(proyecto),ficha=$('fichaPredioPlaneamiento'),responsables=[...new Set([evaluacion.responsable,usuarioResponsableSistema(),'Valeria Cárdenas','Diego Ramírez','Lucía Fernández'].filter(Boolean))];
     $('datosFichaPredio').innerHTML=`<span>Código<strong>${proyecto.codigo||'—'}</strong></span><span>Distrito<strong>${proyecto.distrito||'—'}</strong></span><span>Responsable<strong>${fichaRequisitosEnEdicion?`<select data-responsable-evaluacion>${responsables.map(nombre=>`<option${nombre===evaluacion.responsable?' selected':''}>${escapePlanificacion(nombre)}</option>`).join('')}</select>`:escapePlanificacion(evaluacion.responsable)}</strong></span><span>Equipo<strong>${fichaRequisitosEnEdicion?'<input data-equipo-evaluacion type="text" placeholder="Equipo asignado">':escapePlanificacion(evaluacion.equipo||'Por asignar')}</strong></span>`;
@@ -390,9 +415,9 @@
     if(estado)estado.outerHTML=fichaRequisitosEnEdicion?`<select class="selector-estado-general" data-estado-general-evaluacion aria-label="Estado general de la evaluación"><option${evaluacion.estadoGeneral==='En evaluación'?' selected':''}>En evaluación</option><option${evaluacion.estadoGeneral==='Aprobada'?' selected':''}>Aprobada</option><option${evaluacion.estadoGeneral==='Observada'?' selected':''}>Observada</option></select>`:`<span class="estado-general-evaluacion">${escapePlanificacion(evaluacion.estadoGeneral)}</span>`;
   };
   const renderBloquesEvaluacionPredio=proyecto=>{
-    const evaluacion=evaluacionPredioProyecto(proyecto),tramites=['TUPA provincial','TUPA distrital','Escombrera'],estudios=['DIA','CIRA'];
-    $('fichaPredioPlaneamiento').querySelector('.ficha-tramites-predio').innerHTML=`<h3>3. Requisitos FISE y trámites</h3><div>${tramites.map((nombre,indice)=>`<article><strong>${nombre}</strong>${opcionesEvaluacion(evaluacion.tramites[indice]||'Pendiente',['Cumple','Pendiente','No cumple'],`data-tramite-evaluacion="${indice}"`)}</article>`).join('')}</div>`;
-    $('fichaPredioPlaneamiento').querySelector('.ficha-estudios-predio').innerHTML=`<h3>4. Estudios realizados por FISE</h3><div>${estudios.map((nombre,indice)=>`<article>${nombre}${opcionesEvaluacion(evaluacion.estudios[indice]||'No realizado',['No realizado','En proceso','Realizado'],`data-estudio-evaluacion="${indice}"`)}</article>`).join('')}<p>${fichaRequisitosEnEdicion?'Actualice el estado de los estudios según la evaluación técnica.':'Los estudios se habilitan al aprobarse la evaluación del predio.'}</p></div>`;
+    const evaluacion=evaluacionPredioProyecto(proyecto),tramites=['TUPA provincial','TUPA distrital','Escombrera'],estudios=['DIA','CIRA'];documentosEvaluacionProyecto(proyecto);
+    $('fichaPredioPlaneamiento').querySelector('.ficha-tramites-predio').innerHTML=`<h3>3. Requisitos FISE y trámites</h3><div>${tramites.map((nombre,indice)=>`<article><strong>${nombre}</strong><span class="acciones-estado-evaluacion">${opcionesEvaluacion(evaluacion.tramites[indice]||'Pendiente',['Cumple','Pendiente','No cumple'],`data-tramite-evaluacion="${indice}"`)}${botonDocumentosEvaluacion(proyecto,'tramites',indice,nombre)}</span></article>`).join('')}</div>`;
+    $('fichaPredioPlaneamiento').querySelector('.ficha-estudios-predio').innerHTML=`<h3>4. Estudios realizados por FISE</h3><div>${estudios.map((nombre,indice)=>`<article>${nombre}<span class="acciones-estado-evaluacion">${opcionesEvaluacion(evaluacion.estudios[indice]||'No realizado',['No realizado','En proceso','Realizado'],`data-estudio-evaluacion="${indice}"`)}${botonDocumentosEvaluacion(proyecto,'estudios',indice,nombre)}</span></article>`).join('')}<p>${fichaRequisitosEnEdicion?'Actualice el estado de los estudios según la evaluación técnica.':'Los estudios se habilitan al aprobarse la evaluación del predio.'}</p></div>`;
   };
   const renderObservacionesEvaluacion=proyecto=>{
     const estados=estadosRequisitoProyecto(proyecto,valoresRequisitosFicha()),pendientes=requisitosPlaneamiento.filter(([,],indice)=>estados[indice]!=='Cumple').map(([nombre])=>nombre),lista=pendientes.length?pendientes.slice(0,3).map(nombre=>`<li>Validar o subsanar: ${escapePlanificacion(nombre)}.</li>`).join(''):'<li>La evaluación técnica no presenta requisitos pendientes.</li>';
@@ -402,7 +427,7 @@
     const distrito=$('distritoPlaneamiento').value;
     const proyecto=proyectoPlaneamientoSeleccionado||proyectosPlaneamientoSatcontrol().find(item=>item.distrito===distrito)||null;
     if(!proyecto)return;
-    $('abrirFichaPredioPlaneamiento').querySelector('span').textContent='Ver ficha del proyecto';
+    $('abrirFichaPredioPlaneamiento').querySelector('span').textContent='Ver ficha del predio';
     $('fichaPredioPlaneamiento').querySelector('header small').textContent='FICHA DEL PROYECTO';
     $('tituloFichaPredio').textContent=proyecto.nombre||'Proyecto sin nombre';
     $('subtituloFichaPredio').textContent=`${proyecto.codigo||'Sin código'} · ${proyecto.distrito||'Distrito pendiente'} · planeamiento territorial`;
@@ -415,6 +440,24 @@
     actualizarFichaVisualPredio(proyecto);
   };
   $('abrirFichaPredioPlaneamiento')?.addEventListener('click',()=>setTimeout(sincronizarFichaProyectoPlaneamiento,0));
+  const reabrirFichaPredioPlaneamiento=()=>{
+    const distrito=$('distritoPlaneamiento').value,proyecto=proyectoPlaneamientoSeleccionado||proyectosPlaneamientoSatcontrol().find(item=>item.distrito===distrito);
+    if(!distrito||!proyecto)return;
+    proyectoPlaneamientoSeleccionado=proyecto;
+    vistaPlaneamientoMasificacion.querySelector('.planeamiento-contenido').hidden=true;
+    $('fichaPredioPlaneamiento').hidden=false;
+    setTimeout(()=>{sincronizarFichaProyectoPlaneamiento();actualizarFichaVisualPredio(proyecto);},0);
+  };
+  $('abrirFichaPredioPlaneamiento')?.addEventListener('click',reabrirFichaPredioPlaneamiento);
+  $('volverPlaneamiento')?.addEventListener('click',()=>{
+    vistaPlaneamientoMasificacion.querySelector('.planeamiento-contenido').hidden=false;
+    $('fichaPredioPlaneamiento').hidden=true;
+    renderPlaneamientoDistrito();
+    const boton=$('abrirFichaPredioPlaneamiento');
+    boton.disabled=!proyectoPlaneamientoSeleccionado;boton.hidden=!proyectoPlaneamientoSeleccionado;
+    boton.querySelector('span').textContent='Ver ficha del predio';
+    setTimeout(()=>mapaPlaneamiento?.invalidateSize(),80);
+  });
   const actualizarFiltrosPlaneamiento=()=>{
     const departamento=$('departamentoPlaneamiento'),provincia=$('provinciaPlaneamiento'),distrito=$('distritoPlaneamiento');
     const proyectos=proyectosPlaneamientoSatcontrol();
@@ -478,6 +521,7 @@
     renderObservacionesEvaluacion(proyecto);
     if(!fichaRequisitosEnEdicion)actualizarFichaVisualPredio(proyecto);
     if($('modalDocumentosRequisito').open&&requisitoDocumentosAbierto!==null)renderDocumentosRequisitoModal(proyecto);
+    if($('modalDocumentosEvaluacion').open&&documentoEvaluacionAbierto)renderDocumentosEvaluacionModal(proyecto);
   });
   $('requisitosFichaPredio')?.addEventListener('click',evento=>{
     const boton=evento.target.closest('[data-documentos-requisito]');
@@ -485,6 +529,12 @@
     const proyecto=proyectoFichaPlaneamientoActivo(),requisito=Number(boton.dataset.documentosRequisito);
     if(!proyecto||!Number.isInteger(requisito))return;
     abrirDocumentosRequisito(proyecto,requisito);
+  });
+  $('fichaPredioPlaneamiento')?.addEventListener('click',evento=>{
+    const boton=evento.target.closest('[data-documentos-evaluacion]');
+    if(!boton)return;
+    const proyecto=proyectoFichaPlaneamientoActivo(),grupo=boton.dataset.documentosEvaluacion,indice=Number(boton.dataset.indiceEvaluacion);
+    if(proyecto&&(grupo==='tramites'||grupo==='estudios')&&Number.isInteger(indice))abrirDocumentosEvaluacion(proyecto,grupo,indice);
   });
   $('requisitosFichaPredio')?.addEventListener('change',evento=>{
     const selector=evento.target.closest('[data-estado-requisito]');
@@ -517,6 +567,17 @@
   });
   $('agregarDocumentoRequisitoModal')?.addEventListener('click',()=>{const proyecto=proyectoFichaPlaneamientoActivo();if(proyecto&&requisitoDocumentosAbierto!==null)agregarDocumentoRequisito(proyecto,requisitoDocumentosAbierto);});
   $('cerrarDocumentosRequisito')?.addEventListener('click',cerrarDocumentosRequisito);$('cerrarDocumentosRequisitoPie')?.addEventListener('click',cerrarDocumentosRequisito);
+  $('listaDocumentosEvaluacion')?.addEventListener('click',evento=>{
+    const boton=evento.target.closest('[data-ver-documento-evaluacion],[data-eliminar-documento-evaluacion]');
+    if(!boton||!documentoEvaluacionAbierto)return;
+    const proyecto=proyectoFichaPlaneamientoActivo(),indice=Number(boton.dataset.verDocumentoEvaluacion??boton.dataset.eliminarDocumentoEvaluacion),{grupo,indice:indiceGrupo}=documentoEvaluacionAbierto;
+    if(!proyecto||!Number.isInteger(indice))return;
+    const archivo=documentosEvaluacionProyecto(proyecto)[grupo]?.[indiceGrupo]?.[indice];
+    if(boton.dataset.verDocumentoEvaluacion!==undefined){if(archivo){abrirVistaEvidenciaPap(archivo.tipo);$('tituloVistaEvidenciaPap').textContent=archivo.nombre;}return;}
+    documentosEvaluacionProyecto(proyecto)[grupo]?.[indiceGrupo]?.splice(indice,1);guardarProyectoSatcontrol(proyecto);renderBloquesEvaluacionPredio(proyecto);renderDocumentosEvaluacionModal(proyecto);
+  });
+  $('agregarDocumentoEvaluacionModal')?.addEventListener('click',()=>{const proyecto=proyectoFichaPlaneamientoActivo(),abierto=documentoEvaluacionAbierto;if(proyecto&&abierto)agregarDocumentoEvaluacion(proyecto,abierto.grupo,abierto.indice);});
+  $('cerrarDocumentosEvaluacion')?.addEventListener('click',cerrarDocumentosEvaluacion);$('cerrarDocumentosEvaluacionPie')?.addEventListener('click',cerrarDocumentosEvaluacion);
   const cerrarVistaCrearProyecto = () => document.querySelector('.enlace-menu[href="#satcontrol"]')?.click();
   const botonResumenMasificacion = $('botonResumenMasificacion');
   const colores = { Proyectada: '#4e7de1', 'En ejecución': '#e5a510', Instalada: '#3fac79' };
