@@ -84,6 +84,25 @@
   };
   const requisitosPlaneamiento=[['Saneamiento físico legal',82],['Acceso terrestre disponible',96],['Área mínima 3,500 m²',74],['Geometría regular / frente suficiente',88],['Pendiente y compactación adecuada',68],['Estudio geotécnico / suelos',52],['Sin afectación por fajas o canales',91],['Disponibilidad de servicios básicos',79],['Ubicación adecuada respecto a centros urbanos',85],['Zonificación / habilitación urbana compatible',71],['Partida registral del titular público',63]];
   const romanosPlaneamiento=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI'];
+  let evidenciaPapActual='';
+  const renderEvidenciasPap=()=>{
+    const lista=$('listaEvidenciasPap'),estado=evidenciaPapActual.split('|')[2]||'Sí cumple';
+    lista.innerHTML=`<article class="evidencia-pap-imagen"><span class="tipo-evidencia img">IMG</span><img src="../../img/evidencia-eat-predio.png" alt="Evidencia fotográfica referencial del predio"><div><small>IMAGEN DE EVIDENCIA</small><strong>Registro fotográfico del predio</strong><span>Estado verificado: ${estado}</span></div><button type="button" class="boton-ver-evidencia" data-vista-evidencia="img" aria-label="Ver imagen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.6"/></svg></button></article><article class="evidencia-pap-pdf"><span class="tipo-evidencia pdf">PDF</span><div><small>DOCUMENTO DE SUSTENTO</small><strong>Informe diario de referencia</strong><span>Archivo PDF disponible para consulta.</span></div><button type="button" class="boton-ver-evidencia" data-vista-evidencia="pdf" aria-label="Ver PDF"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.6"/></svg></button></article>`;
+    lista.onclick=evento=>{const boton=evento.target.closest('[data-vista-evidencia]');if(boton)abrirVistaEvidenciaPap(boton.dataset.vistaEvidencia);};
+  };
+  const abrirVistaEvidenciaPap=tipo=>{
+    const esImagen=tipo==='img';
+    $('tituloVistaEvidenciaPap').textContent=esImagen?'Imagen de evidencia':'Documento PDF de evidencia';
+    $('contenidoVistaEvidenciaPap').innerHTML=esImagen?'<img class="vista-imagen-evidencia" src="../../img/evidencia-eat-predio.png" alt="Registro fotográfico del predio">':'<iframe class="visor-pdf-evidencia" src="documentos/informes-ejemplo/ejemplo-informe-diario-idt.pdf" title="Documento PDF de evidencia"></iframe>';
+    $('modalVistaEvidenciaPap').showModal();
+  };
+  const abrirEvidenciaPap=(codigo,indice,estado)=>{
+    evidenciaPapActual=`${codigo}|${indice}|${estado}`;
+    const requisito=requisitosPlaneamiento[indice]?.[0]||`Requisito ${indice+1}`;
+    $('tituloEvidenciaPap').textContent=`Evidencia · ${romanosPlaneamiento[indice]} ${requisito}`;
+    $('subtituloEvidenciaPap').textContent=`Proyecto ${codigo} · Estado: ${estado}`;
+    renderEvidenciasPap();$('modalEvidenciaPap').showModal();
+  };
   const renderizarMatrizPap=()=>{
     const cabecera=$('cabeceraMatrizPap'),cuerpo=$('cuerpoMatrizPap');
     if(!cabecera||!cuerpo)return;
@@ -92,11 +111,12 @@
       const variacion=(indice%4)*3;
       const valores=requisitosPlaneamiento.map(([,valor],numero)=>Math.max(35,Math.min(100,valor-variacion-((numero+indice)%3)*4)));
       const avance=Math.round(valores.filter(valor=>valor>=75).length/valores.length*100);
-      const celdas=valores.map(valor=>{const clase=valor>=75?'cumple':'pendiente';return `<td class="estado ${clase}" title="${valor}%" aria-label="${valor>=75?'Cumple requisito':'No cumple requisito'}"></td>`;}).join('');
+      const celdas=valores.map((valor,numero)=>{const cumple=valor>=75,clase=cumple?'cumple':'pendiente',estado=cumple?'Sí cumple':'No cumple';return `<td class="estado ${clase}" title="${valor}%" aria-label="${estado}"><button type="button" class="boton-evidencia-pap" data-evidencia-pap="${proyecto.codigo}" data-requisito-pap="${numero}" data-estado-pap="${estado}" aria-label="Ver evidencia de ${romanosPlaneamiento[numero]}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11l2 2.4h4.5A2.5 2.5 0 0 1 20 7.9v8.6a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><path d="m8 15 2.1-2.2 1.8 1.7 2.8-3 2.3 3.5"/><circle cx="9" cy="9" r="1.1"/></svg></button></td>`;}).join('');
       return `<tr><td>${indice+1}</td><td>${proyecto.departamento||'—'}</td><td>${proyecto.provincia||'—'}</td><td><strong>${proyecto.distrito||'—'}</strong><small>${proyecto.nombre||''}</small></td>${celdas}<td class="avance-matriz ${avance>=70?'revision':'pendiente'}">${avance>=40?`${avance}%`:'NO APTO'}</td><td class="estado pendiente">–</td><td class="estado pendiente">–</td><td class="estado pendiente">–</td><td class="estudio-matriz">No realizado</td><td class="estudio-matriz">No realizado</td></tr>`;
     }).join('');
+    cuerpo.onclick=evento=>{const boton=evento.target.closest('[data-evidencia-pap]');if(boton)abrirEvidenciaPap(boton.dataset.evidenciaPap,Number(boton.dataset.requisitoPap),boton.dataset.estadoPap);};
   };
-  let mapaPlaneamiento=null,capaPlaneamientoDistritos=null,capaPlaneamientoCumplidores=null,mapaFichaPredio=null,marcadorFichaPredio=null,modoProgramarPlaneamiento=false;
+  let mapaPlaneamiento=null,capaPlaneamientoDistritos=null,capaPlaneamientoCumplidores=null,mapaFichaPredio=null,marcadorFichaPredio=null,modoProgramarPlaneamiento=false,proyectoPlaneamientoSeleccionado=null,puntoProgramacionPlaneamiento=null,marcadorProgramacionPlaneamiento=null,fichaRequisitosEnEdicion=false,requisitoDocumentosAbierto=null;
   const limpiarCumplidoresPlaneamiento=()=>{
     capaPlaneamientoCumplidores?.clearLayers();
     $('elementosCumplenPlaneamiento').hidden=true;
@@ -138,9 +158,10 @@
       kpis=document.createElement('section');kpis.className='ficha-kpis-predio';kpis.innerHTML='<article><i class="icono-kpi requisitos" aria-hidden="true">▣</i><strong id="totalRequisitosFicha">11</strong><span>requisitos técnicos</span></article><article class="cumple"><i class="icono-kpi cumple" aria-hidden="true">✓</i><strong id="cumplidosFicha">0</strong><span>cumplidos</span></article><article class="pendiente"><i class="icono-kpi pendiente" aria-hidden="true">◷</i><strong id="pendientesFicha">0</strong><span>pendientes</span></article><article><i class="icono-kpi documento" aria-hidden="true">▤</i><strong>DIA</strong><span>No realizado</span></article><article><i class="icono-kpi documento" aria-hidden="true">▤</i><strong>CIRA</strong><span>No realizado</span></article>';
       ficha.querySelector('.ficha-predio-cabecera').insertAdjacentElement('afterend',kpis);
     }
-    const porcentajes=[...$('listaRequisitosPlaneamiento').querySelectorAll('.dona-requisito-planeamiento b')].map(item=>Number(item.textContent.replace('%',''))),cumplidos=porcentajes.filter(valor=>valor>=75).length;
+    const porcentajes=[...$('listaRequisitosPlaneamiento').querySelectorAll('.dona-requisito-planeamiento b')].map(item=>Number(item.textContent.replace('%',''))),estados=estadosRequisitoProyecto(proyecto,porcentajes),cumplidos=estados.filter(estado=>estado==='Cumple').length;
     $('totalRequisitosFicha').textContent=porcentajes.length||11;$('cumplidosFicha').textContent=cumplidos;$('pendientesFicha').textContent=Math.max(0,porcentajes.length-cumplidos);
     const pendientes=Math.max(0,porcentajes.length-cumplidos),cumplimiento=Math.round((cumplidos/Math.max(1,porcentajes.length))*100),graficos=$('donaFichaPredio').closest('.ficha-graficos-predio');
+    $('cumplimientoFichaPredio').textContent=`${cumplimiento}%`;
     graficos.innerHTML=`<h3>5. Gráficos y visualizaciones</h3><div class="tres-graficos-ficha"><article class="grafico-dona-ficha"><h4>Cumplimiento de requisitos</h4><div class="dona-ficha-predio" style="--cumplimiento:${cumplimiento}%"><b>${cumplimiento}%</b></div><div><span class="leyenda-cumple">● Cumple <b>${cumplidos}</b></span><span class="leyenda-pendiente">● Pendiente <b>${pendientes}</b></span></div></article><article class="grafico-barras-ficha"><h4>Estado de requisitos</h4><div class="eje-barras-ficha"><span>0</span><span>4</span><span>8</span></div><div class="barras-ficha"><div><i style="height:${Math.max(12,cumplidos/Math.max(1,porcentajes.length)*100)}%"></i><b>${cumplidos}</b><span>Cumple</span></div><div><i style="height:${Math.max(12,pendientes/Math.max(1,porcentajes.length)*100)}%"></i><b>${pendientes}</b><span>Pendiente</span></div></div></article><article class="grafico-linea-ficha"><h4>Avance del proceso</h4><div class="pasos-proceso-ficha"><span class="completo">✓<b>Identificación</b></span><span class="activo">2<b>Evaluación técnica</b></span><span>3<b>Trámites</b></span><span>4<b>Estudios FISE</b></span><span>5<b>Aprobación final</b></span></div></article></div>`;
     const romanos=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI'];
     $('requisitosFichaPredio').querySelectorAll('article').forEach((fila,indice)=>{
@@ -156,8 +177,21 @@
       marcadorFichaPredio=L.marker([lat,lng]).addTo(mapaFichaPredio).bindPopup(`<strong>${proyecto?.nombre||'Predio seleccionado'}</strong><br>${proyecto?.distrito||'Ubicación pendiente'}`).openPopup();
     },80);
   };
+  const vincularPuntosPlaneamiento=()=>{
+    capaPlaneamientoDistritos?.eachLayer(marcador=>{
+      const punto=marcador.getLatLng?.();
+      const proyecto=proyectosPlaneamientoSatcontrol().find(item=>Number(item.lat)===Number(punto?.lat)&&Number(item.lng)===Number(punto?.lng));
+      if(!proyecto)return;
+      marcador.unbindTooltip?.();
+      marcador.bindTooltip(`${proyecto.codigo} · ${proyecto.nombre}`);
+      if(!marcador._proyectoPlaneamientoVinculado){
+        marcador._proyectoPlaneamientoVinculado=true;
+        marcador.on('click',()=>{proyectoPlaneamientoSeleccionado=proyecto;});
+      }
+    });
+  };
   const renderPlaneamientoDistrito=()=>{
-    const selector=$('distritoPlaneamiento'),distrito=selector.value,esResumenGeneral=!distrito,indice=Math.max(0,[...selector.options].findIndex(opcion=>opcion.value===distrito)-1),variacion=indice%4*3,datos=esResumenGeneral?ciudades:ciudades.filter(proyecto=>proyecto.distrito===distrito),kilometros=datos.reduce((total,proyecto)=>total+(Number(proyecto.longitud)||0),0);
+    const selector=$('distritoPlaneamiento'),distrito=selector.value,esResumenGeneral=!distrito,indice=Math.max(0,[...selector.options].findIndex(opcion=>opcion.value===distrito)-1),variacion=indice%4*3,proyectos=proyectosPlaneamientoSatcontrol(),datos=esResumenGeneral?proyectos:proyectos.filter(proyecto=>proyecto.distrito===distrito),kilometros=datos.reduce((total,proyecto)=>total+(Number(proyecto.longitud)||0),0);
     const listaRequisitos=$('listaRequisitosPlaneamiento'),panelCumplidores=$('elementosCumplenPlaneamiento');
     if(panelCumplidores.parentElement===listaRequisitos)listaRequisitos.after(panelCumplidores);
     $('resumenDistritoPlaneamiento').innerHTML=esResumenGeneral?`<small>INFORMACIÓN GENERAL</small><strong>Todos los distritos</strong><span>${datos.length} proyecto(s) identificado(s) · ${kilometros.toFixed(1)} km de red referencial.</span>`:`<small>INFORMACIÓN DEL DISTRITO</small><strong>${distrito}</strong><span>${datos.length||1} proyecto(s) identificado(s) · ${kilometros.toFixed(1)} km de red referencial.</span>`;
@@ -169,15 +203,225 @@
     $('abrirFichaPredioPlaneamiento').disabled=!distrito;
     $('abrirFichaPredioPlaneamiento').hidden=!distrito;
     $('abrirFichaPredioPlaneamiento').dataset.distrito=distrito;
+    $('abrirFichaPredioPlaneamiento').querySelector('span').textContent='Ver ficha del proyecto';
+    if(distrito&&!proyectoPlaneamientoSeleccionado)proyectoPlaneamientoSeleccionado=datos[0]||null;
     if(distrito){const proyecto=datos[0];if(proyecto?.lat&&proyecto?.lng)mapaPlaneamiento?.setView([proyecto.lat,proyecto.lng],10);}
+    vincularPuntosPlaneamiento();
+  };
+  const usuarioResponsableSistema=()=>{
+    const claves=['usuarioActual','usuarioNombre','paule.usuario'];
+    for(const clave of claves){
+      const valor=localStorage.getItem(clave);
+      if(!valor)continue;
+      try{const datos=JSON.parse(valor);const nombre=datos.nombre||datos.name||datos.usuario;if(nombre)return String(nombre);}catch{return valor;}
+    }
+    return 'Valeria Cárdenas';
+  };
+  const datosTerritorialesDesdePunto=({lat,lng})=>{
+    const referencia=[...ciudades].filter(proyecto=>Number.isFinite(Number(proyecto.lat))&&Number.isFinite(Number(proyecto.lng))).sort((a,b)=>((Number(a.lat)-lat)**2+(Number(a.lng)-lng)**2)-((Number(b.lat)-lat)**2+(Number(b.lng)-lng)**2))[0];
+    return {departamento:referencia?.departamento||'Ubicación por validar',provincia:referencia?.provincia||'Ubicación por validar',distrito:referencia?.distrito||'Ubicación por validar'};
+  };
+  const siguienteCodigoPlaneamiento=()=>{
+    const anio=new Date().getFullYear(),codigos=new Set(ciudades.map(proyecto=>proyecto.codigo));
+    let correlativo=ciudades.length+1,codigo='';
+    do{codigo=`PLN-${anio}-${String(correlativo++).padStart(3,'0')}`;}while(codigos.has(codigo));
+    return codigo;
+  };
+  const abrirFichaInicialPlaneamiento=punto=>{
+    puntoProgramacionPlaneamiento={lat:punto.lat,lng:punto.lng,...datosTerritorialesDesdePunto(punto)};
+    if(marcadorProgramacionPlaneamiento)marcadorProgramacionPlaneamiento.remove();
+    marcadorProgramacionPlaneamiento=L.marker([punto.lat,punto.lng]).addTo(mapaPlaneamiento).bindTooltip('Nuevo proyecto',{permanent:true,direction:'top'});
+    $('programacionCodigoProyecto').value=siguienteCodigoPlaneamiento();
+    $('programacionNombreProyecto').value='';
+    $('programacionDepartamento').value=puntoProgramacionPlaneamiento.departamento;
+    $('programacionProvincia').value=puntoProgramacionPlaneamiento.provincia;
+    $('programacionDistrito').value=puntoProgramacionPlaneamiento.distrito;
+    $('programacionResponsable').value=usuarioResponsableSistema();
+    $('programacionCoordenadas').value=`${punto.lat.toFixed(6)}, ${punto.lng.toFixed(6)}`;
+    $('modalNuevaProgramacionPlaneamiento').showModal();
+    $('programacionNombreProyecto').focus();
+  };
+  const cerrarFichaInicialPlaneamiento=()=>{
+    modoProgramarPlaneamiento=false;
+    $('programarPlaneamiento').classList.remove('activo');
+    $('programarPlaneamiento').textContent='＋ Programar nueva';
+    $('ayudaPlaneamiento').textContent='Seleccione un distrito o un punto del mapa para consultar su planeamiento.';
+    if($('modalNuevaProgramacionPlaneamiento').open)$('modalNuevaProgramacionPlaneamiento').close();
+  };
+  const guardarNuevaProgramacionPlaneamiento=()=>{
+    const nombre=$('programacionNombreProyecto').value.trim();
+    if(!nombre){$('programacionNombreProyecto').focus();return;}
+    const punto=puntoProgramacionPlaneamiento;
+    if(!punto)return;
+    const proyecto=prepararVersionesProyecto({...proyectoReferenciaFicha(),codigo:$('programacionCodigoProyecto').value,nombre,departamento:punto.departamento,provincia:punto.provincia,distrito:punto.distrito,lat:punto.lat,lng:punto.lng,localizacion:`${punto.lat.toFixed(6)}, ${punto.lng.toFixed(6)}`,responsableLider:usuarioResponsableSistema(),estado:'En evaluación',avance:0,longitud:0,equipo:[]});
+    ciudades.unshift(proyecto);guardarProyectoSatcontrol(proyecto);proyectoPlaneamientoSeleccionado=proyecto;
+    if(marcadorProgramacionPlaneamiento){marcadorProgramacionPlaneamiento.remove();marcadorProgramacionPlaneamiento=null;}
+    cerrarFichaInicialPlaneamiento();iniciarPlaneamientoSatcontrol();
+    $('distritoPlaneamiento').value=proyecto.distrito;renderPlaneamientoDistrito();
+    $('abrirFichaPredioPlaneamiento').click();
   };
   const iniciarPlaneamiento=()=>{const selector=$('distritoPlaneamiento');const distritos=[...new Set(ciudades.map(proyecto=>proyecto.distrito).filter(Boolean))].sort();selector.replaceChildren(new Option('Seleccione un distrito',''),...distritos.map(distrito=>new Option(distrito,distrito)));if(!mapaPlaneamiento){mapaPlaneamiento=L.map('mapaPlaneamiento',{zoomControl:true}).setView([-9.19,-75.02],5);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(mapaPlaneamiento);capaPlaneamientoDistritos=L.layerGroup().addTo(mapaPlaneamiento);capaPlaneamientoCumplidores=L.layerGroup().addTo(mapaPlaneamiento);ciudades.filter(proyecto=>proyecto.lat&&proyecto.lng).forEach(proyecto=>L.circleMarker([proyecto.lat,proyecto.lng],{radius:8,color:'#75d0e8',weight:2,fillColor:'#2869a5',fillOpacity:.9}).bindTooltip(proyecto.distrito||proyecto.nombre).on('click',()=>{selector.value=proyecto.distrito||'';renderPlaneamientoDistrito();}).addTo(capaPlaneamientoDistritos));selector.addEventListener('change',renderPlaneamientoDistrito);$('limpiarCumplidoresPlaneamiento').addEventListener('click',limpiarCumplidoresPlaneamiento);$('abrirFichaPredioPlaneamiento').addEventListener('click',()=>{const distrito=selector.value,requisitos=[...$('listaRequisitosPlaneamiento').querySelectorAll('.dona-requisito-planeamiento b')].map(item=>Number(item.textContent.replace('%',''))),promedio=Math.round(requisitos.reduce((a,b)=>a+b,0)/requisitos.length);$('tituloFichaPredio').textContent=`Predio candidato · ${distrito}`;$('subtituloFichaPredio').textContent=`Distrito ${distrito} · evaluación preliminar territorial`;$('datosFichaPredio').innerHTML=`<span>Código<strong>PLN-${distrito.slice(0,3).toUpperCase()}-001</strong></span><span>Distrito<strong>${distrito}</strong></span><span>Responsable<strong>FISE / SATCONTROL</strong></span><span>Fecha de corte<strong>${new Date().toLocaleDateString('es-PE')}</strong></span>`;$('requisitosFichaPredio').innerHTML=requisitosPlaneamiento.map(([nombre],i)=>`<article><span>${nombre}</span><b class="${requisitos[i]>=75?'cumple':'pendiente'}">${requisitos[i]>=75?'Cumple':'Pendiente'}</b></article>`).join('');$('cumplimientoFichaPredio').textContent=`${promedio}%`;$('donaFichaPredio').style.setProperty('--cumplimiento',`${promedio}%`);$('donaFichaPredio').querySelector('b').textContent=`${promedio}%`;vistaPlaneamientoMasificacion.querySelector('.planeamiento-contenido').hidden=true;$('fichaPredioPlaneamiento').hidden=false;});$('volverPlaneamiento').addEventListener('click',()=>{vistaPlaneamientoMasificacion.querySelector('.planeamiento-contenido').hidden=false;$('fichaPredioPlaneamiento').hidden=true;setTimeout(()=>mapaPlaneamiento.invalidateSize(),80);});$('programarPlaneamiento').addEventListener('click',()=>{modoProgramarPlaneamiento=!modoProgramarPlaneamiento;$('programarPlaneamiento').classList.toggle('activo',modoProgramarPlaneamiento);$('programarPlaneamiento').textContent=modoProgramarPlaneamiento?'✓ Seleccione un punto en el mapa':'＋ Programar nueva';});}renderPlaneamientoDistrito();setTimeout(()=>mapaPlaneamiento.invalidateSize(),80);};
+  const iniciarPlaneamientoSatcontrol=()=>{
+    const selector=$('distritoPlaneamiento'),proyectos=proyectosPlaneamientoSatcontrol();
+    const distritos=[...new Set(proyectos.map(proyecto=>proyecto.distrito).filter(Boolean))].sort();
+    selector.replaceChildren(new Option(proyectos.length?'Seleccione un distrito':'No hay proyectos registrados en SATCONTROL',''),...distritos.map(distrito=>new Option(distrito,distrito)));
+    if(!mapaPlaneamiento){
+      mapaPlaneamiento=L.map('mapaPlaneamiento',{zoomControl:true}).setView([-9.19,-75.02],5);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(mapaPlaneamiento);
+      capaPlaneamientoDistritos=L.layerGroup().addTo(mapaPlaneamiento);
+      capaPlaneamientoCumplidores=L.layerGroup().addTo(mapaPlaneamiento);
+      mapaPlaneamiento.on('click',evento=>{if(modoProgramarPlaneamiento)abrirFichaInicialPlaneamiento(evento.latlng);});
+      selector.addEventListener('change',renderPlaneamientoDistrito);
+      $('limpiarCumplidoresPlaneamiento').addEventListener('click',limpiarCumplidoresPlaneamiento);
+      $('abrirFichaPredioPlaneamiento').addEventListener('click',()=>{
+        const requisitos=[...$('listaRequisitosPlaneamiento').querySelectorAll('.dona-requisito-planeamiento b')].map(item=>Number(item.textContent.replace('%','')));
+        const promedio=Math.round(requisitos.reduce((a,b)=>a+b,0)/Math.max(1,requisitos.length));
+        $('requisitosFichaPredio').innerHTML=requisitosPlaneamiento.map(([nombre],i)=>`<article><span>${nombre}</span><b class="${requisitos[i]>=75?'cumple':'pendiente'}">${requisitos[i]>=75?'Cumple':'Pendiente'}</b></article>`).join('');
+        $('cumplimientoFichaPredio').textContent=`${promedio}%`;
+        $('donaFichaPredio').style.setProperty('--cumplimiento',`${promedio}%`);
+        $('donaFichaPredio').querySelector('b').textContent=`${promedio}%`;
+        vistaPlaneamientoMasificacion.querySelector('.planeamiento-contenido').hidden=true;
+        $('fichaPredioPlaneamiento').hidden=false;
+      });
+      $('volverPlaneamiento').addEventListener('click',()=>{vistaPlaneamientoMasificacion.querySelector('.planeamiento-contenido').hidden=false;$('fichaPredioPlaneamiento').hidden=true;setTimeout(()=>mapaPlaneamiento.invalidateSize(),80);});
+      $('programarPlaneamiento').addEventListener('click',()=>{modoProgramarPlaneamiento=!modoProgramarPlaneamiento;$('programarPlaneamiento').classList.toggle('activo',modoProgramarPlaneamiento);$('programarPlaneamiento').textContent=modoProgramarPlaneamiento?'✓ Seleccionar un punto':'＋ Programar nueva';$('ayudaPlaneamiento').textContent=modoProgramarPlaneamiento?'Seleccione un punto en el mapa para crear el proyecto.':'Seleccione un distrito o un punto del mapa para consultar su planeamiento.';});
+      $('cancelarNuevaProgramacionPlaneamiento').addEventListener('click',cerrarFichaInicialPlaneamiento);
+      $('guardarNuevaProgramacionPlaneamiento').addEventListener('click',guardarNuevaProgramacionPlaneamiento);
+    }
+    capaPlaneamientoDistritos.clearLayers();
+    proyectos.filter(proyecto=>proyecto.lat&&proyecto.lng).forEach(proyecto=>{
+      L.circleMarker([proyecto.lat,proyecto.lng],{radius:8,color:'#75d0e8',weight:2,fillColor:'#2869a5',fillOpacity:.9})
+        .bindTooltip(`${proyecto.codigo} · ${proyecto.nombre}`)
+        .on('click',()=>{proyectoPlaneamientoSeleccionado=proyecto;selector.value=proyecto.distrito||'';renderPlaneamientoDistrito();})
+        .addTo(capaPlaneamientoDistritos);
+    });
+    if(proyectoPlaneamientoSeleccionado&&!proyectos.some(item=>item.codigo===proyectoPlaneamientoSeleccionado.codigo))proyectoPlaneamientoSeleccionado=null;
+    renderPlaneamientoDistrito();
+    setTimeout(()=>mapaPlaneamiento.invalidateSize(),80);
+  };
+  $('distritoPlaneamiento')?.addEventListener('change',()=>{
+    if(proyectoPlaneamientoSeleccionado?.distrito!==$('distritoPlaneamiento').value)proyectoPlaneamientoSeleccionado=null;
+  });
+  const responsablePlaneamiento=proyecto=>{
+    const responsable=String(proyecto?.responsableLider||'').trim();
+    if(responsable&&responsable!=='-- Seleccione --')return responsable;
+    return usuarioResponsableSistema();
+  };
+  const documentosPredeterminadosRequisitos=[
+    [{nombre:'Partida registral vigente.pdf',tipo:'pdf'},{nombre:'Registro fotográfico del predio.jpg',tipo:'img'}],
+    [{nombre:'Plano de accesibilidad.pdf',tipo:'pdf'}],
+    [{nombre:'Plano perimétrico y área.pdf',tipo:'pdf'}],
+    [{nombre:'Levantamiento topográfico.jpg',tipo:'img'}],
+    [{nombre:'Informe de compactación.pdf',tipo:'pdf'}],
+    [{nombre:'Estudio geotécnico preliminar.pdf',tipo:'pdf'}],
+    [{nombre:'Plano de fajas y canales.pdf',tipo:'pdf'}],
+    [{nombre:'Factibilidad de servicios.pdf',tipo:'pdf'}],
+    [{nombre:'Mapa de ubicación.jpg',tipo:'img'}],
+    [{nombre:'Certificado de zonificación.pdf',tipo:'pdf'}],
+    [{nombre:'Ficha registral del titular.pdf',tipo:'pdf'}]
+  ];
+  const documentosRequisitoProyecto=proyecto=>{
+    if(!Array.isArray(proyecto.documentosRequisitosPlaneamiento)){
+      proyecto.documentosRequisitosPlaneamiento=documentosPredeterminadosRequisitos.map(documentos=>documentos.map(documento=>({...documento})));
+      guardarProyectoSatcontrol(proyecto);
+    }
+    return proyecto.documentosRequisitosPlaneamiento;
+  };
+  const estadosRequisitoProyecto=(proyecto,valores)=>{
+    if(!Array.isArray(proyecto.estadosRequisitosPlaneamiento)){
+      proyecto.estadosRequisitosPlaneamiento=valores.map(valor=>valor>=75?'Cumple':'Pendiente');
+      guardarProyectoSatcontrol(proyecto);
+    }
+    return proyecto.estadosRequisitosPlaneamiento;
+  };
+  const iconoDocumentoPredio=tipo=>tipo==='img'?'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1.4"/><path d="m5.5 17 4.2-4.1 3.1 2.8 2.4-2.3 3.1 3.7"/></svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4V20.5H6z"/><path d="M14 3.5v4h4M8.5 12h7M8.5 15.5h7"/></svg>';
+  const renderRequisitosFichaProyecto=(proyecto,valores)=>{
+    const estados=estadosRequisitoProyecto(proyecto,valores);
+    $('requisitosFichaPredio').innerHTML=requisitosPlaneamiento.map(([nombre],indice)=>{
+      const total=documentosRequisitoProyecto(proyecto)[indice]?.length||0,estado=estados[indice]||'Pendiente',tipoEstado=estado==='Cumple'?'cumple':'pendiente',controlEstado=fichaRequisitosEnEdicion?`<select class="selector-estado-requisito" data-estado-requisito="${indice}" aria-label="Estado de ${escapePlanificacion(nombre)}"><option${estado==='Cumple'?' selected':''}>Cumple</option><option${estado==='Pendiente'?' selected':''}>Pendiente</option><option${estado==='En revisión'?' selected':''}>En revisión</option></select>`:`<b class="${tipoEstado}">${estado}</b>`;
+      return `<article data-requisito-ficha="${indice}"><i class="numero-romano-requisito">${romanosPlaneamiento[indice]||indice+1}</i><span>${escapePlanificacion(nombre)}</span>${controlEstado}<button type="button" class="boton-evidencia-requisito" data-documentos-requisito="${indice}" aria-label="Ver ${total} documento(s) de ${escapePlanificacion(nombre)}" title="Ver documentos (${total})"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11l2 2.4h4.5A2.5 2.5 0 0 1 20 7.9v8.6a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><path d="m8 15 2.1-2.2 1.8 1.7 2.8-3 2.3 3.5"/><circle cx="9" cy="9" r="1.1"/></svg></button></article>`;
+    }).join('');
+  };
+  const valoresRequisitosFicha=()=>[...$('listaRequisitosPlaneamiento').querySelectorAll('.dona-requisito-planeamiento b')].map(item=>Number(item.textContent.replace('%','')));
+  const actualizarDocumentosFicha=proyecto=>renderRequisitosFichaProyecto(proyecto,valoresRequisitosFicha());
+  const abrirDocumentoRequisito=(proyecto,requisito,indice)=>{
+    const archivo=documentosRequisitoProyecto(proyecto)[requisito]?.[indice];
+    if(!archivo)return;
+    abrirVistaEvidenciaPap(archivo.tipo);
+    $('tituloVistaEvidenciaPap').textContent=archivo.nombre;
+  };
+  const renderDocumentosRequisitoModal=proyecto=>{
+    const requisito=requisitoDocumentosAbierto,archivos=documentosRequisitoProyecto(proyecto)[requisito]||[],nombre=requisitosPlaneamiento[requisito]?.[0]||'Requisito técnico';
+    $('tituloDocumentosRequisito').textContent=`Documentos · ${romanosPlaneamiento[requisito]||''} ${nombre}`;
+    $('subtituloDocumentosRequisito').textContent=fichaRequisitosEnEdicion?'Modo edición: agregue o elimine los documentos de sustento.':(archivos.length?`${archivos.length} archivo(s) de sustento disponibles.`:'No hay documentos de sustento registrados.');
+    $('listaDocumentosRequisito').innerHTML=archivos.length?archivos.map((archivo,indice)=>`<article><span class="tipo-documento-requisito ${archivo.tipo}">${archivo.tipo==='img'?'IMG':'PDF'}</span><div><small>${archivo.tipo==='img'?'IMAGEN DE EVIDENCIA':'DOCUMENTO DE SUSTENTO'}</small><strong>${escapePlanificacion(archivo.nombre)}</strong><span>${archivo.tipo==='img'?'Registro fotográfico disponible para consulta.':'Archivo PDF disponible para consulta.'}</span></div><button type="button" class="boton-ver-evidencia" data-ver-documento-modal="${indice}" aria-label="Ver ${escapePlanificacion(archivo.nombre)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.6"/></svg></button>${fichaRequisitosEnEdicion?`<button type="button" class="eliminar-documento-modal" data-eliminar-documento-modal="${indice}" aria-label="Eliminar ${escapePlanificacion(archivo.nombre)}">×</button>`:''}</article>`).join(''):'<p class="sin-documentos-modal">Aún no se registraron documentos para este requisito.</p>';
+    $('agregarDocumentoRequisitoModal').hidden=!fichaRequisitosEnEdicion;
+  };
+  const abrirDocumentosRequisito=(proyecto,requisito)=>{
+    requisitoDocumentosAbierto=requisito;renderDocumentosRequisitoModal(proyecto);$('modalDocumentosRequisito').showModal();
+  };
+  const cerrarDocumentosRequisito=()=>{requisitoDocumentosAbierto=null;$('modalDocumentosRequisito')?.close();};
+  const agregarDocumentoRequisito=(proyecto,requisito)=>{
+    const selector=document.createElement('input');
+    selector.type='file';selector.accept='application/pdf,image/*';selector.hidden=true;
+    selector.addEventListener('change',()=>{
+      const archivo=selector.files?.[0];
+      if(!archivo)return;
+      const documentos=documentosRequisitoProyecto(proyecto);
+      documentos[requisito]??=[];
+      documentos[requisito].push({nombre:archivo.name,tipo:archivo.type.startsWith('image/')?'img':'pdf'});
+      guardarProyectoSatcontrol(proyecto);actualizarDocumentosFicha(proyecto);if(requisitoDocumentosAbierto===requisito)renderDocumentosRequisitoModal(proyecto);selector.remove();
+    },{once:true});
+    document.body.append(selector);selector.click();
+  };
+  const evaluacionPredioProyecto=proyecto=>{
+    if(!proyecto.evaluacionPredioPlaneamiento){
+      proyecto.evaluacionPredioPlaneamiento={tramites:['Pendiente','Pendiente','Pendiente'],estudios:['No realizado','No realizado'],estadoGeneral:'En evaluación',responsable:responsablePlaneamiento(proyecto),equipo:Array.isArray(proyecto.equipo)?proyecto.equipo.filter(Boolean).join(', '):String(proyecto.equipo||'').trim()};
+      guardarProyectoSatcontrol(proyecto);
+    }
+    return proyecto.evaluacionPredioPlaneamiento;
+  };
+  const opcionesEvaluacion=(valor,opciones,atributo)=>fichaRequisitosEnEdicion?`<select ${atributo}>${opciones.map(opcion=>`<option${opcion===valor?' selected':''}>${opcion}</option>`).join('')}</select>`:`<span class="${valor==='Cumple'||valor==='Realizado'?'cumple':valor==='No cumple'?'no-cumple':'pendiente'}">${escapePlanificacion(valor)}</span>`;
+  const renderDatosEvaluacionPredio=proyecto=>{
+    const evaluacion=evaluacionPredioProyecto(proyecto),ficha=$('fichaPredioPlaneamiento'),responsables=[...new Set([evaluacion.responsable,usuarioResponsableSistema(),'Valeria Cárdenas','Diego Ramírez','Lucía Fernández'].filter(Boolean))];
+    $('datosFichaPredio').innerHTML=`<span>Código<strong>${proyecto.codigo||'—'}</strong></span><span>Distrito<strong>${proyecto.distrito||'—'}</strong></span><span>Responsable<strong>${fichaRequisitosEnEdicion?`<select data-responsable-evaluacion>${responsables.map(nombre=>`<option${nombre===evaluacion.responsable?' selected':''}>${escapePlanificacion(nombre)}</option>`).join('')}</select>`:escapePlanificacion(evaluacion.responsable)}</strong></span><span>Equipo<strong>${fichaRequisitosEnEdicion?'<input data-equipo-evaluacion type="text" placeholder="Equipo asignado">':escapePlanificacion(evaluacion.equipo||'Por asignar')}</strong></span>`;
+    const equipo=$('datosFichaPredio').querySelector('[data-equipo-evaluacion]');if(equipo)equipo.value=evaluacion.equipo||'';
+    const estado=ficha.querySelector(':scope > header > span, :scope > header > select.selector-estado-general');
+    if(estado)estado.outerHTML=fichaRequisitosEnEdicion?`<select class="selector-estado-general" data-estado-general-evaluacion aria-label="Estado general de la evaluación"><option${evaluacion.estadoGeneral==='En evaluación'?' selected':''}>En evaluación</option><option${evaluacion.estadoGeneral==='Aprobada'?' selected':''}>Aprobada</option><option${evaluacion.estadoGeneral==='Observada'?' selected':''}>Observada</option></select>`:`<span class="estado-general-evaluacion">${escapePlanificacion(evaluacion.estadoGeneral)}</span>`;
+  };
+  const renderBloquesEvaluacionPredio=proyecto=>{
+    const evaluacion=evaluacionPredioProyecto(proyecto),tramites=['TUPA provincial','TUPA distrital','Escombrera'],estudios=['DIA','CIRA'];
+    $('fichaPredioPlaneamiento').querySelector('.ficha-tramites-predio').innerHTML=`<h3>3. Requisitos FISE y trámites</h3><div>${tramites.map((nombre,indice)=>`<article><strong>${nombre}</strong>${opcionesEvaluacion(evaluacion.tramites[indice]||'Pendiente',['Cumple','Pendiente','No cumple'],`data-tramite-evaluacion="${indice}"`)}</article>`).join('')}</div>`;
+    $('fichaPredioPlaneamiento').querySelector('.ficha-estudios-predio').innerHTML=`<h3>4. Estudios realizados por FISE</h3><div>${estudios.map((nombre,indice)=>`<article>${nombre}${opcionesEvaluacion(evaluacion.estudios[indice]||'No realizado',['No realizado','En proceso','Realizado'],`data-estudio-evaluacion="${indice}"`)}</article>`).join('')}<p>${fichaRequisitosEnEdicion?'Actualice el estado de los estudios según la evaluación técnica.':'Los estudios se habilitan al aprobarse la evaluación del predio.'}</p></div>`;
+  };
+  const renderObservacionesEvaluacion=proyecto=>{
+    const estados=estadosRequisitoProyecto(proyecto,valoresRequisitosFicha()),pendientes=requisitosPlaneamiento.filter(([,],indice)=>estados[indice]!=='Cumple').map(([nombre])=>nombre),lista=pendientes.length?pendientes.slice(0,3).map(nombre=>`<li>Validar o subsanar: ${escapePlanificacion(nombre)}.</li>`).join(''):'<li>La evaluación técnica no presenta requisitos pendientes.</li>';
+    $('fichaPredioPlaneamiento').querySelector('.ficha-observaciones-predio').innerHTML=`<h3>6. Observaciones y acciones recomendadas</h3><ul>${lista}</ul>`;
+  };
+  const sincronizarFichaProyectoPlaneamiento=()=>{
+    const distrito=$('distritoPlaneamiento').value;
+    const proyecto=proyectoPlaneamientoSeleccionado||proyectosPlaneamientoSatcontrol().find(item=>item.distrito===distrito)||null;
+    if(!proyecto)return;
+    $('abrirFichaPredioPlaneamiento').querySelector('span').textContent='Ver ficha del proyecto';
+    $('fichaPredioPlaneamiento').querySelector('header small').textContent='FICHA DEL PROYECTO';
+    $('tituloFichaPredio').textContent=proyecto.nombre||'Proyecto sin nombre';
+    $('subtituloFichaPredio').textContent=`${proyecto.codigo||'Sin código'} · ${proyecto.distrito||'Distrito pendiente'} · planeamiento territorial`;
+    renderDatosEvaluacionPredio(proyecto);
+    const resumen=$('fichaPredioPlaneamiento').querySelector('.ficha-resumen-predio'),textoResumen=proyecto.resumenPlaneamiento||'El resumen se registra durante la asignación de la visita a campo.';
+    resumen.innerHTML=`<h3>1. Resumen del proyecto y/o predio</h3><p class="texto-resumen-predio">${escapePlanificacion(textoResumen)}</p><div><article><small>Aptitud preliminar</small><strong>${proyecto.aptitudPlaneamiento||'Predio a calificar'}</strong></article><article><small>Prioridad</small><strong>${proyecto.prioridadPlaneamiento||'Media'}</strong></article><article><small>Tipo de evaluación</small><strong>${proyecto.tipoEvaluacionPlaneamiento||'Proyecto / predio'}</strong></article></div>`;
+    renderRequisitosFichaProyecto(proyecto,valoresRequisitosFicha());
+    renderBloquesEvaluacionPredio(proyecto);
+    renderObservacionesEvaluacion(proyecto);
+    actualizarFichaVisualPredio(proyecto);
+  };
+  $('abrirFichaPredioPlaneamiento')?.addEventListener('click',()=>setTimeout(sincronizarFichaProyectoPlaneamiento,0));
   const actualizarFiltrosPlaneamiento=()=>{
     const departamento=$('departamentoPlaneamiento'),provincia=$('provinciaPlaneamiento'),distrito=$('distritoPlaneamiento');
-    const provincias=[...new Set(ciudades.filter(item=>!departamento.value||item.departamento===departamento.value).map(item=>item.provincia).filter(Boolean))].sort();
+    const proyectos=proyectosPlaneamientoSatcontrol();
+    const provincias=[...new Set(proyectos.filter(item=>!departamento.value||item.departamento===departamento.value).map(item=>item.provincia).filter(Boolean))].sort();
     if(!provincias.includes(provincia.value))provincia.value='';
     provincia.replaceChildren(new Option('Todas las provincias',''),...provincias.map(item=>new Option(item,item)));
-    const distritos=[...new Set(ciudades.filter(item=>(!departamento.value||item.departamento===departamento.value)&&(!provincia.value||item.provincia===provincia.value)).map(item=>item.distrito).filter(Boolean))].sort();
+    const distritos=[...new Set(proyectos.filter(item=>(!departamento.value||item.departamento===departamento.value)&&(!provincia.value||item.provincia===provincia.value)).map(item=>item.distrito).filter(Boolean))].sort();
     if(!distritos.includes(distrito.value))distrito.value='';
     distrito.replaceChildren(new Option('Todos los distritos',''),...distritos.map(item=>new Option(item,item)));
     renderPlaneamientoDistrito();
@@ -185,7 +429,7 @@
   const inicializarFiltrosPlaneamiento=()=>{
     const departamento=$('departamentoPlaneamiento'),provincia=$('provinciaPlaneamiento'),distrito=$('distritoPlaneamiento');
     if(departamento.dataset.inicializado)return actualizarFiltrosPlaneamiento();
-    const departamentos=[...new Set(ciudades.map(item=>item.departamento).filter(Boolean))].sort();
+    const departamentos=[...new Set(proyectosPlaneamientoSatcontrol().map(item=>item.departamento).filter(Boolean))].sort();
     departamento.replaceChildren(new Option('Todos los departamentos',''),...departamentos.map(item=>new Option(item,item)));
     departamento.dataset.inicializado='true';
     departamento.addEventListener('change',()=>{provincia.value='';distrito.value='';actualizarFiltrosPlaneamiento();});
@@ -205,8 +449,12 @@
     });
     actualizarFiltrosPlaneamiento();
   };
-  const mostrarVistaPlaneamiento=()=>{vistaCrearProyecto.hidden=true;vistaPlanificacionTecnica.hidden=true;vistaCronogramaProyecto.hidden=true;vistaDashboardMasificacion.hidden=true;vistaBandejaMasificacion.hidden=true;$('satcontrol').hidden=true;vistaPlaneamientoMasificacion.hidden=false;vistaPlaneamientoMasificacion.querySelector('.cabecera-planeamiento').hidden=false;vistaPlaneamientoMasificacion.querySelector('.planeamiento-contenido').hidden=false;$('fichaPredioPlaneamiento').hidden=true;actualizarCabeceraSatcontrol('MASIFICACIÓN <i>·</i> PLANEAMIENTO');if(location.hash!=='#planeamiento')history.replaceState(null,'','#planeamiento');document.querySelectorAll('.enlace-menu[data-etiqueta]').forEach(enlace=>enlace.classList.toggle('activo',enlace.getAttribute('href')==='#planeamiento'));iniciarPlaneamiento();inicializarFiltrosPlaneamiento();window.scrollTo({top:0,behavior:'smooth'});};
+  const mostrarVistaPlaneamiento=()=>{vistaCrearProyecto.hidden=true;vistaPlanificacionTecnica.hidden=true;vistaCronogramaProyecto.hidden=true;vistaDashboardMasificacion.hidden=true;vistaBandejaMasificacion.hidden=true;$('satcontrol').hidden=true;vistaPlaneamientoMasificacion.hidden=false;vistaPlaneamientoMasificacion.querySelector('.cabecera-planeamiento').hidden=false;vistaPlaneamientoMasificacion.querySelector('.planeamiento-contenido').hidden=false;$('fichaPredioPlaneamiento').hidden=true;actualizarCabeceraSatcontrol('MASIFICACIÓN <i>·</i> PLANEAMIENTO');if(location.hash!=='#planeamiento')history.replaceState(null,'','#planeamiento');document.querySelectorAll('.enlace-menu[data-etiqueta]').forEach(enlace=>enlace.classList.toggle('activo',enlace.getAttribute('href')==='#planeamiento'));iniciarPlaneamientoSatcontrol();inicializarFiltrosPlaneamiento();window.scrollTo({top:0,behavior:'smooth'});};
   $('abrirMatrizPap')?.addEventListener('click',()=>{renderizarMatrizPap();$('modalMatrizPap')?.showModal();});
+  const cerrarEvidenciaPap=()=>{$('modalEvidenciaPap')?.close();evidenciaPapActual='';};
+  $('cerrarEvidenciaPap')?.addEventListener('click',cerrarEvidenciaPap);$('cancelarEvidenciaPap')?.addEventListener('click',cerrarEvidenciaPap);
+  const cerrarVistaEvidenciaPap=()=>{$('modalVistaEvidenciaPap')?.close();$('contenidoVistaEvidenciaPap').replaceChildren();};
+  $('cerrarVistaEvidenciaPap')?.addEventListener('click',cerrarVistaEvidenciaPap);$('aceptarVistaEvidenciaPap')?.addEventListener('click',cerrarVistaEvidenciaPap);
   $('restablecerPlaneamiento')?.addEventListener('click',restablecerPlaneamiento);
   $('abrirFichaPredioPlaneamiento')?.addEventListener('click',()=>{
     if($('abrirFichaPredioPlaneamiento').disabled)return;
@@ -217,6 +465,58 @@
     setTimeout(()=>actualizarFichaVisualPredio(ciudades.find(proyecto=>proyecto.distrito===$('distritoPlaneamiento').value)||{}),0);
   });
   $('volverPlaneamiento')?.addEventListener('click',()=>vistaPlaneamientoMasificacion.querySelector('.cabecera-planeamiento').hidden=false);
+  const proyectoFichaPlaneamientoActivo=()=>proyectoPlaneamientoSeleccionado||proyectosPlaneamientoSatcontrol().find(proyecto=>proyecto.distrito===$('distritoPlaneamiento').value)||null;
+  $('editarFichaPredio')?.addEventListener('click',()=>{
+    const proyecto=proyectoFichaPlaneamientoActivo();
+    if(!proyecto)return;
+    fichaRequisitosEnEdicion=!fichaRequisitosEnEdicion;
+    $('fichaPredioPlaneamiento').classList.toggle('editando-documentos',fichaRequisitosEnEdicion);
+    $('editarFichaPredio').textContent=fichaRequisitosEnEdicion?'✓ Guardar evaluación':'✎ Editar evaluación';
+    renderDatosEvaluacionPredio(proyecto);
+    actualizarDocumentosFicha(proyecto);
+    renderBloquesEvaluacionPredio(proyecto);
+    renderObservacionesEvaluacion(proyecto);
+    if(!fichaRequisitosEnEdicion)actualizarFichaVisualPredio(proyecto);
+    if($('modalDocumentosRequisito').open&&requisitoDocumentosAbierto!==null)renderDocumentosRequisitoModal(proyecto);
+  });
+  $('requisitosFichaPredio')?.addEventListener('click',evento=>{
+    const boton=evento.target.closest('[data-documentos-requisito]');
+    if(!boton)return;
+    const proyecto=proyectoFichaPlaneamientoActivo(),requisito=Number(boton.dataset.documentosRequisito);
+    if(!proyecto||!Number.isInteger(requisito))return;
+    abrirDocumentosRequisito(proyecto,requisito);
+  });
+  $('requisitosFichaPredio')?.addEventListener('change',evento=>{
+    const selector=evento.target.closest('[data-estado-requisito]');
+    if(!selector)return;
+    const proyecto=proyectoFichaPlaneamientoActivo(),requisito=Number(selector.dataset.estadoRequisito);
+    if(!proyecto||!Number.isInteger(requisito))return;
+    estadosRequisitoProyecto(proyecto,valoresRequisitosFicha())[requisito]=selector.value;
+    guardarProyectoSatcontrol(proyecto);
+  });
+  $('fichaPredioPlaneamiento')?.addEventListener('change',evento=>{
+    const control=evento.target,proyecto=proyectoFichaPlaneamientoActivo();
+    if(!proyecto)return;
+    const evaluacion=evaluacionPredioProyecto(proyecto);
+    if(control.matches('[data-tramite-evaluacion]'))evaluacion.tramites[Number(control.dataset.tramiteEvaluacion)]=control.value;
+    else if(control.matches('[data-estudio-evaluacion]'))evaluacion.estudios[Number(control.dataset.estudioEvaluacion)]=control.value;
+    else if(control.matches('[data-responsable-evaluacion]')){evaluacion.responsable=control.value;proyecto.responsableLider=control.value;}
+    else if(control.matches('[data-equipo-evaluacion]'))evaluacion.equipo=control.value;
+    else if(control.matches('[data-estado-general-evaluacion]'))evaluacion.estadoGeneral=control.value;
+    else return;
+    guardarProyectoSatcontrol(proyecto);
+  });
+  $('listaDocumentosRequisito')?.addEventListener('click',evento=>{
+    const boton=evento.target.closest('[data-ver-documento-modal],[data-eliminar-documento-modal]');
+    if(!boton)return;
+    const proyecto=proyectoFichaPlaneamientoActivo(),indice=Number(boton.dataset.verDocumentoModal??boton.dataset.eliminarDocumentoModal);
+    if(!proyecto||requisitoDocumentosAbierto===null||!Number.isInteger(indice))return;
+    if(boton.dataset.verDocumentoModal!==undefined){abrirDocumentoRequisito(proyecto,requisitoDocumentosAbierto,indice);return;}
+    documentosRequisitoProyecto(proyecto)[requisitoDocumentosAbierto]?.splice(indice,1);
+    guardarProyectoSatcontrol(proyecto);actualizarDocumentosFicha(proyecto);renderDocumentosRequisitoModal(proyecto);
+  });
+  $('agregarDocumentoRequisitoModal')?.addEventListener('click',()=>{const proyecto=proyectoFichaPlaneamientoActivo();if(proyecto&&requisitoDocumentosAbierto!==null)agregarDocumentoRequisito(proyecto,requisitoDocumentosAbierto);});
+  $('cerrarDocumentosRequisito')?.addEventListener('click',cerrarDocumentosRequisito);$('cerrarDocumentosRequisitoPie')?.addEventListener('click',cerrarDocumentosRequisito);
   const cerrarVistaCrearProyecto = () => document.querySelector('.enlace-menu[href="#satcontrol"]')?.click();
   const botonResumenMasificacion = $('botonResumenMasificacion');
   const colores = { Proyectada: '#4e7de1', 'En ejecución': '#e5a510', Instalada: '#3fac79' };
@@ -288,6 +588,11 @@
     leerProyectosSatcontrol().forEach(proyecto=>porCodigo.set(proyecto.codigo,proyecto));
     return aplicarPasosSatcontrol([...porCodigo.values()].map(normalizarComponentesSatcontrol).map(prepararVersionesProyecto));
   };
+  // SATCONTROL mantiene el catálogo activo en `ciudades`; los proyectos
+  // guardados localmente ya se fusionan allí al iniciar la aplicación.
+  // Así Planeamiento no queda vacío cuando todavía no se ha creado un
+  // proyecto nuevo durante esta sesión.
+  const proyectosPlaneamientoSatcontrol=()=>ciudades.filter(proyecto=>proyecto.codigo&&proyecto.nombre);
   const guardarProyectoSatcontrol=proyecto=>{
     const proyectos=leerProyectosSatcontrol().filter(item=>item.codigo!==proyecto.codigo);
     proyectos.unshift(proyecto);
@@ -2979,6 +3284,7 @@
     $('asignarVisitaCampo').addEventListener('click',()=>{
       $('visitaCampoUsuario').value=$('proyectoVisitaUsuario').value;
       $('visitaCampoFecha').value=$('proyectoVisitaFecha').value;
+      $('visitaCampoResumenPredio').value=$('proyectoVisitaResumen').value;
       $('modalAsignarVisitaCampo').showModal();
     });
     const cerrarAsignacionVisita=()=>{$('modalAsignarVisitaCampo').close();};
@@ -2989,6 +3295,7 @@
       if(!usuario){$('visitaCampoUsuario').focus();return;}
       $('proyectoVisitaUsuario').value=usuario;
       $('proyectoVisitaFecha').value=$('visitaCampoFecha').value;
+      $('proyectoVisitaResumen').value=$('visitaCampoResumenPredio').value.trim();
       $('proyectoVisitaFormatoGuardado').value='true';
       actualizarEstadoVisitaCampo();
       cerrarAsignacionVisita();
