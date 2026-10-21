@@ -84,6 +84,18 @@
   };
   const requisitosPlaneamiento=[['Saneamiento físico legal',82],['Acceso terrestre disponible',96],['Área mínima 3,500 m²',74],['Geometría regular / frente suficiente',88],['Pendiente y compactación adecuada',68],['Estudio geotécnico / suelos',52],['Sin afectación por fajas o canales',91],['Disponibilidad de servicios básicos',79],['Ubicación adecuada respecto a centros urbanos',85],['Zonificación / habilitación urbana compatible',71],['Partida registral del titular público',63]];
   const romanosPlaneamiento=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI'];
+  const centrosPobladosReferenciales={
+    'Cerro Colorado':'Pachacútec',
+    'Villa El Salvador':'Sector Lomo de Corvina',
+    'Trujillo':'Alto Trujillo',
+    'José Leonardo Ortiz':'Urrunaga',
+    'San Sebastián':'Ccatcca',
+    'Castilla':'Miraflores',
+    'Subtanjalla':'San Martín de Porres',
+    'El Tambo':'Cochas Chico',
+    'Nuevo Chimbote':'Villa María'
+  };
+  const centroPobladoProyecto=proyecto=>proyecto.centroPoblado||centrosPobladosReferenciales[proyecto.distrito]||'Centro poblado referencial';
   let evidenciaPapActual='';
   const renderEvidenciasPap=()=>{
     const lista=$('listaEvidenciasPap'),estado=evidenciaPapActual.split('|')[2]||'Sí cumple';
@@ -106,17 +118,49 @@
   const renderizarMatrizPap=()=>{
     const cabecera=$('cabeceraMatrizPap'),cuerpo=$('cuerpoMatrizPap');
     if(!cabecera||!cuerpo)return;
-    cabecera.innerHTML=`<tr><th>N.°</th><th>Departamento</th><th>Provincia</th><th>Distrito / localidad</th>${romanosPlaneamiento.map(numero=>`<th>${numero}</th>`).join('')}<th>% avance</th><th>TUPA prov.</th><th>TUPA dist.</th><th>Escombrera</th><th>DIA</th><th>CIRA</th></tr>`;
+    cabecera.innerHTML=`<tr><th>N.°</th><th>Departamento</th><th>Provincia</th><th>Distrito / localidad</th><th>Centro poblado</th>${romanosPlaneamiento.map(numero=>`<th>${numero}</th>`).join('')}<th>% avance</th><th>TUPA prov.</th><th>TUPA dist.</th><th>Escombrera</th><th>DIA</th><th>CIRA</th></tr>`;
     cuerpo.innerHTML=ciudades.map((proyecto,indice)=>{
       const variacion=(indice%4)*3;
       const valores=requisitosPlaneamiento.map(([,valor],numero)=>Math.max(35,Math.min(100,valor-variacion-((numero+indice)%3)*4)));
       const avance=Math.round(valores.filter(valor=>valor>=75).length/valores.length*100);
-      const celdas=valores.map((valor,numero)=>{const cumple=valor>=75,clase=cumple?'cumple':'pendiente',estado=cumple?'Sí cumple':'No cumple';return `<td class="estado ${clase}" title="${valor}%" aria-label="${estado}"><button type="button" class="boton-evidencia-pap" data-evidencia-pap="${proyecto.codigo}" data-requisito-pap="${numero}" data-estado-pap="${estado}" aria-label="Ver evidencia de ${romanosPlaneamiento[numero]}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11l2 2.4h4.5A2.5 2.5 0 0 1 20 7.9v8.6a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><path d="m8 15 2.1-2.2 1.8 1.7 2.8-3 2.3 3.5"/><circle cx="9" cy="9" r="1.1"/></svg></button></td>`;}).join('');
-      return `<tr><td>${indice+1}</td><td>${proyecto.departamento||'—'}</td><td>${proyecto.provincia||'—'}</td><td><strong>${proyecto.distrito||'—'}</strong><small>${proyecto.nombre||''}</small></td>${celdas}<td class="avance-matriz ${avance>=70?'revision':'pendiente'}">${avance>=40?`${avance}%`:'NO APTO'}</td><td class="estado pendiente">–</td><td class="estado pendiente">–</td><td class="estado pendiente">–</td><td class="estudio-matriz">No realizado</td><td class="estudio-matriz">No realizado</td></tr>`;
+      const celdas=valores.map((valor,numero)=>{const cumple=valor>=75,clase=cumple?'cumple':'pendiente',estado=cumple?'Sí cumple':'No cumple';const vistaPrevia=cumple?`<button type="button" class="boton-evidencia-pap" data-evidencia-pap="${proyecto.codigo}" data-requisito-pap="${numero}" data-estado-pap="${estado}" aria-label="Ver evidencia de ${romanosPlaneamiento[numero]}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11l2 2.4h4.5A2.5 2.5 0 0 1 20 7.9v8.6a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><path d="m8 15 2.1-2.2 1.8 1.7 2.8-3 2.3 3.5"/><circle cx="9" cy="9" r="1.1"/></svg></button>`:'<span class="sin-evidencia-pap" aria-label="No entregó información" title="No entregó información"></span>';return `<td class="estado ${clase}" title="${cumple?`${valor}%`:'No entregó información'}" aria-label="${estado}">${vistaPrevia}</td>`;}).join('');
+      return `<tr><td>${indice+1}</td><td>${proyecto.departamento||'—'}</td><td>${proyecto.provincia||'—'}</td><td><strong>${proyecto.distrito||'—'}</strong><button type="button" class="enlace-ficha-matriz" data-ficha-planeamiento="${proyecto.codigo}" title="Abrir ficha de planeamiento">${escapePlanificacion(proyecto.nombre||'Proyecto sin nombre')}</button></td><td>${escapePlanificacion(centroPobladoProyecto(proyecto))}</td>${celdas}<td class="avance-matriz ${avance>=70?'revision':'pendiente'}">${avance>=40?`${avance}%`:'NO APTO'}</td><td class="estado pendiente">–</td><td class="estado pendiente">–</td><td class="estado pendiente">–</td><td class="estudio-matriz">No realizado</td><td class="estudio-matriz">No realizado</td></tr>`;
     }).join('');
-    cuerpo.onclick=evento=>{const boton=evento.target.closest('[data-evidencia-pap]');if(boton)abrirEvidenciaPap(boton.dataset.evidenciaPap,Number(boton.dataset.requisitoPap),boton.dataset.estadoPap);};
+    cuerpo.onclick=evento=>{const ficha=evento.target.closest('[data-ficha-planeamiento]');if(ficha){abrirFichaPlaneamientoDesdeMatriz(ficha.dataset.fichaPlaneamiento);return;}const boton=evento.target.closest('[data-evidencia-pap]');if(boton)abrirEvidenciaPap(boton.dataset.evidenciaPap,Number(boton.dataset.requisitoPap),boton.dataset.estadoPap);};
   };
-  let mapaPlaneamiento=null,capaPlaneamientoDistritos=null,capaPlaneamientoCumplidores=null,mapaFichaPredio=null,marcadorFichaPredio=null,modoProgramarPlaneamiento=false,proyectoPlaneamientoSeleccionado=null,puntoProgramacionPlaneamiento=null,marcadorProgramacionPlaneamiento=null,fichaRequisitosEnEdicion=false,requisitoDocumentosAbierto=null,documentoEvaluacionAbierto=null;
+  let mapaPlaneamiento=null,capaPlaneamientoDistritos=null,capaPlaneamientoCumplidores=null,capaPlaneamientoDepartamentos=null,capaPlaneamientoProvincias=null,capaPlaneamientoLimitesDistritales=null,limitesPlaneamientoDepartamentos=null,limitesPlaneamientoProvincias=null,limitesPlaneamientoDistritos=null,departamentoLimitePlaneamiento='',provinciaLimitePlaneamiento='',mapaFichaPredio=null,marcadorFichaPredio=null,modoProgramarPlaneamiento=false,proyectoPlaneamientoSeleccionado=null,puntoProgramacionPlaneamiento=null,marcadorProgramacionPlaneamiento=null,fichaRequisitosEnEdicion=false,requisitoDocumentosAbierto=null,documentoEvaluacionAbierto=null,proyectoVisitaPlaneamientoActivo=null;
+  const estiloLimitePlaneamiento=(nivel,activo=false)=>nivel==='departamento'?{color:activo?'#4d91b8':'#7faec8',weight:activo?2.2:1.25,fillColor:'#a7d0df',fillOpacity:activo?.07:.018}:{color:activo?'#d5793b':'#5c95b4',weight:activo?2.15:1.05,fillColor:'#91c7dc',fillOpacity:activo?.065:.008,dashArray:activo?null:'4 4'};
+  const actualizarLimitesPlaneamiento=()=>{
+    if(!mapaPlaneamiento||!limitesPlaneamientoDepartamentos||!capaPlaneamientoDepartamentos)return;
+    const distritoSeleccionado=$('distritoPlaneamiento')?.value||'',proyecto=proyectoPlaneamientoSeleccionado,departamentoSeleccionado=departamentoLimitePlaneamiento||proyecto?.departamento||'',provinciaSeleccionada=provinciaLimitePlaneamiento||'';
+    capaPlaneamientoDepartamentos.clearLayers();
+    L.geoJSON(limitesPlaneamientoDepartamentos,{style:feature=>estiloLimitePlaneamiento('departamento',feature.properties.NAME_1===departamentoSeleccionado),onEachFeature:(feature,capa)=>{capa.bindTooltip(feature.properties.NAME_1,{sticky:true,direction:'center'});capa.on('click',evento=>{L.DomEvent.stopPropagation(evento.originalEvent);departamentoLimitePlaneamiento=feature.properties.NAME_1;provinciaLimitePlaneamiento='';mapaPlaneamiento.fitBounds(capa.getBounds(),{padding:[28,28],maxZoom:7});actualizarLimitesPlaneamiento();});}}).addTo(capaPlaneamientoDepartamentos);
+    capaPlaneamientoDepartamentos.eachLayer(capa=>capa.bringToBack?.());
+    if(!capaPlaneamientoProvincias||!capaPlaneamientoLimitesDistritales||!limitesPlaneamientoProvincias||!limitesPlaneamientoDistritos)return;
+    capaPlaneamientoProvincias.clearLayers();
+    if(departamentoSeleccionado){
+      L.geoJSON(limitesPlaneamientoProvincias,{filter:feature=>feature.properties.NAME_1===departamentoSeleccionado,style:feature=>estiloLimitePlaneamiento('distrito',feature.properties.NAME_2===provinciaSeleccionada),onEachFeature:(feature,capa)=>{capa.bindTooltip(feature.properties.NAME_2,{permanent:true,direction:'center',className:'etiqueta-limite-planeamiento'});capa.on('click',evento=>{L.DomEvent.stopPropagation(evento.originalEvent);provinciaLimitePlaneamiento=feature.properties.NAME_2;mapaPlaneamiento.fitBounds(capa.getBounds(),{padding:[24,24],maxZoom:10});actualizarLimitesPlaneamiento();});}}).addTo(capaPlaneamientoProvincias);
+      /* Las provincias deben quedar sobre el límite departamental para que se distingan tras el zoom. */
+      capaPlaneamientoProvincias.eachLayer(capa=>capa.bringToFront?.());
+    }
+    capaPlaneamientoLimitesDistritales.clearLayers();
+    const mostrarDistritos=Boolean(distritoSeleccionado)||Boolean(provinciaSeleccionada)||mapaPlaneamiento.getZoom()>=10;
+    if(!mostrarDistritos)return;
+    const filtro=feature=>distritoSeleccionado?feature.properties.NAME_3===distritoSeleccionado:(provinciaSeleccionada?feature.properties.NAME_2===provinciaSeleccionada:(departamentoSeleccionado?feature.properties.NAME_1===departamentoSeleccionado:true));
+    L.geoJSON(limitesPlaneamientoDistritos,{filter:filtro,style:feature=>estiloLimitePlaneamiento('distrito',feature.properties.NAME_3===distritoSeleccionado),onEachFeature:(feature,capa)=>{capa.bindTooltip(feature.properties.NAME_3,{permanent:true,direction:'center',className:'etiqueta-limite-planeamiento'});capa.on('click',evento=>{L.DomEvent.stopPropagation(evento.originalEvent);const selectorDistrito=$('distritoPlaneamiento');if(selectorDistrito&&[...selectorDistrito.options].some(opcion=>opcion.value===feature.properties.NAME_3)){selectorDistrito.value=feature.properties.NAME_3;renderPlaneamientoDistrito();}mapaPlaneamiento.fitBounds(capa.getBounds(),{padding:[22,22],maxZoom:13});});}}).addTo(capaPlaneamientoLimitesDistritales);
+    capaPlaneamientoLimitesDistritales.eachLayer(capa=>capa.bringToFront?.());
+  };
+  const cargarLimitesPlaneamiento=async()=>{
+    if(limitesPlaneamientoDepartamentos&&limitesPlaneamientoProvincias&&limitesPlaneamientoDistritos){actualizarLimitesPlaneamiento();return;}
+    try{
+      const [departamentos,provincias,distritos]=await Promise.all([fetch('../../geo/peru_departamentos_gadm41.json'),fetch('../../geo/gadm41_PER_2.json'),fetch('../../geo/peru_distritos_gadm41.json')]);
+      if(!departamentos.ok||!provincias.ok||!distritos.ok)throw new Error('Límites territoriales no disponibles');
+      limitesPlaneamientoDepartamentos=await departamentos.json();
+      limitesPlaneamientoProvincias=await provincias.json();
+      limitesPlaneamientoDistritos=await distritos.json();
+      actualizarLimitesPlaneamiento();
+    }catch(error){console.warn('No se cargaron los límites territoriales de Planeamiento.',error);}
+  };
   const limpiarCumplidoresPlaneamiento=()=>{
     capaPlaneamientoCumplidores?.clearLayers();
     $('elementosCumplenPlaneamiento').hidden=true;
@@ -207,6 +251,7 @@
     $('abrirFichaPredioPlaneamiento').dataset.distrito=distrito;
     $('abrirFichaPredioPlaneamiento').querySelector('span').textContent='Ver ficha del predio';
     if(distrito){const proyecto=datos[0];if(proyecto?.lat&&proyecto?.lng)mapaPlaneamiento?.setView([proyecto.lat,proyecto.lng],10);}
+    actualizarLimitesPlaneamiento();
     vincularPuntosPlaneamiento();
   };
   const usuarioResponsableSistema=()=>{
@@ -220,13 +265,20 @@
   };
   const datosTerritorialesDesdePunto=({lat,lng})=>{
     const referencia=[...ciudades].filter(proyecto=>Number.isFinite(Number(proyecto.lat))&&Number.isFinite(Number(proyecto.lng))).sort((a,b)=>((Number(a.lat)-lat)**2+(Number(a.lng)-lng)**2)-((Number(b.lat)-lat)**2+(Number(b.lng)-lng)**2))[0];
-    return {departamento:referencia?.departamento||'Ubicación por validar',provincia:referencia?.provincia||'Ubicación por validar',distrito:referencia?.distrito||'Ubicación por validar'};
+    return {departamento:referencia?.departamento||'Ubicación por validar',provincia:referencia?.provincia||'Ubicación por validar',distrito:referencia?.distrito||'Ubicación por validar',centroPoblado:referencia?.centroPoblado||referencia?.localidad||''};
   };
   const siguienteCodigoPlaneamiento=()=>{
     const anio=new Date().getFullYear(),codigos=new Set(ciudades.map(proyecto=>proyecto.codigo));
     let correlativo=ciudades.length+1,codigo='';
     do{codigo=`PLN-${anio}-${String(correlativo++).padStart(3,'0')}`;}while(codigos.has(codigo));
     return codigo;
+  };
+  const equiposPlaneamientoReferenciales=['Equipo GIS, Equipo Social, Mesa Técnica','Equipo Técnico, Equipo Legal, Mesa Técnica','Equipo de Campo, Equipo Ambiental, Equipo Social'];
+  const equipoPropuestoPlaneamiento=proyecto=>{
+    const equipo=Array.isArray(proyecto?.equipo)?proyecto.equipo.filter(Boolean).join(', '):String(proyecto?.equipo||'').trim();
+    if(equipo)return equipo;
+    const referencia=String(proyecto?.codigo||proyecto?.nombre||'').split('').reduce((total,caracter)=>total+caracter.charCodeAt(0),0);
+    return equiposPlaneamientoReferenciales[referencia%equiposPlaneamientoReferenciales.length];
   };
   const abrirFichaInicialPlaneamiento=punto=>{
     puntoProgramacionPlaneamiento={lat:punto.lat,lng:punto.lng,...datosTerritorialesDesdePunto(punto)};
@@ -237,9 +289,12 @@
     $('programacionDepartamento').value=puntoProgramacionPlaneamiento.departamento;
     $('programacionProvincia').value=puntoProgramacionPlaneamiento.provincia;
     $('programacionDistrito').value=puntoProgramacionPlaneamiento.distrito;
+    $('programacionCentroPoblado').value=puntoProgramacionPlaneamiento.centroPoblado;
+    $('programacionBeneficiariosReniec').value='';delete $('programacionBeneficiariosReniec').dataset.total;
     const responsable=usuarioResponsableSistema(),selectorResponsable=$('programacionResponsable');
     if(![...selectorResponsable.options].some(opcion=>opcion.value===responsable))selectorResponsable.add(new Option(responsable,responsable),0);
     selectorResponsable.value=responsable;
+    $('programacionEquipo').value=equipoPropuestoPlaneamiento({codigo:$('programacionCodigoProyecto').value});
     $('programacionCoordenadas').value=`${punto.lat.toFixed(6)}, ${punto.lng.toFixed(6)}`;
     $('modalNuevaProgramacionPlaneamiento').showModal();
     $('programacionNombreProyecto').focus();
@@ -251,12 +306,20 @@
     $('ayudaPlaneamiento').textContent='Seleccione un distrito o un punto del mapa para consultar su planeamiento.';
     if($('modalNuevaProgramacionPlaneamiento').open)$('modalNuevaProgramacionPlaneamiento').close();
   };
+  $('consultarBeneficiariosReniec')?.addEventListener('click',()=>{
+    const centro=$('programacionCentroPoblado').value.trim();
+    if(!centro){$('programacionCentroPoblado').focus();return;}
+    const punto=puntoProgramacionPlaneamiento||{lat:0,lng:0},semilla=Math.round((Math.abs(Number(punto.lat)||0)*1000)+(Math.abs(Number(punto.lng)||0)*1000)+centro.length*83),total=450+semilla%2850;
+    $('programacionBeneficiariosReniec').value=`${total.toLocaleString('es-PE')} posibles beneficiarios`;
+    $('programacionBeneficiariosReniec').dataset.total=String(total);
+  });
   const guardarNuevaProgramacionPlaneamiento=()=>{
     const nombre=$('programacionNombreProyecto').value.trim();
     if(!nombre){$('programacionNombreProyecto').focus();return;}
     const punto=puntoProgramacionPlaneamiento;
     if(!punto)return;
-    const proyecto=prepararVersionesProyecto({...proyectoReferenciaFicha(),codigo:$('programacionCodigoProyecto').value,nombre,departamento:punto.departamento,provincia:punto.provincia,distrito:punto.distrito,lat:punto.lat,lng:punto.lng,localizacion:`${punto.lat.toFixed(6)}, ${punto.lng.toFixed(6)}`,responsableLider:$('programacionResponsable').value,estado:'En evaluación',avance:0,longitud:0,equipo:[]});
+    const equipo=$('programacionEquipo').value.split(',').map(item=>item.trim()).filter(Boolean);
+    const proyecto=prepararVersionesProyecto({...proyectoReferenciaFicha(),codigo:$('programacionCodigoProyecto').value,nombre,departamento:punto.departamento,provincia:punto.provincia,distrito:punto.distrito,centroPoblado:$('programacionCentroPoblado').value.trim(),beneficiariosReniec:Number($('programacionBeneficiariosReniec').dataset.total)||0,lat:punto.lat,lng:punto.lng,localizacion:`${punto.lat.toFixed(6)}, ${punto.lng.toFixed(6)}`,responsableLider:$('programacionResponsable').value,estado:'En evaluación',avance:0,longitud:0,equipo});
     ciudades.unshift(proyecto);guardarProyectoSatcontrol(proyecto);proyectoPlaneamientoSeleccionado=proyecto;
     if(marcadorProgramacionPlaneamiento){marcadorProgramacionPlaneamiento.remove();marcadorProgramacionPlaneamiento=null;}
     cerrarFichaInicialPlaneamiento();iniciarPlaneamientoSatcontrol();
@@ -271,9 +334,13 @@
     if(!mapaPlaneamiento){
       mapaPlaneamiento=L.map('mapaPlaneamiento',{zoomControl:true}).setView([-9.19,-75.02],5);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(mapaPlaneamiento);
+      capaPlaneamientoDepartamentos=L.layerGroup().addTo(mapaPlaneamiento);
+      capaPlaneamientoProvincias=L.layerGroup().addTo(mapaPlaneamiento);
+      capaPlaneamientoLimitesDistritales=L.layerGroup().addTo(mapaPlaneamiento);
       capaPlaneamientoDistritos=L.layerGroup().addTo(mapaPlaneamiento);
       capaPlaneamientoCumplidores=L.layerGroup().addTo(mapaPlaneamiento);
       mapaPlaneamiento.on('click',evento=>{if(modoProgramarPlaneamiento)abrirFichaInicialPlaneamiento(evento.latlng);});
+      mapaPlaneamiento.on('zoomend',actualizarLimitesPlaneamiento);
       selector.addEventListener('change',renderPlaneamientoDistrito);
       $('limpiarCumplidoresPlaneamiento').addEventListener('click',limpiarCumplidoresPlaneamiento);
       $('abrirFichaPredioPlaneamiento').addEventListener('click',()=>{
@@ -299,6 +366,7 @@
         .addTo(capaPlaneamientoDistritos);
     });
     if(proyectoPlaneamientoSeleccionado&&!proyectos.some(item=>item.codigo===proyectoPlaneamientoSeleccionado.codigo))proyectoPlaneamientoSeleccionado=null;
+    cargarLimitesPlaneamiento();
     renderPlaneamientoDistrito();
     setTimeout(()=>mapaPlaneamiento.invalidateSize(),80);
   };
@@ -393,7 +461,12 @@
   };
   const evaluacionPredioProyecto=proyecto=>{
     if(!proyecto.evaluacionPredioPlaneamiento){
-      proyecto.evaluacionPredioPlaneamiento={tramites:['Pendiente','Pendiente','Pendiente'],estudios:['No realizado','No realizado'],estadoGeneral:'En evaluación',responsable:responsablePlaneamiento(proyecto),equipo:Array.isArray(proyecto.equipo)?proyecto.equipo.filter(Boolean).join(', '):String(proyecto.equipo||'').trim()};
+      proyecto.evaluacionPredioPlaneamiento={tramites:['Pendiente','Pendiente','Pendiente'],estudios:['No realizado','No realizado'],estadoGeneral:'En evaluación',responsable:responsablePlaneamiento(proyecto),equipo:equipoPropuestoPlaneamiento(proyecto)};
+      guardarProyectoSatcontrol(proyecto);
+    }
+    if(!proyecto.evaluacionPredioPlaneamiento.equipo){
+      proyecto.evaluacionPredioPlaneamiento.equipo=equipoPropuestoPlaneamiento(proyecto);
+      if(!Array.isArray(proyecto.equipo)||!proyecto.equipo.length)proyecto.equipo=proyecto.evaluacionPredioPlaneamiento.equipo.split(',').map(item=>item.trim()).filter(Boolean);
       guardarProyectoSatcontrol(proyecto);
     }
     return proyecto.evaluacionPredioPlaneamiento;
@@ -432,8 +505,12 @@
     $('tituloFichaPredio').textContent=proyecto.nombre||'Proyecto sin nombre';
     $('subtituloFichaPredio').textContent=`${proyecto.codigo||'Sin código'} · ${proyecto.distrito||'Distrito pendiente'} · planeamiento territorial`;
     renderDatosEvaluacionPredio(proyecto);
-    const resumen=$('fichaPredioPlaneamiento').querySelector('.ficha-resumen-predio'),textoResumen=proyecto.resumenPlaneamiento||'El resumen se registra durante la asignación de la visita a campo.';
-    resumen.innerHTML=`<h3>1. Resumen del proyecto y/o predio</h3><p class="texto-resumen-predio">${escapePlanificacion(textoResumen)}</p><div><article><small>Aptitud preliminar</small><strong>${proyecto.aptitudPlaneamiento||'Predio a calificar'}</strong></article><article><small>Prioridad</small><strong>${proyecto.prioridadPlaneamiento||'Media'}</strong></article><article><small>Tipo de evaluación</small><strong>${proyecto.tipoEvaluacionPlaneamiento||'Proyecto / predio'}</strong></article></div>`;
+    const resumen=$('fichaPredioPlaneamiento').querySelector('.ficha-resumen-predio');
+    resumen.innerHTML=`<h3>1. Resumen del proyecto y/o predio</h3><label class="campo-resumen-planeamiento"><span>Resumen</span><textarea id="resumenProyectoPlaneamiento" rows="4" placeholder="Ingrese el resumen, situación actual, alcance y datos relevantes del proyecto o predio.">${escapePlanificacion(proyecto.resumenPlaneamiento||'')}</textarea></label><div><article><small>Aptitud preliminar</small><strong>${proyecto.aptitudPlaneamiento||'Predio a calificar'}</strong></article><article><small>Prioridad</small><strong>${proyecto.prioridadPlaneamiento||'Media'}</strong></article><article><small>Tipo de evaluación</small><strong>${proyecto.tipoEvaluacionPlaneamiento||'Proyecto / predio'}</strong></article></div>`;
+    $('resumenProyectoPlaneamiento').addEventListener('input',evento=>{
+      proyecto.resumenPlaneamiento=evento.target.value;
+      guardarProyectoSatcontrol(proyecto);
+    });
     renderRequisitosFichaProyecto(proyecto,valoresRequisitosFicha());
     renderBloquesEvaluacionPredio(proyecto);
     renderObservacionesEvaluacion(proyecto);
@@ -493,6 +570,18 @@
     actualizarFiltrosPlaneamiento();
   };
   const mostrarVistaPlaneamiento=()=>{vistaCrearProyecto.hidden=true;vistaPlanificacionTecnica.hidden=true;vistaCronogramaProyecto.hidden=true;vistaDashboardMasificacion.hidden=true;vistaBandejaMasificacion.hidden=true;$('satcontrol').hidden=true;vistaPlaneamientoMasificacion.hidden=false;vistaPlaneamientoMasificacion.querySelector('.cabecera-planeamiento').hidden=false;vistaPlaneamientoMasificacion.querySelector('.planeamiento-contenido').hidden=false;$('fichaPredioPlaneamiento').hidden=true;actualizarCabeceraSatcontrol('MASIFICACIÓN <i>·</i> PLANEAMIENTO');if(location.hash!=='#planeamiento')history.replaceState(null,'','#planeamiento');document.querySelectorAll('.enlace-menu[data-etiqueta]').forEach(enlace=>enlace.classList.toggle('activo',enlace.getAttribute('href')==='#planeamiento'));iniciarPlaneamientoSatcontrol();inicializarFiltrosPlaneamiento();window.scrollTo({top:0,behavior:'smooth'});};
+  const abrirFichaPlaneamientoDesdeMatriz=codigo=>{
+    const proyecto=proyectosPlaneamientoSatcontrol().find(item=>item.codigo===codigo);
+    if(!proyecto)return;
+    proyectoPlaneamientoSeleccionado=proyecto;
+    $('modalMatrizPap')?.close();
+    mostrarVistaPlaneamiento();
+    setTimeout(()=>{
+      $('distritoPlaneamiento').value=proyecto.distrito||'';
+      renderPlaneamientoDistrito();
+      reabrirFichaPredioPlaneamiento();
+    },0);
+  };
   $('abrirMatrizPap')?.addEventListener('click',()=>{renderizarMatrizPap();$('modalMatrizPap')?.showModal();});
   const cerrarEvidenciaPap=()=>{$('modalEvidenciaPap')?.close();evidenciaPapActual='';};
   $('cerrarEvidenciaPap')?.addEventListener('click',cerrarEvidenciaPap);$('cancelarEvidenciaPap')?.addEventListener('click',cerrarEvidenciaPap);
@@ -531,6 +620,17 @@
     abrirDocumentosRequisito(proyecto,requisito);
   });
   $('fichaPredioPlaneamiento')?.addEventListener('click',evento=>{
+    const asignar=evento.target.closest('[data-asignar-visita-planeamiento]');
+    if(asignar){
+      const proyecto=proyectoFichaPlaneamientoActivo();
+      if(!proyecto)return;
+      proyectoVisitaPlaneamientoActivo=proyecto;
+      $('visitaCampoUsuario').value=responsablePlaneamiento(proyecto);
+      $('visitaCampoFecha').value='';
+      $('visitaCampoResumenPredio').value=proyecto.resumenPlaneamiento||'';
+      $('modalAsignarVisitaCampo').showModal();
+      return;
+    }
     const boton=evento.target.closest('[data-documentos-evaluacion]');
     if(!boton)return;
     const proyecto=proyectoFichaPlaneamientoActivo(),grupo=boton.dataset.documentosEvaluacion,indice=Number(boton.dataset.indiceEvaluacion);
@@ -551,7 +651,7 @@
     if(control.matches('[data-tramite-evaluacion]'))evaluacion.tramites[Number(control.dataset.tramiteEvaluacion)]=control.value;
     else if(control.matches('[data-estudio-evaluacion]'))evaluacion.estudios[Number(control.dataset.estudioEvaluacion)]=control.value;
     else if(control.matches('[data-responsable-evaluacion]')){evaluacion.responsable=control.value;proyecto.responsableLider=control.value;}
-    else if(control.matches('[data-equipo-evaluacion]'))evaluacion.equipo=control.value;
+    else if(control.matches('[data-equipo-evaluacion]')){evaluacion.equipo=control.value;proyecto.equipo=control.value.split(',').map(item=>item.trim()).filter(Boolean);}
     else if(control.matches('[data-estado-general-evaluacion]'))evaluacion.estadoGeneral=control.value;
     else return;
     guardarProyectoSatcontrol(proyecto);
@@ -3348,7 +3448,7 @@
       $('visitaCampoResumenPredio').value=$('proyectoVisitaResumen').value;
       $('modalAsignarVisitaCampo').showModal();
     });
-    const cerrarAsignacionVisita=()=>{$('modalAsignarVisitaCampo').close();};
+    const cerrarAsignacionVisita=()=>{$('modalAsignarVisitaCampo').close();proyectoVisitaPlaneamientoActivo=null;};
     $('cerrarAsignarVisitaCampo').addEventListener('click',cerrarAsignacionVisita);
     $('cancelarAsignarVisitaCampo').addEventListener('click',cerrarAsignacionVisita);
     $('confirmarAsignarVisitaCampo').addEventListener('click',()=>{
@@ -3358,6 +3458,12 @@
       $('proyectoVisitaFecha').value=$('visitaCampoFecha').value;
       $('proyectoVisitaResumen').value=$('visitaCampoResumenPredio').value.trim();
       $('proyectoVisitaFormatoGuardado').value='true';
+      if(proyectoVisitaPlaneamientoActivo){
+        proyectoVisitaPlaneamientoActivo.resumenPlaneamiento=$('visitaCampoResumenPredio').value.trim();
+        proyectoVisitaPlaneamientoActivo.responsableLider=usuario;
+        guardarProyectoSatcontrol(proyectoVisitaPlaneamientoActivo);
+        setTimeout(()=>sincronizarFichaProyectoPlaneamiento(),0);
+      }
       actualizarEstadoVisitaCampo();
       cerrarAsignacionVisita();
     });
