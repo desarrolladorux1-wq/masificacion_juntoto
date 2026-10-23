@@ -2122,3 +2122,6 @@ body .modal-matriz-pap .tabla-matriz-pap-contenedor tbody tr:hover,body .modal-m
 
 /* Etiquetas territoriales legibles, sin competir con el mapa base. */
 .mapa-planeamiento-panel .etiqueta-limite-planeamiento{padding:2px 5px;border:0;border-radius:4px;color:#244861;background:rgba(255,255,255,.78);box-shadow:none;font-size:.62rem;font-weight:800}.mapa-planeamiento-panel .etiqueta-limite-planeamiento:before{display:none}
+
+/* En el resumen financiero se muestran únicamente montos que se pueden registrar. */
+.presupuestos-contractuales{grid-template-columns:1fr!important}.presupuestos-contractuales article{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;align-items:center;min-height:0}.presupuestos-contractuales article small{grid-column:1}.presupuestos-contractuales article strong{grid-column:2;grid-row:1 / span 2;margin:0;text-align:right}.presupuestos-contractuales article span{grid-column:1;color:#b5c8df;font-size:.64rem;line-height:1.35}
