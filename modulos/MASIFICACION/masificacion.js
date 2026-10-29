@@ -2998,6 +2998,18 @@
       curvaResumen.querySelectorAll('.linea-curva.verificado,.linea-curva.liquidable').forEach(linea=>linea.remove());
       curvaResumen.querySelector('svg')?.setAttribute('aria-label','Curva S con avance programado y ejecutado');
     }
+    const sincronizarCantidadesComponentes=()=>{
+      const etiquetas=['PSR-GNL','Redes','TCs'];
+      document.querySelectorAll('.tabla-hitos-fisicos table').forEach((tabla,indice)=>{
+        const campos=[...tabla.querySelectorAll('tbody tr:first-child input')];
+        const unidad=campos[1]?.value.trim(),cantidad=campos[2]?.value.trim();
+        const etiqueta=etiquetas[indice];
+        const tarjeta=[...$('contenidoResumenProyecto').querySelectorAll('.datos-resumen-grid article')].find(item=>item.querySelector('small')?.textContent.trim()===etiqueta);
+        if(tarjeta&&cantidad&&unidad)tarjeta.querySelector('strong').textContent=`${cantidad} ${unidad}`;
+      });
+    };
+    sincronizarCantidadesComponentes();
+    document.querySelectorAll('.tabla-hitos-fisicos table').forEach(tabla=>{tabla.oninput=sincronizarCantidadesComponentes;});
     const panelMapaResumen=$('contenidoResumenProyecto').querySelector('.mapa-resumen');
     panelMapaResumen?.querySelector('p')?.remove();
     const estadoPap=$('proyectoIncluidoPap').value||'';
@@ -3596,7 +3608,7 @@
       if(tablaHitosPago.classList.contains('tabla-hitos-pago'))return;
       tablaHitosPago.classList.add('tabla-hitos-pago');
       const encabezado=tablaHitosPago.tHead?.rows[0];
-      if(encabezado){encabezado.insertCell(0).outerHTML='<th>Entidad<br>responsable</th>';encabezado.cells[1].textContent='Descripción';encabezado.deleteCell(6);encabezado.deleteCell(4);encabezado.insertCell(4).outerHTML='<th>Seguimiento</th>';}
+      if(encabezado){encabezado.insertCell(0).outerHTML='<th>Entidad<br>responsable</th>';encabezado.cells[1].textContent='Descripción';encabezado.deleteCell(6);encabezado.deleteCell(4);encabezado.insertCell(4).outerHTML='<th>Estado</th>';}
       [...tablaHitosPago.tBodies[0].rows].forEach(fila=>{fila.insertCell(0).innerHTML='<span class="origen-hito">FISE</span>';fila.deleteCell(6);fila.deleteCell(4);fila.insertCell(4).innerHTML='<span class="estado-seguimiento observado" title="Estado informado por el interventor">Observado</span>';});
     });
     document.querySelectorAll('.tabla-baremo-componentes').forEach((tabla,indice)=>{
@@ -3613,7 +3625,7 @@
       if(tabla.classList.contains('tabla-servicios'))return;
       tabla.classList.add('tabla-servicios');
       const encabezado=tabla.tHead?.rows[0];
-      if(encabezado){encabezado.insertCell(0).outerHTML='<th>Entidad<br>responsable</th>';encabezado.cells[1].textContent='Descripción';encabezado.deleteCell(5);encabezado.insertCell(5).outerHTML='<th>Seguimiento</th>';}
+      if(encabezado){encabezado.insertCell(0).outerHTML='<th>Entidad<br>responsable</th>';encabezado.cells[1].textContent='Descripción';encabezado.deleteCell(5);encabezado.insertCell(5).outerHTML='<th>Estado</th>';}
       [...tabla.tBodies[0].rows].forEach(fila=>{fila.insertCell(0).innerHTML='<span class="origen-hito">FISE</span>';fila.deleteCell(5);fila.insertCell(5).innerHTML='<span class="estado-seguimiento observado" title="Estado informado por el interventor">Observado</span>';});
     });
     // El avance se consulta como trazabilidad: no se edita desde esta ficha.
@@ -3622,8 +3634,11 @@
       const primeraFila=tabla.tBodies?.[0]?.rows?.[0];const entradaAvance=primeraFila?.querySelector('input[type="number"][max="100"]');if(!entradaAvance||tabla.dataset.dobleAvanceInstalado)return;
       const indice=[...primeraFila.cells].findIndex(celda=>celda.contains(entradaAvance));if(indice<0)return;
       tabla.dataset.dobleAvanceInstalado='true';
-      if(tabla.tHead?.rows?.[0]?.cells[indice])tabla.tHead.rows[0].cells[indice].classList.add('columna-avance-oculta');
-      [...tabla.tBodies[0].rows].forEach((fila,filaIndice)=>{const entrada=fila.querySelector('input[type="number"][max="100"]');if(!entrada)return;const celda=entrada.closest('td'),registrado=Number(entrada.value)||0,validado=Math.min(registrado,Math.max(0,registrado-(filaIndice?5:0))),descripcion=fila.cells[1];celda.classList.add('celda-avance-oculta');descripcion?.insertAdjacentHTML('beforeend',`<div class="doble-avance" data-avance-contratista="${registrado}" data-avance-interventor="${validado}">${barraAvanceActor('Contratista',registrado)}${barraAvanceActor('Interventor',validado)}</div>`);});
+      const esHitoPago=tabla.classList.contains('tabla-hitos-pago');
+      const encabezadoAvance=tabla.tHead?.rows?.[0]?.cells[indice];
+      if(esHitoPago){if(encabezadoAvance)encabezadoAvance.textContent='% del monto contractual';}
+      else if(encabezadoAvance)encabezadoAvance.classList.add('columna-avance-oculta');
+      [...tabla.tBodies[0].rows].forEach((fila,filaIndice)=>{const entrada=fila.querySelector('input[type="number"][max="100"]');if(!entrada)return;const celda=entrada.closest('td'),registrado=Number(entrada.value)||0,validado=Math.min(registrado,Math.max(0,registrado-(filaIndice?5:0))),descripcion=fila.cells[1];if(!esHitoPago)celda.classList.add('celda-avance-oculta');descripcion?.insertAdjacentHTML('beforeend',`<div class="doble-avance" data-avance-contratista="${registrado}" data-avance-interventor="${validado}">${barraAvanceActor('Contratista',registrado)}${barraAvanceActor('Interventor',validado)}</div>`);});
     };
     document.querySelectorAll('.tabla-hitos-pago,.tabla-servicios').forEach(instalarDobleAvance);
     const iconoRequisitos='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v15H5zM16 3v4h4M8 11h8M8 15h5M8 19h5"/><path d="m8 8 1.5 1.5L12 7"/></svg>';
@@ -3680,7 +3695,7 @@
       prepararSustentoPorActor(fila.querySelector('.carga-sustento-hito'),'interventor');
       agregarAccionEliminarFila(fila);
       $(boton.dataset.tablaHitos||'tablaHitosPsr').append(fila);
-      const avanceNuevo=fila.querySelector('input[type="number"][max="100"]'),celdaAvanceNueva=avanceNuevo?.closest('td'),descripcionNueva=fila.cells[1];if(celdaAvanceNueva){celdaAvanceNueva.classList.add('celda-avance-oculta');descripcionNueva?.insertAdjacentHTML('beforeend',`<div class="doble-avance" data-avance-contratista="0" data-avance-interventor="0">${barraAvanceActor('Contratista',0)}${barraAvanceActor('Interventor',0)}</div>`);}
+      const avanceNuevo=fila.querySelector('input[type="number"][max="100"]'),descripcionNueva=fila.cells[1];if(avanceNuevo)descripcionNueva?.insertAdjacentHTML('beforeend',`<div class="doble-avance" data-avance-contratista="0" data-avance-interventor="0">${barraAvanceActor('Contratista',0)}${barraAvanceActor('Interventor',0)}</div>`);
       fila.querySelector('input').focus();
     }));
     document.querySelectorAll('[data-agregar-hito-fisico]').forEach(boton=>boton.addEventListener('click',()=>{
