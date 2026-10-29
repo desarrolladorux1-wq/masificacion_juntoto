@@ -24,6 +24,15 @@
     if(!cierre){const destino=contenedor.querySelector('.ficha-cusco-grid')||contenedor,curva=destino.querySelector('.ficha-cusco-curva');if(curva)curva.insertAdjacentHTML('beforebegin',cierreFicha(proyecto));else destino.insertAdjacentHTML('beforeend',cierreFicha(proyecto));cierre=contenedor.querySelector('.cierre-ficha-compartida');activarCierre(cierre);}
     const panel=cierre.querySelector('[data-cierre-panel="liquidacion"]');if(panel)panel.innerHTML=`<p class="cierre-intro">Expediente final compartido. Consulte los hitos, requisitos y sustentos de cada componente.</p><div class="componentes-cierre">${[['COMPONENTE 01','PSR-GNL / Planta de regasificación'],['COMPONENTE 02','Redes de distribución'],['COMPONENTE 03','Tuberías de conexión']].map(([codigo,nombre])=>`<article><small>${codigo}</small><strong>${nombre}</strong><span>${proyecto.pasosSatcontrol?.[3]?'Parámetros contractuales guardados':'Parámetros pendientes'}</span><b>⌄</b></article>`).join('')}</div>`;
   };
+  const sincronizarResumenFichaRoles=ficha=>{
+    ficha.querySelectorAll('.ficha-cusco-componentes article').forEach(tarjeta=>{const porcentaje=tarjeta.querySelector('i b')?.style.width||'0%';const textoAvance=tarjeta.querySelector('span');if(textoAvance)textoAvance.textContent=`Porcentaje de avance: ${porcentaje}`;});
+    const curva=ficha.querySelector('.ficha-cusco-curva');if(!curva)return;
+    const etiqueta=curva.querySelector('header span');if(etiqueta)etiqueta.textContent='Programado · ejecutado';
+    if(!document.getElementById('estiloCurvaRoles'))document.head.insertAdjacentHTML('beforeend','<style id="estiloCurvaRoles">.ficha-cusco-curva .leyenda-curva-s{display:flex;gap:12px;align-items:center;margin:-3px 0 12px;color:#c6d7eb;font-size:.67rem;font-weight:800}.ficha-cusco-curva .leyenda-curva-s i{width:11px;height:11px;border-radius:3px;background:#69c8e8}.ficha-cusco-curva .leyenda-curva-s i.ejecutado{background:#507df0}.ficha-cusco-curva .grafica-curva-s{display:block;width:100%;height:auto;max-height:none!important;border-radius:12px;background:#121f3b}.ficha-cusco-curva .grafica-curva-s .rejilla-curva path{fill:none;stroke:#3a5280;stroke-width:1}.ficha-cusco-curva .grafica-curva-s .etiquetas-curva text{fill:#b6c9e3;font-size:13px;font-weight:700}.ficha-cusco-curva .grafica-curva-s .linea-curva{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}.ficha-cusco-curva .grafica-curva-s .programado{stroke:#69c8e8}.ficha-cusco-curva .grafica-curva-s .ejecutado{stroke:#507df0}</style>');
+    curva.querySelector('.leyenda-curva-s')?.remove();
+    curva.querySelector('header')?.insertAdjacentHTML('afterend','<div class="leyenda-curva-s"><i></i>Programado <i class="ejecutado"></i>Ejecutado</div>');
+    const svg=curva.querySelector('svg');if(svg)svg.outerHTML='<svg class="grafica-curva-s" viewBox="0 0 960 300" role="img" aria-label="Curva S con avance programado y ejecutado"><g class="rejilla-curva"><path d="M70 35H925M70 90H925M70 145H925M70 200H925M70 255H925M70 35V255M192 35V255M314 35V255M436 35V255M558 35V255M680 35V255M802 35V255M925 35V255"/></g><g class="etiquetas-curva"><text x="26" y="258">0%</text><text x="18" y="203">25%</text><text x="18" y="148">50%</text><text x="18" y="93">75%</text><text x="10" y="38">100%</text><text x="70" y="282">M1</text><text x="192" y="282">M2</text><text x="314" y="282">M3</text><text x="436" y="282">M4</text><text x="558" y="282">M5</text><text x="680" y="282">M6</text><text x="802" y="282">M7</text><text x="910" y="282">M8</text></g><polyline class="linea-curva programado" points="70,248 192,235 314,215 436,185 558,145 680,105 802,68 925,42"/><polyline class="linea-curva ejecutado" points="70,251 192,241 314,224 436,198 558,160 680,122 802,84 925,72"/></svg>';
+  };
   const actualizarFichaExistente=proyecto=>{
     const ficha=document.querySelector('.vista-ficha-cusco');
     if(!ficha||!proyecto)return;
@@ -35,7 +44,7 @@
     ficha.querySelectorAll('.ficha-cusco-datos article').forEach(item=>{const etiqueta=item.querySelector('small')?.textContent?.trim(),destino=item.querySelector('strong');if(destino&&Object.prototype.hasOwnProperty.call(valores,etiqueta))destino.textContent=texto(valores[etiqueta]);});
     const actualizado=ficha.querySelector('.ficha-cusco-actualizacion strong');if(actualizado)actualizado.textContent='Actualizado desde Masificación';
     document.querySelectorAll('[data-vista="ficha-proyecto-cusco"] .enlace-texto').forEach(nodo=>nodo.textContent=texto(proyecto.nombre));
-    insertarCierreMasificacion(ficha);
+    sincronizarResumenFichaRoles(ficha);insertarCierreMasificacion(ficha);
   };
   const crearFichaSupervisor=proyecto=>{
     // El supervisor ya accede a la ficha desde el proyecto desplegable del menú.
