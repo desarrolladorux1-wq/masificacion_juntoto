@@ -2997,6 +2997,8 @@
       curvaResumen.querySelector('.leyenda-curva-s').innerHTML='<i class="programado"></i>Programado <i class="declarado"></i>Ejecutado';
       curvaResumen.querySelectorAll('.linea-curva.verificado,.linea-curva.liquidable').forEach(linea=>linea.remove());
       curvaResumen.querySelector('svg')?.setAttribute('aria-label','Curva S con avance programado y ejecutado');
+      const inicioCurva=new Date(`${datos.inicio}T12:00:00`),finCurva=new Date(`${datos.fin}T12:00:00`),intervaloCurva=(finCurva-inicioCurva)/7,etiquetasCurva=[...curvaResumen.querySelectorAll('.etiquetas-curva text')].slice(5);
+      etiquetasCurva.forEach((etiqueta,indice)=>{const fecha=new Date(inicioCurva.getTime()+intervaloCurva*indice);etiqueta.textContent=fecha.toLocaleDateString('es-PE',{day:'2-digit',month:'short'}).replace('.','');});
     }
     const sincronizarCantidadesComponentes=()=>{
       const etiquetas=['PSR-GNL','Redes','TCs'];
