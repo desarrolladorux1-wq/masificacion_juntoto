@@ -2857,6 +2857,28 @@
       [registro.nombre,registro.ruc,registro.correo,registro.direccion].forEach((valor,indice)=>{if(campos[indice])campos[indice].value=valor;});
     });
   }
+  function copiarDatosGeneralesEnComponentes(){
+    if(document.querySelector('input[name="actoresCompartidosComponentes"]:checked')?.value!=='si')return;
+    const empresa=$('empresaEspecializadaGeneral')?.value||'',interventor=$('interventorContratoGeneral')?.value||'',denominacion=$('denominacionLicitacionGeneral')?.value||'',monto=$('montoServicioGeneral')?.value||'',moneda=$('monedaServicioGeneral')?.value||'PEN',plazo=$('plazoServicioGeneral')?.value||'',unidad=$('unidadPlazoServicioGeneral')?.value||'dias',inicio=$('fechaInicioServicioGeneral')?.value||'',fin=$('fechaFinServicioGeneral')?.value||'';
+    const asignarActor=(tarjeta,tipo,nombre)=>{
+      const registro=(catalogoActoresContractuales[tipo]||[]).find(item=>item.nombre===nombre),selector=tarjeta.querySelector(`[data-buscar-actor="${tipo}"]`);
+      if(!selector||!registro)return;
+      selector.value=registro.ruc;selector.dispatchEvent(new Event('change',{bubbles:true}));
+    };
+    document.querySelectorAll('.gestion-contractual-componente').forEach(tarjeta=>{
+      asignarActor(tarjeta,'contratista',empresa);asignarActor(tarjeta,'interventor',interventor);
+      [...tarjeta.querySelectorAll('.fila-contrato-componentes label')].forEach(etiqueta=>{
+        const nombre=etiqueta.firstChild?.textContent.trim(),entrada=etiqueta.querySelector('input');
+        if(nombre==='Denominación de la licitación'&&entrada)entrada.value=denominacion;
+      });
+      tarjeta.querySelectorAll('[data-tipo="monto-c"]').forEach(campo=>campo.value=monto);
+      tarjeta.querySelectorAll('[data-tipo="moneda-c"]').forEach(campo=>campo.value=moneda);
+      tarjeta.querySelectorAll('[data-tipo="plazo"]').forEach(campo=>campo.value=plazo);
+      tarjeta.querySelectorAll('[data-tipo="unidad-plazo"]').forEach(campo=>campo.value=unidad);
+      tarjeta.querySelectorAll('[data-tipo="fecha-inicio"]').forEach(campo=>campo.value=inicio);
+      tarjeta.querySelectorAll('[data-tipo="fecha-fin"]').forEach(campo=>campo.value=fin);
+    });
+  }
   function actualizarConfiguracionActoresComponentes(){
     const seleccion=document.querySelector('input[name="actoresCompartidosComponentes"]:checked'),contenedor=document.querySelector('.gestiones-contractuales-componentes');
     if(!seleccion||!contenedor)return;
@@ -2894,7 +2916,8 @@
     document.querySelectorAll('.fila-actores-contractuales').forEach(fila=>{
       if(!independientes)copiarDatosContratistaEnFila(fila);
     });
-    if(descripcion)descripcion.textContent=independientes?'Registre contratista e interventor en cada componente. Los documentos del contrato se administran de manera independiente.':'Registre aquí los nombres del contratista y del interventor que se aplicarán a PSR-GNL, Redes y Tuberías de conexión.';
+    if(!independientes)copiarDatosGeneralesEnComponentes();
+    if(descripcion)descripcion.textContent=independientes?'Registre contratista, interventor y datos del servicio en cada componente. Los documentos del contrato siempre se pueden adjuntar.':'Al marcar Sí se copiarán los datos registrados arriba —actores, licitación, monto, plazo y fechas— a todos los componentes.';
   }
   function valorResumenProyecto(id,simulado){const valor=$(id)?.value?.trim();return valor||simulado;}
   function geometriaResumenProyecto(){try{return JSON.parse($('proyectoGeometria').value||'null');}catch{return null;}}
@@ -3038,8 +3061,17 @@
     actualizarSeguimientoComponente(null);
     const contenedorComponentes=$('contenidoResumenProyecto').querySelector('.estado-componentes-resumen'),fasesResumen=leerFasesProyecto(),fasesLinea=fasesResumen.length?fasesResumen:[{nombre:'Anteproyecto',inicio:'',fin:''},{nombre:'Proyecto',inicio:'',fin:''},{nombre:'Construcción',inicio:'',fin:''},{nombre:'Operación',inicio:'',fin:''}];
     contenedorComponentes?.insertAdjacentHTML('afterend',`<section class="linea-fases-resumen"><header><small>LÍNEA DE FASES DEL PROYECTO</small><span>${fasesResumen.length?'Fases registradas':'Fases referenciales'}</span></header><div>${fasesLinea.map((fase,indice)=>`<article class="${indice===fasesLinea.length-1?'ultima':''}"><b>${String(indice+1).padStart(2,'0')}</b><strong>${escapePlanificacion(fase.nombre||`Fase ${indice+1}`)}</strong><small>${fase.inicio||fase.fin?`${fase.inicio||'—'} · ${fase.fin||'—'}`:'Fechas por definir'}</small></article>`).join('')}</div></section>`);
+    const formatearMontoContractual=(moneda,monto)=>`${moneda==='USD'?'US$':'S/'} ${monto.toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+    const desglosePresupuestoContractual=tipo=>{
+      const referencial=tipo==='c'?[['PSR-GNL / Planta de regasificación',1250000],['Redes de distribución',5100000],['Tuberías de conexión',1500000]]:[['PSR-GNL / Planta de regasificación',180000],['Redes de distribución',740000],['Tuberías de conexión',220000]];
+      return referencial.map(([nombre,montoReferencial],indice)=>{
+        const clave=['psr','redes','tc'][indice],componente=document.querySelector(`.gestion-contractual-componente[data-gestion-componente="${clave}"]`),campo=componente?.querySelector(`[data-tipo="monto-${tipo}"]`),moneda=componente?.querySelector(`[data-tipo="moneda-${tipo}"]`)?.value||'PEN',monto=Number(campo?.value);
+        return {nombre,monto:Number.isFinite(monto)&&monto>0?monto:montoReferencial,moneda};
+      });
+    };
+    const detalleContratista=desglosePresupuestoContractual('c'),detalleInterventor=desglosePresupuestoContractual('i'),tablaDesglose=detalle=>`<div class="detalle-presupuesto-componentes"><small>Detalle por componente</small>${detalle.map(item=>`<div><span>${item.nombre}</span><strong>${formatearMontoContractual(item.moneda,item.monto)}</strong></div>`).join('')}</div>`;
     const panelPresupuestos=$('contenidoResumenProyecto').querySelector('.costo-resumen');
-    if(panelPresupuestos)panelPresupuestos.innerHTML=`<header><h3>Presupuestos contractuales</h3><span>Gestión contractual</span></header><div class="costos-kpi presupuestos-contractuales"><article><small>Presupuesto contractual · Contratista</small><strong>${presupuestoContratista}</strong><span>Consolidado de los componentes registrados.</span></article><article><small>Presupuesto contractual · Interventor</small><strong>${presupuestoInterventor}</strong><span>Consolidado de los componentes registrados.</span></article></div><p>Estos montos se ingresan en la gestión contractual de cada componente. No se muestran costos, desembolsos ni saldos que aún no tienen una fuente de registro.</p>`;
+    if(panelPresupuestos)panelPresupuestos.innerHTML=`<header><h3>Presupuestos contractuales</h3><span>Gestión contractual</span></header><div class="costos-kpi presupuestos-contractuales"><details><summary><span><small>Presupuesto contractual · Contratista</small><em>Ver detalle por componente</em></span><strong>${presupuestoContratista}</strong><b aria-hidden="true">⌄</b></summary>${tablaDesglose(detalleContratista)}</details><details><summary><span><small>Presupuesto contractual · Interventor</small><em>Ver detalle por componente</em></span><strong>${presupuestoInterventor}</strong><b aria-hidden="true">⌄</b></summary>${tablaDesglose(detalleInterventor)}</details></div><p>El monto principal es la suma de los componentes. Despliegue cada presupuesto para revisar su detalle.</p>`;
     $('contenidoResumenProyecto').querySelector('.curva-s-resumen')?.insertAdjacentHTML('beforebegin',`<section class="panel-resumen documentos-liquidacion-resumen"><header><div><small>EXPEDIENTE FINANCIERO</small><h3>Documentos de liquidación</h3></div><span>3 componentes</span></header><p>Revise los hitos y sustentos requeridos antes de habilitar la liquidación y el pago.</p><div class="desplegables-liquidacion"><details open><summary><span><b>01</b><strong>PSR-GNL</strong><small>Hitos y actas de planta</small></span><em>70% verificado</em></summary><div class="detalle-liquidacion"><table><thead><tr><th>Hito</th><th>Estado</th><th>Sustentos requeridos</th></tr></thead><tbody><tr><td>Pre-commissioning</td><td><span class="estado-documento listo">Validado</span></td><td>Acta del interventor, protocolos de prueba y valorización.</td></tr><tr><td>Puesta en operación</td><td><span class="estado-documento pendiente">Pendiente</span></td><td>Acta de recepción, conformidad y solicitud de transferencia.</td></tr></tbody></table></div></details><details><summary><span><b>02</b><strong>Redes de distribución</strong><small>Metrados y dossier de obra</small></span><em>68% verificado</em></summary><div class="detalle-liquidacion"><table><thead><tr><th>Hito</th><th>Estado</th><th>Sustentos requeridos</th></tr></thead><tbody><tr><td>Valorización lote 4</td><td><span class="estado-documento listo">Validado</span></td><td>Cuadro de metrados, dossier, IDT y valorización validada.</td></tr><tr><td>Gasificación y cierre</td><td><span class="estado-documento pendiente">En revisión</span></td><td>Prueba conforme, acta de gasificación e informe Osinergmin si aplica.</td></tr></tbody></table></div></details><details><summary><span><b>03</b><strong>Tuberías de conexión</strong><small>Lotes de suministros habilitados</small></span><em>62% verificado</em></summary><div class="detalle-liquidacion"><table><thead><tr><th>Hito</th><th>Estado</th><th>Sustentos requeridos</th></tr></thead><tbody><tr><td>Lote TC-04 habilitado</td><td><span class="estado-documento listo">Validado</span></td><td>Listado de suministros, evidencia y validación del interventor.</td></tr><tr><td>Liquidación de lote</td><td><span class="estado-documento pendiente">Pendiente</span></td><td>Valorización, solicitud de transferencia y factura cuando corresponda.</td></tr></tbody></table></div></details></div></section>`);
     renderDocumentosLiquidacionResumen();
     configurarPestanasLiquidacionResumen();
@@ -3395,6 +3427,7 @@
       opcion.addEventListener('change',actualizarConfiguracionActoresComponentes);
       opcion.addEventListener('click',actualizarConfiguracionActoresComponentes);
     });
+    ['empresaEspecializadaGeneral','interventorContratoGeneral','denominacionLicitacionGeneral','montoServicioGeneral','monedaServicioGeneral','plazoServicioGeneral','unidadPlazoServicioGeneral','fechaInicioServicioGeneral','fechaFinServicioGeneral'].forEach(id=>$(id)?.addEventListener(['monedaServicioGeneral','unidadPlazoServicioGeneral'].includes(id)?'change':'input',copiarDatosGeneralesEnComponentes));
     ['contratista','interventor'].forEach(tipo=>$(`${tipo}CompartidoContrato`)?.addEventListener('change',()=>sincronizarActorCompartido(tipo)));
     ['fechaInicioCompartidaContrato','fechaFinCompartidaContrato'].forEach(id=>$(id)?.addEventListener('change',actualizarConfiguracionActoresComponentes));
     let documentoContratoPendienteEliminar=null;
@@ -3588,6 +3621,26 @@
     });
     document.querySelectorAll('.gestion-contractual-componente').forEach(gestion=>gestion.addEventListener('input',evento=>{if(!evento.target.matches('.plazo-contractual-compartido'))return;gestion.querySelectorAll('.plazo-contractual-compartido').forEach(control=>{if(control!==evento.target)control.value=evento.target.value;});}));
     document.querySelectorAll('.gestion-contractual-componente').forEach(gestion=>gestion.addEventListener('change',evento=>{if(!evento.target.matches('.unidad-plazo-compartida'))return;gestion.querySelectorAll('.unidad-plazo-compartida').forEach(control=>{if(control!==evento.target)control.value=evento.target.value;});}));
+    const calcularFechaFinContractual=gestion=>{
+      const inicio=gestion.querySelector('[data-tipo="fecha-inicio"]')?.value,plazo=Number(gestion.querySelector('[data-tipo="plazo"]')?.value),unidad=gestion.querySelector('[data-tipo="unidad-plazo"]')?.value;
+      if(!inicio||!Number.isFinite(plazo)||plazo<=0||!unidad)return;
+      const fecha=new Date(`${inicio}T12:00:00`);
+      if(unidad==='dias')fecha.setDate(fecha.getDate()+plazo);
+      else if(unidad==='meses')fecha.setMonth(fecha.getMonth()+plazo);
+      else fecha.setFullYear(fecha.getFullYear()+plazo);
+      const valor=fecha.toISOString().slice(0,10);
+      gestion.querySelectorAll('[data-tipo="fecha-fin"]').forEach(campo=>campo.value=valor);
+    };
+    document.querySelectorAll('.gestion-contractual-componente').forEach(gestion=>gestion.addEventListener('input',evento=>{if(evento.target.matches('[data-tipo="fecha-inicio"],.plazo-contractual-compartido'))calcularFechaFinContractual(gestion);}));
+    document.querySelectorAll('.gestion-contractual-componente').forEach(gestion=>gestion.addEventListener('change',evento=>{if(evento.target.matches('[data-tipo="unidad-plazo"]'))calcularFechaFinContractual(gestion);}));
+    const actualizarFechaFinServicioGeneral=()=>{
+      const inicio=$('fechaInicioServicioGeneral')?.value,plazo=Number($('plazoServicioGeneral')?.value),unidad=$('unidadPlazoServicioGeneral')?.value;
+      if(!inicio||!Number.isFinite(plazo)||plazo<=0)return;
+      const fecha=new Date(`${inicio}T12:00:00`);
+      if(unidad==='meses')fecha.setMonth(fecha.getMonth()+plazo);else fecha.setDate(fecha.getDate()+plazo);
+      $('fechaFinServicioGeneral').value=fecha.toISOString().slice(0,10);copiarDatosGeneralesEnComponentes();
+    };
+    ['fechaInicioServicioGeneral','plazoServicioGeneral','unidadPlazoServicioGeneral'].forEach(id=>$(id)?.addEventListener(id==='unidadPlazoServicioGeneral'?'change':'input',actualizarFechaFinServicioGeneral));
     const tarjetasParametros=[...document.querySelectorAll('.panel-parametros-contractuales .desplegable-parametro')];
     const actualizarResumenContractual=componente=>{
       const gestion=document.querySelector(`.gestion-contractual-componente[data-gestion-componente="${componente}"]`),tarjeta=tarjetasParametros.find(item=>componente==='psr'?item.classList.contains('parametro-psr'):item.querySelector('h4')?.textContent.includes(componente==='redes'?'Redes':'Tuberías'));
