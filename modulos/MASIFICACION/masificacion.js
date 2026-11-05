@@ -511,6 +511,7 @@
     renderDatosEvaluacionPredio(proyecto);
     const resumen=$('fichaPredioPlaneamiento').querySelector('.ficha-resumen-predio');
     resumen.innerHTML=`<h3>1. Resumen del proyecto y/o predio</h3><label class="campo-resumen-planeamiento"><span>Resumen</span><textarea id="resumenProyectoPlaneamiento" rows="4" placeholder="Ingrese el resumen, situación actual, alcance y datos relevantes del proyecto o predio.">${escapePlanificacion(proyecto.resumenPlaneamiento||'')}</textarea></label><div><article><small>Aptitud preliminar</small><strong>${proyecto.aptitudPlaneamiento||'Predio a calificar'}</strong></article><article><small>Prioridad</small><strong>${proyecto.prioridadPlaneamiento||'Media'}</strong></article><article><small>Tipo de evaluación</small><strong>${proyecto.tipoEvaluacionPlaneamiento||'Proyecto / predio'}</strong></article></div>`;
+    const botonVisita=document.createElement('button');botonVisita.type='button';botonVisita.className='boton-visita-planeamiento';botonVisita.dataset.asignarVisitaPlaneamiento='true';botonVisita.textContent=proyecto.visitaCampo?.usuario?'Reasignar visita a campo':'Asignar visita a campo';resumen.append(botonVisita);
     $('resumenProyectoPlaneamiento').addEventListener('input',evento=>{
       proyecto.resumenPlaneamiento=evento.target.value;
       guardarProyectoSatcontrol(proyecto);
@@ -629,9 +630,10 @@
       const proyecto=proyectoFichaPlaneamientoActivo();
       if(!proyecto)return;
       proyectoVisitaPlaneamientoActivo=proyecto;
-      $('visitaCampoUsuario').value=responsablePlaneamiento(proyecto);
-      $('visitaCampoFecha').value='';
+      $('visitaCampoUsuario').value=proyecto.visitaCampo?.usuario||responsablePlaneamiento(proyecto);
+      $('visitaCampoFecha').value=proyecto.visitaCampo?.fecha||'';
       $('visitaCampoResumenPredio').value=proyecto.resumenPlaneamiento||'';
+      $('visitaCampoIndicaciones').value=proyecto.visitaCampo?.indicaciones||'';
       $('modalAsignarVisitaCampo').showModal();
       return;
     }
@@ -3523,6 +3525,7 @@
       if(proyectoVisitaPlaneamientoActivo){
         proyectoVisitaPlaneamientoActivo.resumenPlaneamiento=$('visitaCampoResumenPredio').value.trim();
         proyectoVisitaPlaneamientoActivo.responsableLider=usuario;
+        proyectoVisitaPlaneamientoActivo.visitaCampo={usuario,fecha:$('visitaCampoFecha').value,indicaciones:$('visitaCampoIndicaciones').value.trim()};
         guardarProyectoSatcontrol(proyectoVisitaPlaneamientoActivo);
         setTimeout(()=>sincronizarFichaProyectoPlaneamiento(),0);
       }
