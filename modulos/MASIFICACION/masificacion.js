@@ -2298,7 +2298,7 @@
     $('campoPeriodoSupervision').hidden=tipo!=='semanal';
     document.querySelectorAll('[data-campo-informe]').forEach(campo=>campo.hidden=campo.dataset.campoInforme!==tipo);
     $('supervisionNumero').value=tipo==='diario'?'END-IDT-RED-CU-259-G1-25-07-2026':'ISO-CU-REDES-039';
-    $('estadoInformeSupervision').textContent=tipo==='diario'?'Informe diario listo para editar.':'Informe semanal listo para editar.';
+    $('estadoInformeSupervision').textContent='';
   }
 
   let mesCalendarioInformes=new Date(2026,8,1);
@@ -2365,18 +2365,74 @@
     }));
   }
 
+  let pestanaInformeDiarioActiva='generales';
+  function mostrarPestanaInformeDiario(pestana='generales') {
+    const modal=$('modalInformesSupervision');
+    const esIdtDirecto=modal.classList.contains('formulario-directo')&&tipoInformeSupervisionActivo()==='diario';
+    const navegacion=$('pestanasInformeDiario');
+    if(!esIdtDirecto){
+      navegacion.hidden=true;
+      modal.querySelectorAll('[data-idt-seccion]').forEach(seccion=>seccion.hidden=false);
+      return;
+    }
+    pestanaInformeDiarioActiva=pestana;
+    navegacion.hidden=false;
+    navegacion.querySelectorAll('[data-idt-pestana]').forEach(boton=>boton.classList.toggle('activo',boton.dataset.idtPestana===pestana));
+    modal.querySelectorAll('[data-idt-seccion]').forEach(seccion=>seccion.hidden=seccion.dataset.idtSeccion!==pestana);
+    const matrizIdt=modal.querySelector('.matriz-campos-informe[data-campo-informe="diario"]');
+    if(matrizIdt)matrizIdt.hidden=pestana==='generales';
+  }
+
+  function guardarBorradorInformeDiario() {
+    const campos=[...document.querySelectorAll('#modalInformesSupervision .supervision-editor input:not([type="file"]),#modalInformesSupervision .supervision-editor textarea,#modalInformesSupervision .supervision-editor select')];
+    const borrador=Object.fromEntries(campos.filter(campo=>campo.id).map(campo=>[campo.id,campo.value]));
+    localStorage.setItem('paulet-idt-borrador',JSON.stringify({actualizado:new Date().toISOString(),campos:borrador}));
+    $('estadoInformeSupervision').textContent='Borrador guardado localmente.';
+  }
+
+  function validarInformeDiario() {
+    const obligatorios=['supervisionProyecto','supervisionNumero','supervisionFecha','supervisionContratista','supervisionSupervisor','supervisionCliente','supervisionLugar'];
+    const faltantes=obligatorios.filter(id=>!$(id)?.value?.trim());
+    $('estadoInformeSupervision').textContent=faltantes.length?`Complete ${faltantes.length} dato(s) obligatorio(s) antes de generar el PDF.`:'Validación correcta: el informe está listo para generar el PDF.';
+  }
+
   function abrirInformesSupervision(tipo='diario',formularioDirecto=false) {
+    const modal=$('modalInformesSupervision');
+    const marcoIdt=$('marcoInformeDiarioIdt');
+    const usarReferenciaCompleta=formularioDirecto&&(tipo==='diario'||tipo==='semanal');
+    modal.classList.toggle('idt-referencia-completa',usarReferenciaCompleta);
+    marcoIdt.hidden=!usarReferenciaCompleta;
+    if(usarReferenciaCompleta){
+      const fuenteReferencia=`Paulet_Modal_IDT_Funcional.html?tipo=${tipo}`;
+      if(marcoIdt.getAttribute('src')!==fuenteReferencia)marcoIdt.setAttribute('src',fuenteReferencia);
+      if(!marcoIdt.dataset.vinculado){
+        marcoIdt.dataset.vinculado='true';
+        marcoIdt.addEventListener('load',()=>{
+          const cerrar=marcoIdt.contentDocument?.getElementById('closeModal');
+          cerrar?.addEventListener('click',()=>modal.close(),{capture:true});
+        });
+      }
+      modal.classList.remove('formulario-directo');
+      modal.showModal();
+      return;
+    }
     const selector=$('supervisionProyecto');
     selector.replaceChildren(...ciudades.map(p=>new Option(`${p.codigo} · ${p.nombre}`,p.codigo)));
     selector.value=proyectoSeleccionado?.codigo||ciudades[0]?.codigo||'';
     configurarInformeSupervision(tipo);
-    const modal=$('modalInformesSupervision');
+    const cuerpo=modal.querySelector('.supervision-cuerpo'),configuracion=modal.querySelector('.supervision-configuracion'),editor=modal.querySelector('.supervision-editor'),editorGrid=editor.querySelector('.supervision-editor-grid'),calendario=modal.querySelector('.calendario-informes-supervision');
+    if(formularioDirecto&&configuracion.parentElement!==editorGrid)editorGrid.prepend(configuracion);
+    if(formularioDirecto){['padding','margin','border','border-radius','background','box-shadow'].forEach(propiedad=>configuracion.style.setProperty(propiedad,'0','important'));configuracion.style.removeProperty('display');}
+    if(!formularioDirecto&&configuracion.parentElement===editorGrid){['display','padding','margin','border','border-radius','background','box-shadow'].forEach(propiedad=>configuracion.style.removeProperty(propiedad));cuerpo.insertBefore(configuracion,calendario);}
     modal.classList.toggle('formulario-directo',formularioDirecto);
     modal.querySelector('.supervision-tipos').hidden=formularioDirecto;
     modal.querySelector('.calendario-informes-supervision').hidden=formularioDirecto;
     modal.querySelector('.supervision-editor').open=true;
     modal.querySelector('header h2').textContent=formularioDirecto?(tipo==='diario'?'Formulario de informe diario IDT':'Formulario de informe semanal ISO'):'Generación de informes';
     modal.querySelector('header p').textContent=formularioDirecto?(tipo==='diario'?'Complete los datos del IDT y genere el PDF del informe diario.':'Complete los datos del ISO y genere el PDF del informe semanal.'):'Formatos técnicos IDT diario e ISO semanal.';
+    ['validarInformeDiario','guardarBorradorInformeDiario','generarPdfInformeDiario'].forEach(id=>$(id).hidden=!(formularioDirecto&&tipo==='diario'));
+    mostrarPestanaInformeDiario(pestanaInformeDiarioActiva);
+    normalizarCamposNumericosIdt();
     renderizarGaleriaSupervision();
     renderizarReportesSupervision();
     renderizarCalendarioInformes();
@@ -2417,10 +2473,87 @@
     return fetch(recurso.src).then(r=>r.blob()).then(blob=>new Promise((resolve,reject)=>{const lector=new FileReader();lector.onload=()=>resolve(lector.result);lector.onerror=reject;lector.readAsDataURL(blob);}));
   }
 
+  const valorNumericoIdt=(valor,decimales=0)=>{
+    let texto=String(valor??'').replace(/[^0-9,.-]/g,'');
+    if(!texto)return '';
+    if(texto.includes(',')&&texto.includes('.')) texto=texto.lastIndexOf(',')>texto.lastIndexOf('.')?texto.replaceAll('.','').replace(',','.'):texto.replaceAll(',','');
+    else texto=texto.replace(',','.');
+    const numero=Number(texto);
+    return Number.isFinite(numero)?new Intl.NumberFormat('es-PE',{minimumFractionDigits:decimales,maximumFractionDigits:decimales}).format(numero):String(valor??'').trim();
+  };
+  const formatoIdtCampo=[
+    ['supervisionAvanceCivil',2,'%'],['supervisionAvanceMecanico',2,'%'],['supervisionPresion',1,''],['supervisionTemperatura',0,''],
+    ['supervisionRedInstalada',2,''],['supervisionRedGasificada',2,''],['supervisionPersonal',0,''],['supervisionEquipos',0,''],['supervisionRncAbiertas',0,''],['supervisionRncCerradas',0,'']
+  ];
+  const normalizarCamposNumericosIdt=()=>formatoIdtCampo.forEach(([id,decimales,sufijo])=>{
+    const campo=$(id);if(!campo||campo.dataset.idtFormatoInicializado)return;
+    campo.dataset.idtFormatoInicializado='true';
+    campo.addEventListener('blur',()=>{const numero=valorNumericoIdt(campo.value,decimales);if(numero)campo.value=`${numero}${sufijo}`;});
+  });
+
+  async function exportarInformeDiarioIdt(proyecto) {
+    const valor=id=>$(id)?.value?.trim()||'';
+    const {jsPDF}=window.jspdf,doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const azul=[56,132,207],naranja=[255,102,0],gris=[102,102,102],borde=[145,145,145];
+    const fecha=valor('supervisionFecha'),numero=valor('supervisionNumero');
+    const datosNumero=(id,decimales=0,unidad='')=>{const n=valorNumericoIdt(valor(id),decimales);return n?`${n}${unidad?` ${unidad}`:''}`:'—';};
+    const texto=(id,alternativa='Sin información registrada.')=>valor(id)||alternativa;
+    const banda=(y,numeroSeccion,titulo,color=naranja)=>{doc.setFillColor(...color);doc.rect(14,y,182,5,'F');doc.setTextColor(255);doc.setFont('helvetica','bold');doc.setFontSize(6.3);doc.text(String(numeroSeccion),17,y+3.45);doc.text(titulo,105,y+3.45,{align:'center'});return y+5;};
+    const cabecera=(pagina)=>{
+      doc.setDrawColor(0);doc.setLineWidth(.25);doc.rect(14,9,182,31);
+      doc.setTextColor(...naranja);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text('END',18,23);
+      doc.setTextColor(26,87,142);doc.setFontSize(9);doc.text('FISE',43,23);
+      doc.setFillColor(...naranja);doc.rect(55,9,90,5,'F');doc.setTextColor(255);doc.setFontSize(5.5);doc.text('FORMATO',100,12.5,{align:'center'});
+      doc.setTextColor(15);doc.setFontSize(8);doc.text('INFORME DIARIO DE TRABAJO - IDT',100,23,{align:'center'});
+      doc.setFontSize(5.5);doc.text('END-FPY-FI-04',170,13,{align:'center'});doc.text(`PÁGINA ${pagina}`,170,22,{align:'center'});
+      doc.autoTable({startY:40,margin:{left:14,right:14},theme:'grid',styles:{fontSize:5.1,cellPadding:1.35,textColor:[20,20,20],lineColor:borde,overflow:'linebreak'},body:[
+        [{content:'PROYECTO',styles:{fillColor:gris,textColor:255,fontStyle:'bold'}},{content:proyecto.nombre||'Proyecto de masificación'},{content:'N.º INFORME',styles:{fillColor:gris,textColor:255,fontStyle:'bold'}},{content:numero,styles:{fillColor:[255,242,0]}},],
+        [{content:'SUPERVISIÓN',styles:{fillColor:gris,textColor:255,fontStyle:'bold'}},{content:text('supervisionSupervisor')},{content:'CONTRATISTA',styles:{fillColor:gris,textColor:255,fontStyle:'bold'}},{content:text('supervisionContratista')}],
+        [{content:'CLIENTE',styles:{fillColor:gris,textColor:255,fontStyle:'bold'}},{content:text('supervisionCliente')},{content:'LUGAR DE SUPERVISIÓN',styles:{fillColor:gris,textColor:255,fontStyle:'bold'}},{content:text('supervisionLugar')}],
+        [{content:'FECHA DE EJECUCIÓN',styles:{fillColor:gris,textColor:255,fontStyle:'bold'}},{content:fecha},{content:'ESPECIALIDAD',styles:{fillColor:gris,textColor:255,fontStyle:'bold'}},{content:'CIVIL · MECÁNICA · ELÉCTRICA · INSTRUMENTACIÓN'}]
+      ],columnStyles:{0:{cellWidth:25},1:{cellWidth:66},2:{cellWidth:30},3:{cellWidth:61}}});
+      let y=doc.lastAutoTable.finalY;
+      doc.setFillColor(...azul);doc.rect(14,y,182,5,'F');doc.setTextColor(255);doc.setFontSize(5.7);doc.text('ESPECIALIDAD CIVIL - MECÁNICA - ELÉCTRICA - INSTRUMENTACIÓN',105,y+3.35,{align:'center'});return y+5;
+    };
+    let y=cabecera(1);
+    y=banda(y,1,'DESCRIPCIÓN DEL AVANCE CONSTRUCTIVO');
+    doc.autoTable({startY:y,margin:{left:14,right:14},theme:'grid',styles:{fontSize:5.5,cellPadding:1.5,textColor:[20,20,20],lineColor:borde,overflow:'linebreak'},head:[['ÍTEM','ACTIVIDAD / AVANCE','COMENTARIOS']],headStyles:{fillColor:[120,120,120],textColor:255,fontStyle:'bold'},body:[
+      ['2.1','Permisos para la ejecución del proyecto',texto('idtPermisos')],['2.2','Recorrido informativo y difusión de inicio de obra',texto('idtRecorrido')],['2.3','Señalización y detección de interferencias',texto('idtSenalizacion')],['2.4','Excavación de calicatas',texto('idtCalicatas')]
+    ],columnStyles:{0:{cellWidth:14,halign:'center'},1:{cellWidth:67},2:{cellWidth:101}}});
+    y=doc.lastAutoTable.finalY+3;
+    y=banda(y,3,'OBSERVACIONES Y AUDITORÍAS');
+    doc.autoTable({startY:y,margin:{left:14,right:14},theme:'grid',styles:{fontSize:5.5,cellPadding:1.5,textColor:[20,20,20],lineColor:borde,overflow:'linebreak'},body:[
+      [{content:'RNC ABIERTAS',styles:{fontStyle:'bold'}},datosNumero('supervisionRncAbiertas'),{content:'RNC CERRADAS',styles:{fontStyle:'bold'}},datosNumero('supervisionRncCerradas')],
+      [{content:'RNC TOTAL',styles:{fontStyle:'bold'}},datosNumero('supervisionRncAbiertas')+' / '+datosNumero('supervisionRncCerradas'),{content:'OBSERVACIONES',styles:{fontStyle:'bold'}},texto('supervisionObservaciones')]
+    ],columnStyles:{0:{cellWidth:35},1:{cellWidth:20,halign:'center'},2:{cellWidth:35},3:{cellWidth:92}}});
+    y=doc.lastAutoTable.finalY+3;
+    y=banda(y,4,'GESTIÓN DEL TIEMPO (CRONOGRAMA)');
+    doc.autoTable({startY:y,margin:{left:14,right:14},theme:'grid',styles:{fontSize:5.5,cellPadding:1.7,textColor:[20,20,20],lineColor:borde,overflow:'linebreak'},body:[[{content:text('idtCronograma'),colSpan:2}],[{content:'Actividad principal',styles:{fillColor:[238,238,238],fontStyle:'bold'}},{content:text('supervisionActividadDiaria')}]],columnStyles:{0:{cellWidth:48},1:{cellWidth:134}}});
+    y=doc.lastAutoTable.finalY+3;
+    y=banda(y,5,'SEGURIDAD');
+    doc.autoTable({startY:y,margin:{left:14,right:14},theme:'grid',styles:{fontSize:5.4,cellPadding:1.25,textColor:[20,20,20],lineColor:borde,overflow:'linebreak'},head:[['CHARLA DE SEGURIDAD','INCIDENTES','ACCIDENTES','DETALLE']],headStyles:{fillColor:[120,120,120],textColor:255,fontStyle:'bold'},body:[[texto('idtTemaSeguridad'),`${datosNumero('supervisionIncidentes')} · ${texto('idtDetalleIncidentes')}`,`${datosNumero('supervisionAccidentes')} · ${texto('idtDetalleAccidentes')}`,texto('supervisionCharlaSeguridad')]],columnStyles:{0:{cellWidth:45},1:{cellWidth:42},2:{cellWidth:42},3:{cellWidth:53}}});
+    y=doc.lastAutoTable.finalY+3;
+    y=banda(y,6,'MANO DE OBRA - CONTRATISTA',naranja);
+    const personal=texto('idtPersonalDetalle','').split('\n').filter(Boolean).map((linea,i)=>{const [cargo,...cantidad]=linea.split(':');return [String(i+1),cargo.trim(),'Und.',cantidad.join(':').trim()||'—'];});
+    doc.autoTable({startY:y,margin:{left:14,right:14},theme:'grid',styles:{fontSize:5.1,cellPadding:1.1,textColor:[20,20,20],lineColor:borde},head:[['ÍTEM','DESCRIPCIÓN','UNIDAD','CANTIDAD']],headStyles:{fillColor:azul,textColor:255,fontStyle:'bold'},body:personal.slice(0,11),columnStyles:{0:{cellWidth:12,halign:'center'},1:{cellWidth:104},2:{cellWidth:28,halign:'center'},3:{cellWidth:38,halign:'center'}}});
+    y=doc.lastAutoTable.finalY+3;
+    y=banda(y,7,'NAGASCO - EQUIPOS',naranja);
+    const equipos=texto('idtEquiposDetalle','').split('\n').filter(Boolean).map((linea,i)=>{const [equipo,...cantidad]=linea.split(':');return [String(i+1),equipo.trim(),'Und.',cantidad.join(':').trim()||'—'];});
+    doc.autoTable({startY:y,margin:{left:14,right:14},theme:'grid',styles:{fontSize:5.1,cellPadding:1.1,textColor:[20,20,20],lineColor:borde},head:[['ÍTEM','DESCRIPCIÓN DE EQUIPOS','UNIDAD','CANTIDAD']],headStyles:{fillColor:azul,textColor:255,fontStyle:'bold'},body:equipos.slice(0,6),columnStyles:{0:{cellWidth:12,halign:'center'},1:{cellWidth:104},2:{cellWidth:28,halign:'center'},3:{cellWidth:38,halign:'center'}}});
+    y=doc.lastAutoTable.finalY+3;
+    y=banda(y,8,'PERSONAL',naranja);
+    doc.autoTable({startY:y,margin:{left:14,right:14},theme:'grid',styles:{fontSize:5.4,cellPadding:1.35,textColor:[20,20,20],lineColor:borde},head:[['SUPERVISIÓN END PERÚ S.A.C.','SUPERVISIÓN F.I.S.E.']],headStyles:{fillColor:azul,textColor:255,fontStyle:'bold',halign:'center'},body:[[texto('idtFirmaSupervision'),texto('idtFirmaFise')]],columnStyles:{0:{cellWidth:91},1:{cellWidth:91}},minCellHeight:13});
+    const seleccionadas=[...evidenciasMovilSupervision,...evidenciasCargadasSupervision].filter(f=>f.incluida);
+    const imagenes=[];for(const f of seleccionadas){try{imagenes.push({...f,data:await recursoADataUrl(f)});}catch(error){console.warn('No se pudo cargar evidencia',f.src,error);}}
+    for(let inicio=0;inicio<imagenes.length;inicio+=9){doc.addPage();let yFoto=cabecera(doc.getNumberOfPages());yFoto=banda(yFoto,9,'REGISTRO FOTOGRÁFICO');const grupo=imagenes.slice(inicio,inicio+9);grupo.forEach((f,i)=>{const col=i%3,fila=Math.floor(i/3),x=15+col*60,y=yFoto+fila*70;doc.setDrawColor(120);doc.setFillColor(246,246,246);doc.rect(x,y,58,67,'FD');try{doc.addImage(f.data,'JPEG',x+1,y+1,56,49,undefined,'FAST');}catch{try{doc.addImage(f.data,'PNG',x+1,y+1,56,49,undefined,'FAST');}catch{}}doc.setFillColor(105);doc.rect(x,y+50,58,17,'F');doc.setTextColor(255);doc.setFont('helvetica','bold');doc.setFontSize(4.9);const leyenda=`${inicio+i+1}. ${f.titulo}`;doc.text(doc.splitTextToSize(leyenda,54),x+1.5,y+54);doc.setFont('helvetica','normal');doc.setFontSize(4.4);doc.text(doc.splitTextToSize(f.detalle||'Evidencia de campo',54),x+1.5,y+60);});}
+    const archivoPdf=doc.output('blob');reportesGeneradosSupervision.unshift({numero,tipo:'diario',fecha,proyecto:`${proyecto.codigo} · ${proyecto.nombre}`,url:URL.createObjectURL(archivoPdf)});renderizarReportesSupervision();doc.save(`informe-diario-idt-${numero.replace(/[^a-z0-9-]+/gi,'_')}.pdf`);$('estadoInformeSupervision').textContent=`PDF IDT generado con el formato diario y ${imagenes.length} fotografía(s).`;
+  }
+
   async function exportarSupervisionPdf(evento) {
     if(evento&&!evento.isTrusted)return;
     if(!window.jspdf?.jsPDF){$('estadoInformeSupervision').textContent='No se pudo cargar el generador PDF.';return;}
     const tipo=tipoInformeSupervisionActivo(),proyecto=ciudades.find(p=>p.codigo===$('supervisionProyecto').value)||proyectoActual();
+    if(tipo==='diario')return exportarInformeDiarioIdt(proyecto);
     const valor=id=>$(id)?.value?.trim()||'';
     const fecha=tipo==='diario'?valor('supervisionFecha'):valor('supervisionPeriodo');
     const titulo=tipo==='diario'?'INFORME DIARIO DE TRABAJO - IDT':'INFORME SEMANAL DE TRABAJO - ISO';
@@ -3979,6 +4112,13 @@
     $('abrirInformeDiarioSupervision').addEventListener('click',()=>abrirInformesSupervision('diario',true));
     $('abrirInformeSemanalSupervision').addEventListener('click',()=>abrirInformesSupervision('semanal',true));
     document.querySelectorAll('[data-tipo-supervision]').forEach(b=>b.addEventListener('click',()=>configurarInformeSupervision(b.dataset.tipoSupervision)));
+    $('pestanasInformeDiario')?.addEventListener('click',evento=>{
+      const boton=evento.target.closest('[data-idt-pestana]');
+      if(boton)mostrarPestanaInformeDiario(boton.dataset.idtPestana);
+    });
+    $('validarInformeDiario')?.addEventListener('click',validarInformeDiario);
+    $('guardarBorradorInformeDiario')?.addEventListener('click',guardarBorradorInformeDiario);
+    $('generarPdfInformeDiario')?.addEventListener('click',exportarSupervisionPdf);
     $('abrirReportesSupervision')?.addEventListener('click',()=>{
       renderizarReportesSupervision();
       $('modalReportesSupervision').showModal();
