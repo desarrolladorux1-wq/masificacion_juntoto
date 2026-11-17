@@ -12,14 +12,22 @@
     <div class="marca-login"><img src="../logo_fise.png" alt="FISE"></div>
     <form id="formLogin" class="login-form">
       <p class="eyebrow">MASIFICACIÓN DE GAS NATURAL</p>
-      <h1>Bienvenido</h1>
-      <p class="acceso-directo">Acceso para Interventor</p>
-      <label class="campo-login">DNI o usuario<input id="usuarioInterventor" autocomplete="username" placeholder="Ingrese su DNI o usuario"></label>
+      <h1>Bienvenido Interventor</h1>
+      <label class="campo-login">Correo Gmail<input id="correoInterventor" type="email" autocomplete="email" placeholder="nombre@gmail.com"></label>
       <label class="campo-login">Contraseña<input id="claveInterventor" type="password" autocomplete="current-password" placeholder="Ingrese su contraseña"></label>
-      <small class="acceso-mock">Mockup: puede ingresar sin completar los campos.</small>
+      <button id="mostrarRecuperacion" class="olvido-contrasena" type="button">¿Olvidó su contraseña?</button>
       <button class="ingresar" type="submit">Ingresar</button>
     </form>
     <p class="pie-login">Aplicativo móvil del interventor<br>Masificación de gas natural</p>
+    <div id="recuperacionContrasena" class="modal-recuperacion" hidden>
+      <section class="dialogo-recuperacion" role="dialog" aria-modal="true" aria-labelledby="tituloRecuperacion">
+        <button id="cerrarRecuperacion" class="cerrar-recuperacion" type="button" aria-label="Cerrar">×</button>
+        <p class="eyebrow">RECUPERAR CONTRASEÑA</p><h2 id="tituloRecuperacion">Ingrese su correo Gmail</h2>
+        <p>Le prepararemos un enlace de recuperación.</p>
+        <label>Correo Gmail<input id="correoRecuperacion" type="email" autocomplete="email" placeholder="nombre@gmail.com"></label>
+        <button id="enviarRecuperacion" type="button">Enviar enlace</button>
+      </section>
+    </div>
   </section>
 
   <main class="app contratista-app interventor-app" id="appContratista" hidden>
@@ -31,27 +39,20 @@
 
     <div class="contenido-movil">
       <section class="vista activa" id="inicio">
-        <p class="eyebrow">INFORMES DE SUPERVISIÓN</p>
-        <h2>Informes de hoy</h2>
-        <article class="tarjeta-movil frente">
-          <p>Informe diario · IDT</p><h3>Red de distribución · Sector 03</h3>
-          <span>Datos generales vinculados a Masificación</span>
-          <div class="progreso"><i style="width:68%"></i></div><b>En preparación · 68% de avance reportado</b>
-        </article>
         <h2>Resumen de informes</h2>
         <div class="resumen-grid">
-          <article><span>IDT esta semana</span><b>5</b></article>
-          <article><span>ISO esta semana</span><b>1</b></article>
-          <article><span>Borradores</span><b>1</b></article>
+          <article><span>IDT esta semana</span><b id="contadorIdt">0</b></article>
+          <article><span>ISO esta semana</span><b id="contadorIso">0</b></article>
+          <article><span>Borradores</span><b id="contadorBorradores">0</b></article>
         </div>
         <article class="tarjeta-movil aviso"><h3>Crear informe</h3><p>Elija el formato que necesita registrar.</p><div class="acciones-inicio"><button data-ir="formularios" data-tipo-informe="diario" type="button">Informe diario · IDT</button><button data-ir="formularios" data-tipo-informe="semanal" type="button" class="secundario-inicio">Informe semanal · ISO</button></div></article>
       </section>
 
       <section class="vista" id="formularios">
-        <p class="eyebrow">REGISTRO DE SUPERVISIÓN</p><h2>Nuevo informe</h2>
+        <h2>Nuevo informe</h2>
         <div class="selector-formularios selector-informe-movil">
-          <label>Tipo de informe<select id="tipoInformeMovil" aria-label="Tipo de informe"><option value="diario">Informe diario · IDT</option><option value="semanal">Informe semanal · ISO</option></select></label>
           <label>Proyecto<select id="proyectoReferenciaMovil" aria-label="Proyecto del informe"></select></label>
+          <label>Tipo de informe<select id="tipoInformeMovil" aria-label="Tipo de informe"><option value="diario">Informe diario · IDT</option><option value="semanal">Informe semanal · ISO</option></select></label>
         </div>
         <article class="tarjeta-movil datos-masificacion-movil">
           <div id="datosMasificacionMovil"></div>
@@ -102,8 +103,9 @@
   </style>
   <style>
     .formulario-dinamico-movil h4{margin:8px 0 0;color:#3b6690;font-size:.67rem}.lista-entregables{display:grid;gap:8px}.lista-entregables label{display:grid;grid-template-columns:1fr 86px;gap:8px;align-items:end;padding:9px;border:1px solid #e0eaf1;border-radius:9px;background:#f8fbfd}.lista-entregables input{padding:8px;font-size:.65rem}@media(max-width:520px){.lista-entregables label{grid-template-columns:1fr}}
-    .login-form{grid-template-rows:none!important;gap:12px!important}.login-form .campo-login{display:grid;height:auto;padding:0;border:0;background:transparent;color:#d0def6;font-size:.66rem;font-weight:800;gap:6px}.login-form .campo-login input{width:100%;height:44px;padding:0 12px;color:#fff;border:1px solid #52607d;border-radius:11px;background:rgba(255,255,255,.08);font-size:.76rem;outline:0}.login-form .campo-login input::placeholder{color:#a7b5cf;font-weight:500}.acceso-mock{color:#a8bbd9;font-size:.59rem;line-height:1.35}
+    .login-form{grid-template-rows:none!important;gap:12px!important}.login-form .campo-login{display:grid;height:auto;padding:0;border:0;background:transparent;color:#d0def6;font-size:.66rem;font-weight:800;gap:6px}.login-form .campo-login input{width:100%;height:44px;padding:0 12px;color:#fff;border:1px solid #52607d;border-radius:11px;background:rgba(255,255,255,.08);font-size:.76rem;outline:0}.login-form .campo-login input::placeholder{color:#a7b5cf;font-weight:500}.acceso-mock{color:#a8bbd9;font-size:.59rem;line-height:1.35}.olvido-contrasena{justify-self:start;padding:0;color:#8ecff0;border:0;background:transparent;font:inherit;font-size:.65rem;font-weight:800;text-decoration:underline}.modal-recuperacion[hidden]{display:none}.modal-recuperacion{position:absolute;z-index:5;inset:0;display:grid;place-items:center;padding:24px;background:#071224a8;backdrop-filter:blur(3px)}.dialogo-recuperacion{position:relative;display:grid;gap:12px;width:100%;padding:22px;color:#d7e5fa;border:1px solid #6783aa;border-radius:18px;background:linear-gradient(150deg,#29466f,#14233e);box-shadow:0 20px 40px #050a1599}.dialogo-recuperacion h2{margin:0;color:#fff;font-size:1.08rem}.dialogo-recuperacion p:not(.eyebrow){margin:0;color:#b8c9e3;font-size:.72rem;line-height:1.4}.dialogo-recuperacion label{display:grid;gap:6px;color:#d0def6;font-size:.66rem;font-weight:800}.dialogo-recuperacion input{width:100%;height:42px;padding:0 10px;color:#fff;border:1px solid #6980a5;border-radius:9px;background:#ffffff14;font:inherit;font-size:.73rem}.dialogo-recuperacion>button:not(.cerrar-recuperacion){height:42px;color:#12304e;border:0;border-radius:9px;background:#8ecff0;font:inherit;font-size:.7rem;font-weight:900}.cerrar-recuperacion{position:absolute;top:11px;right:11px;width:32px;height:32px;color:#dceaff;border:1px solid #7890b4;border-radius:9px;background:#ffffff12;font-size:1.35rem;line-height:1}
     .selector-proyecto-referencia{display:grid;gap:6px;margin:0 0 10px;color:#537493;font-size:.62rem;font-weight:800}.selector-proyecto-referencia select{width:100%;height:42px;padding:0 10px;color:#264d71;border:1px solid #c8dfed;border-radius:10px;background:#fff;font:inherit;font-size:.68rem;font-weight:700}
+    .boton-editar-datos{display:grid;place-items:center;width:34px;height:34px;margin-left:4px;color:#fff;border:0;border-radius:10px;background:#317ba7;box-shadow:0 3px 8px #2b618a44}.boton-editar-datos svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}.edicion-datos-informe{display:grid;gap:8px}.edicion-datos-informe label{display:grid;gap:5px;color:#55738f;font-size:.61rem;font-weight:800}.edicion-datos-informe input,.edicion-datos-informe textarea{padding:9px;font-size:.68rem}.edicion-datos-informe textarea{min-height:64px}.edicion-datos-informe button{justify-self:start;padding:9px 11px;color:#fff;border:0;border-radius:9px;background:#3986b5;font:inherit;font-size:.65rem;font-weight:800}
     .boton-menu{display:grid;place-items:center;width:42px;height:42px;margin-left:auto;color:#fff;border:1px solid #ffffff70;border-radius:12px;background:#ffffff1c}.boton-menu svg,.opcion-menu-interventor svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}.menu-lateral[hidden]{display:none}.menu-lateral{position:absolute;z-index:30;inset:0;background:#10233d77;backdrop-filter:blur(2px)}.panel-menu-interventor{display:flex;flex-direction:column;width:min(86%,340px);height:100%;padding:18px;background:#fff;box-shadow:10px 0 30px #11264a40}.cabecera-menu-interventor{display:flex;align-items:center;justify-content:flex-end;margin-bottom:18px}.perfil-menu-interventor>span{display:grid;place-items:center;width:42px;height:42px;color:#fff;border-radius:13px;background:linear-gradient(135deg,#345d91,#5db0d0);font-size:.82rem}.cabecera-menu-interventor button{width:38px;height:38px;color:#385b87;border:0;border-radius:10px;background:#eef5f9;font-size:1.6rem;line-height:1}.perfil-menu-interventor{display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:10px;width:100%;padding:13px;text-align:left;color:#204a80;border:1px solid #d6e3ed;border-radius:15px;background:#f9fcfe}.perfil-menu-interventor b{font-size:.8rem}.perfil-menu-interventor small{display:block;margin-top:3px;color:#7488a0;font-size:.62rem;font-weight:600}.perfil-menu-interventor i{color:#6381a1;font-size:1.35rem;font-style:normal}.titulo-menu-interventor{margin:23px 8px 8px;color:#66809d;font-size:.63rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.opcion-menu-interventor{display:flex;align-items:center;gap:12px;width:100%;padding:14px 9px;color:#254d79;border:0;border-bottom:1px solid #e7eef4;background:transparent;text-align:left;font:inherit;font-size:.77rem;font-weight:800}.opcion-menu-interventor svg{color:#3b85ae}
   </style>
   <script src="app.js?v=20261117-informes-interventor-1"></script>
