@@ -26,7 +26,7 @@
     <header class="app-cabecera">
       <img src="../logo_fise.png" alt="FISE">
       <div><p>MASIFICACIÓN</p><h1>Interventor</h1><span>Proyecto Especial · Cusco</span></div>
-      <strong>IN</strong>
+      <button id="abrirMenuInterventor" class="boton-menu" type="button" aria-label="Abrir menú" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     </header>
 
     <div class="contenido-movil">
@@ -84,6 +84,17 @@
       <button type="button" data-ir="informes"><svg viewBox="0 0 24 24"><path d="M5 3h11l3 3v15H5zM16 3v4h4M8 12h8M8 16h8"/></svg><span>Mis informes</span></button>
       <button type="button" data-ir="perfil"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c.7-4 3.3-6 8-6s7.3 2 8 6"/></svg><span>Perfil</span></button>
     </nav>
+
+    <div id="menuLateralInterventor" class="menu-lateral" hidden>
+      <aside class="panel-menu-interventor" role="dialog" aria-modal="true" aria-label="Menú de Interventor">
+        <div class="cabecera-menu-interventor"><button id="cerrarMenuInterventor" type="button" aria-label="Cerrar menú">×</button></div>
+        <button class="perfil-menu-interventor" type="button" data-menu-ir="perfil"><span>IN</span><b>Andrea Interventor<small>END PERÚ S.A.C.</small></b><i>›</i></button>
+        <p class="titulo-menu-interventor">Informes</p>
+        <button class="opcion-menu-interventor" type="button" data-menu-informe="diario"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM15 3v5h5M9 12h6M9 16h6"/></svg><span>Informe diario · IDT</span></button>
+        <button class="opcion-menu-interventor" type="button" data-menu-informe="semanal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM15 3v5h5M9 12h6M9 16h6"/></svg><span>Informe semanal · ISO</span></button>
+        <button class="opcion-menu-interventor" type="button" data-menu-ir="informes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v15H5zM16 3v4h4M8 12h8M8 16h8"/></svg><span>Mis informes</span></button>
+      </aside>
+    </div>
   </main>
   <div id="toast" class="toast" role="status"></div>
   <style>
@@ -93,6 +104,7 @@
     .formulario-dinamico-movil h4{margin:8px 0 0;color:#3b6690;font-size:.67rem}.lista-entregables{display:grid;gap:8px}.lista-entregables label{display:grid;grid-template-columns:1fr 86px;gap:8px;align-items:end;padding:9px;border:1px solid #e0eaf1;border-radius:9px;background:#f8fbfd}.lista-entregables input{padding:8px;font-size:.65rem}@media(max-width:520px){.lista-entregables label{grid-template-columns:1fr}}
     .login-form{grid-template-rows:none!important;gap:12px!important}.login-form .campo-login{display:grid;height:auto;padding:0;border:0;background:transparent;color:#d0def6;font-size:.66rem;font-weight:800;gap:6px}.login-form .campo-login input{width:100%;height:44px;padding:0 12px;color:#fff;border:1px solid #52607d;border-radius:11px;background:rgba(255,255,255,.08);font-size:.76rem;outline:0}.login-form .campo-login input::placeholder{color:#a7b5cf;font-weight:500}.acceso-mock{color:#a8bbd9;font-size:.59rem;line-height:1.35}
     .selector-proyecto-referencia{display:grid;gap:6px;margin:0 0 10px;color:#537493;font-size:.62rem;font-weight:800}.selector-proyecto-referencia select{width:100%;height:42px;padding:0 10px;color:#264d71;border:1px solid #c8dfed;border-radius:10px;background:#fff;font:inherit;font-size:.68rem;font-weight:700}
+    .boton-menu{display:grid;place-items:center;width:42px;height:42px;margin-left:auto;color:#fff;border:1px solid #ffffff70;border-radius:12px;background:#ffffff1c}.boton-menu svg,.opcion-menu-interventor svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}.menu-lateral[hidden]{display:none}.menu-lateral{position:absolute;z-index:30;inset:0;background:#10233d77;backdrop-filter:blur(2px)}.panel-menu-interventor{display:flex;flex-direction:column;width:min(86%,340px);height:100%;padding:18px;background:#fff;box-shadow:10px 0 30px #11264a40}.cabecera-menu-interventor{display:flex;align-items:center;justify-content:flex-end;margin-bottom:18px}.perfil-menu-interventor>span{display:grid;place-items:center;width:42px;height:42px;color:#fff;border-radius:13px;background:linear-gradient(135deg,#345d91,#5db0d0);font-size:.82rem}.cabecera-menu-interventor button{width:38px;height:38px;color:#385b87;border:0;border-radius:10px;background:#eef5f9;font-size:1.6rem;line-height:1}.perfil-menu-interventor{display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:10px;width:100%;padding:13px;text-align:left;color:#204a80;border:1px solid #d6e3ed;border-radius:15px;background:#f9fcfe}.perfil-menu-interventor b{font-size:.8rem}.perfil-menu-interventor small{display:block;margin-top:3px;color:#7488a0;font-size:.62rem;font-weight:600}.perfil-menu-interventor i{color:#6381a1;font-size:1.35rem;font-style:normal}.titulo-menu-interventor{margin:23px 8px 8px;color:#66809d;font-size:.63rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.opcion-menu-interventor{display:flex;align-items:center;gap:12px;width:100%;padding:14px 9px;color:#254d79;border:0;border-bottom:1px solid #e7eef4;background:transparent;text-align:left;font:inherit;font-size:.77rem;font-weight:800}.opcion-menu-interventor svg{color:#3b85ae}
   </style>
   <script src="app.js?v=20261117-informes-interventor-1"></script>
 </body>

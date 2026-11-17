@@ -64,6 +64,10 @@
   function manejarFotos(archivos,destino='descripcionesFotos'){const lista=$(destino);if(lista)lista.innerHTML=[...archivos].map((archivo,indice)=>`<label>Foto ${indice+1}: ${esc(archivo.name)}<input placeholder="Descripción técnica de la fotografía"></label>`).join('')}
   $('formLogin').addEventListener('submit',evento=>{evento.preventDefault();$('pantallaLogin').hidden=true;$('appContratista').hidden=false;ir('inicio')});
   document.querySelectorAll('[data-ir]').forEach(boton=>boton.addEventListener('click',()=>ir(boton.dataset.ir)));
+  const abrirMenu=()=>{$('menuLateralInterventor').hidden=false;$('abrirMenuInterventor').setAttribute('aria-expanded','true')},cerrarMenu=()=>{$('menuLateralInterventor').hidden=true;$('abrirMenuInterventor').setAttribute('aria-expanded','false')};
+  $('abrirMenuInterventor').addEventListener('click',abrirMenu);
+  $('cerrarMenuInterventor').addEventListener('click',cerrarMenu);
+  $('menuLateralInterventor').addEventListener('click',evento=>{if(evento.target===$('menuLateralInterventor'))cerrarMenu();const destino=evento.target.closest('[data-menu-ir]');if(destino){ir(destino.dataset.menuIr);cerrarMenu()}const informe=evento.target.closest('[data-menu-informe]');if(informe){$('tipoInformeMovil').value=informe.dataset.menuInforme;renderFormularioMovil();ir('formularios');cerrarMenu()}});
   document.querySelectorAll('[data-tipo-informe]').forEach(boton=>boton.addEventListener('click',()=>{const selector=$('tipoInformeMovil');selector.value=boton.dataset.tipoInforme;renderFormularioMovil()}));
   $('tipoInformeMovil').addEventListener('change',renderFormularioMovil);
   $('proyectoReferenciaMovil').addEventListener('change',evento=>{proyectoReferencia=evento.target.value;renderFormularioMovil();mensaje('Proyecto actualizado.')});
