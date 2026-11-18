@@ -45,6 +45,8 @@
   if(tituloAplicacion)tituloAplicacion.textContent='Supervisión';
   if(rolPerfil)rolPerfil.textContent='Supervisora de campo';
   if(rolDato)rolDato.textContent='Supervisora de campo';
+  const perfil=$('perfil');
+  if(perfil){perfil.innerHTML='<p class="eyebrow">CUENTA DE USUARIO</p><h2>Mi perfil</h2><form id="formPerfilSupervisionMovil" class="formulario-perfil-unificado"><label>Nombres<input value="Valeria"></label><label>Apellidos<input value="Cárdenas"></label><label>Entidad supervisora<input value="END PERÚ S.A.C."></label><label>Correo<input type="email" value="valeria.cardenas@fise.gob.pe"></label><label>Teléfono<input value="999 555 333"></label><button type="submit">Guardar cambios</button><button id="cerrarSesionSupervisionMovil" type="button" class="secundario">Cerrar sesión</button></form>';$('formPerfilSupervisionMovil').addEventListener('submit',evento=>{evento.preventDefault();avisar('Datos del perfil guardados.');});$('cerrarSesionSupervisionMovil').addEventListener('click',()=>{document.getElementById('app').hidden=true;document.getElementById('pantallaLoginSupervision').hidden=false;});}
   const marcaAplicacion=document.querySelector('#app header>b');
   if(marcaAplicacion)marcaAplicacion.textContent='SC';
   pintarVisita();iniciarMapaVisitas();
