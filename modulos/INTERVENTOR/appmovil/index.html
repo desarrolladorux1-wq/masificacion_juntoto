@@ -69,6 +69,24 @@
         <div id="listaInformes" class="lista-informes"></div>
       </section>
 
+      <section class="vista" id="noConformidades">
+        <p class="eyebrow">CONTROL DE CALIDAD</p><h2>No Conformidades</h2>
+        <p class="descripcion">Registre hallazgos y comunique la acción requerida al contratista.</p>
+        <form id="formNoConformidadMovil" class="formulario-movil tarjeta-movil">
+          <label>Código NC<input id="codigoNcMovil" readonly></label>
+          <label>Proyecto<select id="proyectoNcMovil"></select></label>
+          <label>Componente<select id="componenteNcMovil"><option>Redes de distribución</option><option>PSR-GNL</option><option>Tuberías de conexión</option></select></label>
+          <label>Tipo de NC<select id="tipoNcMovil"><option>Incumplimiento técnico</option><option>Seguridad y medio ambiente</option><option>Documental</option></select></label>
+          <label>Ubicación<input id="ubicacionNcMovil" placeholder="Frente, sector o coordenada"></label>
+          <label>Fecha de detección<input id="fechaNcMovil" type="date" required></label>
+          <label>Descripción detallada<textarea id="descripcionNcMovil" required placeholder="Describa el hallazgo identificado"></textarea></label>
+          <label>Acción requerida al contratista<textarea id="accionNcMovil" placeholder="Indique la subsanación solicitada"></textarea></label>
+          <label>Evidencias<input id="evidenciasNcMovil" type="file" multiple accept="image/*,.pdf"></label>
+          <button type="submit">Registrar No Conformidad</button>
+        </form>
+        <div id="listaNcMovil" class="lista-informes"></div>
+      </section>
+
       <section class="vista" id="perfil">
         <p class="eyebrow">CUENTA DE USUARIO</p><h2>Mi perfil</h2>
         <form id="formPerfil" class="formulario-movil">
@@ -83,6 +101,7 @@
       <button class="activo" type="button" data-ir="inicio"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Inicio</span></button>
       <button type="button" data-ir="formularios"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM15 3v5h5M9 12h6M9 16h6"/></svg><span>Informes</span></button>
       <button type="button" data-ir="informes"><svg viewBox="0 0 24 24"><path d="M5 3h11l3 3v15H5zM16 3v4h4M8 12h8M8 16h8"/></svg><span>Mis informes</span></button>
+      <button type="button" data-ir="noConformidades"><svg viewBox="0 0 24 24"><path d="M12 3 3 20h18L12 3ZM12 9v4M12 17h.01"/></svg><span>NC</span></button>
       <button type="button" data-ir="perfil"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c.7-4 3.3-6 8-6s7.3 2 8 6"/></svg><span>Perfil</span></button>
     </nav>
 
@@ -94,6 +113,7 @@
         <button class="opcion-menu-interventor" type="button" data-menu-informe="diario"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM15 3v5h5M9 12h6M9 16h6"/></svg><span>Informe diario · IDT</span></button>
         <button class="opcion-menu-interventor" type="button" data-menu-informe="semanal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM15 3v5h5M9 12h6M9 16h6"/></svg><span>Informe semanal · ISO</span></button>
         <button class="opcion-menu-interventor" type="button" data-menu-ir="informes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v15H5zM16 3v4h4M8 12h8M8 16h8"/></svg><span>Mis informes</span></button>
+        <button class="opcion-menu-interventor" type="button" data-menu-ir="noConformidades"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 20h18L12 3ZM12 9v4M12 17h.01"/></svg><span>No Conformidades</span></button>
       </aside>
     </div>
   </main>

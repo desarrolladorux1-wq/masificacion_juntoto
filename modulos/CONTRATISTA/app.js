@@ -87,7 +87,14 @@
     $('seleccionarTodoCronogramaContratista').checked=!!total&&seleccionCronograma.size===total;
     actualizarDeslizadoresCronogramaContratista();
   }
+  function insertarFasesCronogramaContratista(){
+    const tabla=$('tablaCronogramaContratista'),encabezado=tabla?.closest('table')?.querySelector('thead tr');if(!tabla||!encabezado)return;
+    const cabeceraActividad=[...encabezado.children].find(celda=>celda.textContent.trim()==='Actividad');
+    if(cabeceraActividad&&![...encabezado.children].some(celda=>celda.textContent.trim()==='Fase')){const celda=document.createElement('th');celda.dataset.columnaFase='';celda.textContent='Fase';cabeceraActividad.insertAdjacentElement('afterend',celda);}
+    tabla.querySelectorAll('tr[data-actividad-cronograma]').forEach(fila=>{const indice=Number(fila.dataset.actividadCronograma),actividad=actividadesCronograma[indice],celdaActividad=fila.children[2];if(!actividad||!celdaActividad||fila.querySelector('[data-columna-fase]'))return;const celda=document.createElement('td');celda.dataset.columnaFase='';celda.innerHTML=`<select aria-label="Fase ${indice+1}" data-campo-cronograma="fase">${['Fase 1','Fase 2','Fase 3','No aplica'].map(fase=>`<option${(actividad.fase||'Fase 1')===fase?' selected':''}>${fase}</option>`).join('')}</select>`;celdaActividad.insertAdjacentElement('afterend',celda);});
+  }
   function actualizarDeslizadoresCronogramaContratista(){
+    insertarFasesCronogramaContratista();
     requestAnimationFrame(()=>{
       const pares=[[document.querySelector('.tabla-cronograma-contratista'),$('deslizadorTablaCronogramaContratista')],[document.querySelector('.gantt-contratista'),$('deslizadorGanttCronogramaContratista')]];
       pares.forEach(([panel,deslizador])=>{if(!panel||!deslizador)return;const maximo=Math.max(0,panel.scrollWidth-panel.clientWidth);deslizador.max=maximo;deslizador.value=Math.min(maximo,panel.scrollLeft);deslizador.disabled=maximo<2;});
@@ -118,16 +125,17 @@ $('tablaCronogramaContratista')?.addEventListener('click',evento=>{
     const enlace=document.createElement('a');enlace.href=URL.createObjectURL(archivo);enlace.download='cronograma-actividades-cusco.csv';enlace.click();URL.revokeObjectURL(enlace.href);
   });
   function alternarCronogramaAmpliado(ampliar){
-    const panel=document.querySelector('.panel-cronograma-contratista'),boton=$('ampliarCronogramaContratista');
+    const panel=document.querySelector('.panel-cronograma-contratista'),boton=$('ampliarCronogramaContratista'),modal=$('modalCronogramaAmpliadoContratista'),contenedor=$('contenidoModalCronogramaAmpliado');
     if(!panel)return;
-    const activo=typeof ampliar==='boolean'?ampliar:!panel.classList.contains('cronograma-ampliado');
-    panel.classList.toggle('cronograma-ampliado',activo);
-    document.body.classList.toggle('cronograma-ampliado-activo',activo);
-    if(boton){boton.textContent=activo?'× Cerrar':'⛶ Ampliar';boton.setAttribute('title',activo?'Cerrar vista ampliada':'Ampliar cronograma');}
+    const activo=typeof ampliar==='boolean'?ampliar:!modal?.open;
+    if(activo&&modal&&contenedor){const marcador=document.createComment('cronograma-contratista');panel.replaceWith(marcador);panel._marcadorCronograma=marcador;contenedor.append(panel);modal.showModal();}
+    if(!activo&&modal?.open)modal.close();
+    if(boton){boton.textContent=activo?'× Cerrar':'⛶ Ampliar';boton.setAttribute('title',activo?'Cerrar vista ampliada':'Ampliar cronograma');boton.setAttribute('aria-expanded',String(activo));}
     setTimeout(actualizarDeslizadoresCronogramaContratista,40);
   }
-  $('ampliarCronogramaContratista')?.addEventListener('click',()=>alternarCronogramaAmpliado());
-  document.addEventListener('keydown',evento=>{if(evento.key==='Escape'&&document.querySelector('.panel-cronograma-contratista.cronograma-ampliado'))alternarCronogramaAmpliado(false);});
+  $('ampliarCronogramaContratista')?.addEventListener('click',evento=>{evento.preventDefault();alternarCronogramaAmpliado();});
+  $('cerrarCronogramaAmpliadoContratista')?.addEventListener('click',()=>alternarCronogramaAmpliado(false));
+  $('modalCronogramaAmpliadoContratista')?.addEventListener('close',()=>{const panel=document.querySelector('.panel-cronograma-contratista'),marcador=panel?._marcadorCronograma;if(marcador?.parentNode)marcador.replaceWith(panel);if(panel)delete panel._marcadorCronograma;const boton=$('ampliarCronogramaContratista');if(boton){boton.textContent='⛶ Ampliar';boton.setAttribute('title','Ampliar cronograma');boton.setAttribute('aria-expanded','false');}setTimeout(actualizarDeslizadoresCronogramaContratista,40);});
   $('seleccionarTodoCronogramaContratista')?.addEventListener('change',evento=>{seleccionCronograma.clear();if(evento.target.checked)actividadesCronograma.forEach((_,indice)=>seleccionCronograma.add(indice));renderCronogramaContratista();});
   function ajustarNivelCronogramaContratista(delta){seleccionCronograma.forEach(indice=>actividadesCronograma[indice].nivel=Math.max(0,Math.min(3,Number(actividadesCronograma[indice].nivel||0)+delta)));renderCronogramaContratista();}
   $('bajarNivelCronogramaContratista')?.addEventListener('click',()=>ajustarNivelCronogramaContratista(1));
@@ -331,8 +339,8 @@ $('tablaCronogramaContratista')?.addEventListener('click',evento=>{
       const proyectoCusco=doc.createElement('a');proyectoCusco.className='enlace-menu enlace-menu-contratista';proyectoCusco.href='../../index.html#ficha-proyecto-cusco';proyectoCusco.target='_top';proyectoCusco.dataset.etiqueta='Proyecto Especial de Masificación · Cusco';proyectoCusco.innerHTML='<span class="menu-icono" aria-hidden="true"><b>01</b></span><span class="enlace-texto">Proyecto Especial de Masificación · Cusco</span>';submenusProyectosSat.append(proyectoCusco);
       proyectoCusco.addEventListener('click',(evento)=>{evento.preventDefault();window.parent.postMessage({tipo:'contratista:navegar',id:'ficha-proyecto-cusco'},window.location.origin)});
       cabeceraProyectos.addEventListener('click',()=>{const abierto=cabeceraProyectos.getAttribute('aria-expanded')==='true';cabeceraProyectos.setAttribute('aria-expanded',String(!abierto));submenusProyectosSat.hidden=abierto});grupoProyectos.append(cabeceraProyectos,submenusProyectosSat);
-      const aplicativoMovil=doc.createElement('a');aplicativoMovil.className='enlace-menu enlace-menu-contratista enlace-app-movil';aplicativoMovil.href='../INTERVENTOR/appmovil/index.html';aplicativoMovil.target='_top';aplicativoMovil.dataset.etiqueta='Aplicativo móvil';aplicativoMovil.innerHTML='<span class="menu-icono" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2"/><path d="M10 18.3h4"/></svg></span><span class="enlace-texto">Aplicativo móvil</span>';
       const cronograma=doc.createElement('a');cronograma.className='enlace-menu enlace-menu-contratista';cronograma.href='../../index.html#cronograma-actividades';cronograma.target='_top';cronograma.dataset.etiqueta='Cronograma y actividades';cronograma.innerHTML='<span class="menu-icono" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M12 18h.01"/></svg></span><span class="enlace-texto">Cronograma y actividades</span>';
+      const aplicativoMovil=doc.createElement('a');aplicativoMovil.className='enlace-menu enlace-menu-contratista enlace-app-movil';aplicativoMovil.href='appmovil/index.html';aplicativoMovil.target='_top';aplicativoMovil.dataset.etiqueta='Aplicativo móvil de Contratista';aplicativoMovil.innerHTML='<span class="menu-icono" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2"/><path d="M10 18.3h4"/></svg></span><span class="enlace-texto">Aplicativo móvil</span>';
       grupoInformes.hidden=true;
       enlaceSat.after(grupoProyectos);grupoProyectos.after(cronograma);cronograma.after(grupoInformes);grupoInformes.after(aplicativoMovil);
     }

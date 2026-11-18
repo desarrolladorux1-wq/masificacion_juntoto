@@ -1,8 +1,8 @@
 (()=>{
   const $=id=>document.getElementById(id);
-  const destinos={masificacion:'modulos/MASIFICACION/masificacion.html',contratista:'modulos/CONTRATISTA/index.html',interventor:'modulos/INTERVENTOR/index.html',supervisor:'modulos/SUPERVISOR_PETROPERU/index.html'};
+  const destinos={masificacion:'modulos/MASIFICACION/masificacion.html',contratista:'modulos/CONTRATISTA/index.html',interventor:'modulos/INTERVENTOR/index.html',supervision:'modulos/SUPERVISION/index.html',petroperu:'modulos/SUPERVISOR_PETROPERU/index.html',supervisor:'modulos/SUPERVISOR_PETROPERU/index.html'};
   const clave='paulet-masificacion-usuarios';
-  const iniciales=[{nombre:'Usuario Masificación',usuario:'masificacion',clave:'123456',rol:'masificacion'},{nombre:'Usuario Contratista',usuario:'contratista',clave:'123456',rol:'contratista'},{nombre:'Usuario Interventor',usuario:'interventor',clave:'123456',rol:'interventor'},{nombre:'Supervisor PETROPERÚ',usuario:'supervisor',clave:'123456',rol:'supervisor'}];
+  const iniciales=[{nombre:'Usuario Masificación',usuario:'masificacion',clave:'123456',rol:'masificacion'},{nombre:'Usuario Contratista',usuario:'contratista',clave:'123456',rol:'contratista'},{nombre:'Usuario Interventor',usuario:'interventor',clave:'123456',rol:'interventor'},{nombre:'Supervisión de Campo',usuario:'supervision',clave:'123456',rol:'supervision'},{nombre:'Usuario Petroperú',usuario:'petroperu',clave:'123456',rol:'petroperu'},{nombre:'Supervisor PETROPERÚ',usuario:'supervisor',clave:'123456',rol:'supervisor'}];
   const leer=()=>{
     const guardados=JSON.parse(localStorage.getItem(clave)||'null');
     if(!guardados)return iniciales;

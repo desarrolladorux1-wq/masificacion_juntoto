@@ -831,8 +831,21 @@
   const normalizarComponentesSatcontrol=proyecto=>({...proyecto,componentesSatcontrol:componentesSatcontrolProyecto(proyecto)});
   const clavePasosSatcontrol='masificacion.pasos-satcontrol';
   const claveProyectosSatcontrol='masificacion.proyectos-guardados';
+  // Ficha maestra: es el contrato de datos que consumen los demás módulos.
+  // Ningún módulo debe mantener una ficha paralela del mismo proyecto.
+  const claveFichasCompartidas='masificacion.fichas-consolidadas';
   const leerPasosSatcontrol=()=>{try{return JSON.parse(localStorage.getItem(clavePasosSatcontrol)||'{}')}catch{return {}}};
   const leerProyectosSatcontrol=()=>{try{return JSON.parse(localStorage.getItem(claveProyectosSatcontrol)||'[]')}catch{return []}};
+  const leerFichasCompartidas=()=>{try{return JSON.parse(localStorage.getItem(claveFichasCompartidas)||'{}')}catch{return {}}};
+  const porcentajeFicha=(valor,alternativo=0)=>Math.max(0,Math.min(100,Number.isFinite(Number(valor))?Number(valor):alternativo));
+  const construirFichaCompartida=proyecto=>{
+    const actividades=Array.isArray(proyecto.cronograma)?proyecto.cronograma:[];
+    const avances=actividades.map(actividad=>Number(actividad.avance)).filter(Number.isFinite);
+    const avance=porcentajeFicha(proyecto.avance,avances.length?Math.round(avances.reduce((s,valor)=>s+valor,0)/avances.length):0);
+    const longitud=Number(proyecto.longitud)||0,redes=longitud?Math.round(longitud*1000):0,beneficiarios=Number(proyecto.beneficiarios)||0;
+    return {version:1,actualizado:new Date().toISOString(),codigo:proyecto.codigo,nombre:proyecto.nombre,contrato:proyecto.contrato||'Sin contrato registrado',estado:proyecto.estado||'En evaluación',departamento:proyecto.departamento||'',provincia:proyecto.provincia||'',distrito:proyecto.distrito||'',contratista:proyecto.empresaContratista||proyecto.contratista||'',interventor:proyecto.interventor||'',ubicacion:{lat:Number(proyecto.lat)||null,lng:Number(proyecto.lng)||null,area:proyecto.areaInfluencia||''},metricas:{programado:avance,declarado:avance,verificado:avance,liquidable:avance},componentes:{psr:{cantidad:proyecto.capacidadPsr?`${proyecto.capacidadPsr} unidad(es)`:'—',avance},redes:{cantidad:redes?`${redes.toLocaleString('es-PE')} ml`:'—',avance},tcs:{cantidad:beneficiarios?`${beneficiarios.toLocaleString('es-PE')} suministros`:'—',avance}},beneficiarios,actividades:actividades.length,formulariosCompletos:(proyecto.componentesCompletados||[]).length};
+  };
+  const guardarFichaCompartida=proyecto=>{if(!proyecto?.codigo)return;const fichas=leerFichasCompartidas(),ficha=construirFichaCompartida(proyecto),datos=proyecto.fichaConsolidada||{};ficha.metricas={programado:porcentajeFicha(datos.metricas?.programado,72.8),declarado:porcentajeFicha(datos.metricas?.declarado,69.2),verificado:porcentajeFicha(datos.metricas?.verificado,67.9),liquidable:porcentajeFicha(datos.metricas?.liquidable,55)};ficha.componentes={psr:{cantidad:datos.componentes?.psr?.cantidad||ficha.componentes.psr.cantidad||'1 unidad',avance:porcentajeFicha(datos.componentes?.psr?.avance,70)},redes:{cantidad:datos.componentes?.redes?.cantidad||ficha.componentes.redes.cantidad||'25,000 ml',avance:porcentajeFicha(datos.componentes?.redes?.avance,68)},tcs:{cantidad:datos.componentes?.tcs?.cantidad||ficha.componentes.tcs.cantidad||'1,000 suministros',avance:porcentajeFicha(datos.componentes?.tcs?.avance,62)}};ficha.costos=datos.costos||{presupuesto:'S/ 12,500,000',actualizado:'S/ 8,940,000',comprometido:'S/ 2,710,000',desembolsado:'S/ 6,870,000'};ficha.actores=datos.actores||[['Contratista','Redes de distribución','69.2%','Parte diario + valorización lote 4'],['Interventor','PSR-GNL','67.9%','IDT semanal consolidado'],['PETROPERÚ','Tuberías de conexión','66.8%','Conformidad técnica parcial'],['OSINERGMIN','Redes de distribución','58.0%','Inspección de Redes lote 2'],['FISE','Proyecto integral','55.0%','Liquidación parcial aprobada']];fichas[proyecto.codigo]=ficha;localStorage.setItem(claveFichasCompartidas,JSON.stringify(fichas));};
   const aplicarPasosSatcontrol=proyectos=>{
     const guardados=leerPasosSatcontrol();
     return proyectos.map(proyecto=>{
@@ -859,8 +872,10 @@
     const proyectos=leerProyectosSatcontrol().filter(item=>item.codigo!==proyecto.codigo);
     proyectos.unshift(proyecto);
     localStorage.setItem(claveProyectosSatcontrol,JSON.stringify(proyectos));
+    guardarFichaCompartida(proyecto);
   };
   let ciudades = restaurarProyectosSatcontrol(ciudadesBase.map(prepararVersionesProyecto));
+  ciudades.forEach(guardarFichaCompartida);
   const proyectoReferenciaFicha=()=>prepararVersionesProyecto({codigo:'FISE-2026-CUS-001',nombre:'Proyecto Especial de Masificación · Cusco',departamento:'Cusco',provincia:'Cusco',distrito:'San Jerónimo',lat:-13.532,lng:-71.947,estado:'En evaluación',avance:0,longitud:25,responsableLider:'Oliver Gonzales',empresaContratista:'PA-FARMIN / NAGASCO',elementos:'Válvulas 8 · Tuberías PE 12 · Estaciones 1'});
   const estadosVisibles = new Set(Object.keys(colores));
   let mapa, capaBase, capaProyectos, capaGis, capaManzanas, capaPredios, capaInfluencia, proyectoSeleccionado=null, datosGeo=[], manzanasUrbanas=[], estratosInei=[], filtroEstratoActivo='todos';
