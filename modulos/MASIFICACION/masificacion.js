@@ -2531,28 +2531,28 @@
       doc.setFillColor(...azul);doc.rect(14,y,182,5,'F');doc.setTextColor(255);doc.setFontSize(5.7);doc.text('ESPECIALIDAD CIVIL - MECÁNICA - ELÉCTRICA - INSTRUMENTACIÓN',105,y+3.35,{align:'center'});return y+5;
     };
     let y=cabecera(1);
-    y=banda(y,1,'DESCRIPCIÓN DEL AVANCE CONSTRUCTIVO');
+    y=banda(y,1,'RESUMEN EJECUTIVO – CONSTRUCCIÓN');
     doc.autoTable({startY:y,margin:{left:14,right:14},theme:'grid',styles:{fontSize:5.5,cellPadding:1.5,textColor:[20,20,20],lineColor:borde,overflow:'linebreak'},head:[['ÍTEM','ACTIVIDAD / AVANCE','COMENTARIOS']],headStyles:{fillColor:[120,120,120],textColor:255,fontStyle:'bold'},body:[
       ['2.1','Permisos para la ejecución del proyecto',texto('idtPermisos')],['2.2','Recorrido informativo y difusión de inicio de obra',texto('idtRecorrido')],['2.3','Señalización y detección de interferencias',texto('idtSenalizacion')],['2.4','Excavación de calicatas',texto('idtCalicatas')]
     ],columnStyles:{0:{cellWidth:14,halign:'center'},1:{cellWidth:67},2:{cellWidth:101}}});
     y=doc.lastAutoTable.finalY+3;
-    y=banda(y,3,'OBSERVACIONES Y AUDITORÍAS');
+    y=banda(y,2,'OBSERVACIONES Y AUDITORÍAS');
     doc.autoTable({startY:y,margin:{left:14,right:14},theme:'grid',styles:{fontSize:5.5,cellPadding:1.5,textColor:[20,20,20],lineColor:borde,overflow:'linebreak'},body:[
       [{content:'RNC ABIERTAS',styles:{fontStyle:'bold'}},datosNumero('supervisionRncAbiertas'),{content:'RNC CERRADAS',styles:{fontStyle:'bold'}},datosNumero('supervisionRncCerradas')],
       [{content:'RNC TOTAL',styles:{fontStyle:'bold'}},datosNumero('supervisionRncAbiertas')+' / '+datosNumero('supervisionRncCerradas'),{content:'OBSERVACIONES',styles:{fontStyle:'bold'}},texto('supervisionObservaciones')]
     ],columnStyles:{0:{cellWidth:35},1:{cellWidth:20,halign:'center'},2:{cellWidth:35},3:{cellWidth:92}}});
     y=doc.lastAutoTable.finalY+3;
-    y=banda(y,4,'GESTIÓN DEL TIEMPO (CRONOGRAMA)');
-    doc.autoTable({startY:y,margin:{left:14,right:14},theme:'grid',styles:{fontSize:5.5,cellPadding:1.7,textColor:[20,20,20],lineColor:borde,overflow:'linebreak'},body:[[{content:text('idtCronograma'),colSpan:2}],[{content:'Actividad principal',styles:{fillColor:[238,238,238],fontStyle:'bold'}},{content:text('supervisionActividadDiaria')}]],columnStyles:{0:{cellWidth:48},1:{cellWidth:134}}});
+    y=banda(y,3,'GESTIÓN DEL TIEMPO (CRONOGRAMA)');
+    doc.autoTable({startY:y,margin:{left:14,right:14},theme:'grid',styles:{fontSize:5.5,cellPadding:1.7,textColor:[20,20,20],lineColor:borde,overflow:'linebreak'},body:[[{content:text('idtCronograma'),colSpan:2}]],columnStyles:{0:{cellWidth:48},1:{cellWidth:134}}});
     y=doc.lastAutoTable.finalY+3;
-    y=banda(y,5,'SEGURIDAD');
+    y=banda(y,4,'SEGURIDAD');
     doc.autoTable({startY:y,margin:{left:14,right:14},theme:'grid',styles:{fontSize:5.4,cellPadding:1.25,textColor:[20,20,20],lineColor:borde,overflow:'linebreak'},head:[['CHARLA DE SEGURIDAD','INCIDENTES','ACCIDENTES','DETALLE']],headStyles:{fillColor:[120,120,120],textColor:255,fontStyle:'bold'},body:[[texto('idtTemaSeguridad'),`${datosNumero('supervisionIncidentes')} · ${texto('idtDetalleIncidentes')}`,`${datosNumero('supervisionAccidentes')} · ${texto('idtDetalleAccidentes')}`,texto('supervisionCharlaSeguridad')]],columnStyles:{0:{cellWidth:45},1:{cellWidth:42},2:{cellWidth:42},3:{cellWidth:53}}});
     y=doc.lastAutoTable.finalY+3;
-    y=banda(y,6,'MANO DE OBRA - CONTRATISTA',naranja);
+    y=banda(y,5,'MANO DE OBRA - CONTRATISTA',naranja);
     const personal=texto('idtPersonalDetalle','').split('\n').filter(Boolean).map((linea,i)=>{const [cargo,...cantidad]=linea.split(':');return [String(i+1),cargo.trim(),'Und.',cantidad.join(':').trim()||'—'];});
     doc.autoTable({startY:y,margin:{left:14,right:14},theme:'grid',styles:{fontSize:5.1,cellPadding:1.1,textColor:[20,20,20],lineColor:borde},head:[['ÍTEM','DESCRIPCIÓN','UNIDAD','CANTIDAD']],headStyles:{fillColor:azul,textColor:255,fontStyle:'bold'},body:personal.slice(0,11),columnStyles:{0:{cellWidth:12,halign:'center'},1:{cellWidth:104},2:{cellWidth:28,halign:'center'},3:{cellWidth:38,halign:'center'}}});
     y=doc.lastAutoTable.finalY+3;
-    y=banda(y,7,'NAGASCO - EQUIPOS',naranja);
+    y=banda(y,6,'NAGASCO - EQUIPOS',naranja);
     const equipos=texto('idtEquiposDetalle','').split('\n').filter(Boolean).map((linea,i)=>{const [equipo,...cantidad]=linea.split(':');return [String(i+1),equipo.trim(),'Und.',cantidad.join(':').trim()||'—'];});
     doc.autoTable({startY:y,margin:{left:14,right:14},theme:'grid',styles:{fontSize:5.1,cellPadding:1.1,textColor:[20,20,20],lineColor:borde},head:[['ÍTEM','DESCRIPCIÓN DE EQUIPOS','UNIDAD','CANTIDAD']],headStyles:{fillColor:azul,textColor:255,fontStyle:'bold'},body:equipos.slice(0,6),columnStyles:{0:{cellWidth:12,halign:'center'},1:{cellWidth:104},2:{cellWidth:28,halign:'center'},3:{cellWidth:38,halign:'center'}}});
     y=doc.lastAutoTable.finalY+3;

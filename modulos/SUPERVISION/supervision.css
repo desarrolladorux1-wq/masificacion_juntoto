@@ -20,3 +20,76 @@
 
 /* Un único control de menú: se conserva el de la cabecera. */
 #contraerMenuSupervision{display:none!important}.cabecera-titulo .menu-toggle{display:grid;gap:4px;width:38px;height:38px;padding:0;place-content:center;color:#ccecff;border:1px solid #4f6993;border-radius:10px;background:#1c3156;box-shadow:none}.cabecera-titulo .menu-toggle i{display:block;width:18px;height:2px;border-radius:2px;background:currentColor}
+
+/* Perfil web: estructura homologada con Interventor. */
+.cabecera-perfil-supervision{display:flex;align-items:center;gap:18px;margin-bottom:22px;padding:25px 28px;color:#eef5ff;border:1px solid #496b9b;border-radius:20px;background:#20355e}.avatar-perfil-supervision{display:grid;width:70px;height:70px;place-items:center;border-radius:22px;background:linear-gradient(135deg,#4e8fc7,#6bc1d7)}.avatar-perfil-supervision svg{width:42px;height:42px;fill:none;stroke:#fff;stroke-width:1.8}.cabecera-perfil-supervision small{color:#b7cdf2;font-size:.76rem;font-weight:900;letter-spacing:.1em}.cabecera-perfil-supervision h2{margin:7px 0;color:#fff;font-size:2rem}.cabecera-perfil-supervision p{margin:0;color:#b9cceb}.cabecera-perfil-supervision button{margin-left:auto;padding:14px 22px;color:#fff;border:1px solid #637eab;border-radius:14px;background:#293d68;font-weight:850;cursor:pointer}.paneles-perfil-supervision{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;max-width:1460px}.panel-perfil-supervision{display:grid;gap:20px;padding:25px;border:1px solid #466a9a;border-radius:20px;background:#1b2f55}.panel-perfil-supervision>header{display:flex;align-items:flex-start;gap:14px}.panel-perfil-supervision>header>b{display:grid;width:46px;height:46px;place-items:center;color:#d6e5ff;border-radius:13px;background:#29477d;font-size:.84rem}.panel-perfil-supervision h3{margin:3px 0 6px;color:#fff;font-size:1.35rem}.panel-perfil-supervision p{margin:0;color:#c1d2eb;font-size:.86rem;line-height:1.4}.campos-perfil-supervision{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.campos-perfil-supervision label{color:#d6e2f8;font-size:.73rem;font-weight:900;text-transform:uppercase}.campos-perfil-supervision input{min-height:56px;padding:14px;color:#fff;border:1px solid #5578aa;border-radius:14px;background:#15294c;font-size:1rem;font-weight:800}.campos-perfil-supervision input:focus{outline:3px solid #65c3e155;border-color:#72cbed}.campo-completo{grid-column:1/-1}.panel-perfil-supervision>button{min-height:58px;color:#fff;border:0;border-radius:14px;background:linear-gradient(100deg,#5594bf,#6bc38d);font:850 1rem Arial;cursor:pointer}.panel-perfil-supervision:nth-child(2)>button{background:#304a82}.seguridad-perfil-supervision{grid-template-columns:1fr}@media(max-width:920px){.paneles-perfil-supervision{grid-template-columns:1fr}}@media(max-width:620px){.cabecera-perfil-supervision{align-items:flex-start;flex-wrap:wrap;padding:20px}.cabecera-perfil-supervision button{margin-left:88px}.campos-perfil-supervision{grid-template-columns:1fr}.campo-completo{grid-column:auto}}
+
+/* Escala y navegación homologadas con Interventor en escritorio. */
+@media(min-width:761px){.menu{width:320px;background:linear-gradient(180deg,#17284b,#111d38)}main{margin-left:320px}.marca{min-height:200px;justify-content:center;align-items:center;flex-direction:column;padding:22px;border-bottom:1px solid #3b4a6c}.marca img{width:118px;height:128px;padding:10px;border-radius:22px}.marca-texto{text-align:center}.marca strong{font-size:1.48rem}.marca small{display:none}.menu nav{gap:9px;padding:34px 20px}.menu nav::before{content:'MASIFICACIÓN';display:block;margin:0 12px 15px;color:#f4f7ff;font-size:1.2rem;font-weight:900}.menu .enlace-menu{grid-template-columns:44px minmax(0,1fr);min-height:58px;gap:14px;padding:12px 16px}.menu .enlace-menu .menu-icono{width:44px;height:42px}.menu .enlace-menu .menu-icono svg{width:25px;height:25px}.menu .enlace-menu .enlace-texto{font-size:1rem;line-height:1.25}.submenus-proyectos-supervision{margin-left:34px;padding-left:18px}.submenus-proyectos-supervision .enlace-menu{min-height:92px;padding:14px}.submenus-proyectos-supervision .enlace-texto{font-size:.94rem}.pie-menu-supervision{padding:22px 20px}.pie-menu-supervision .enlace-menu{min-height:58px;font-size:1rem}.menu-plegado .menu{width:82px}.menu-plegado main{margin-left:82px}.menu-plegado .marca{min-height:94px;padding:16px 10px}.menu-plegado .marca img{width:52px;height:58px}.menu-plegado .menu nav::before{display:none}.menu-plegado .menu .enlace-menu{grid-template-columns:44px;justify-content:center}.menu-plegado .pie-menu-supervision{padding:16px 10px}.vista{padding:34px 38px}.cabecera-titulo h1{font-size:1.75rem}.cabecera-titulo small{font-size:.75rem}.lista-visitas-supervision{gap:22px}.visita-supervision{padding:22px}.visita-supervision h3{font-size:1.28rem}.visita-supervision p{font-size:1rem}}
+
+/* Misma escala del menú lateral de Interventor. */
+@media(min-width:761px){body{font-family:Inter,Arial,sans-serif}.menu{width:clamp(300px,17vw,370px)}main{margin-left:clamp(300px,17vw,370px)}.marca{min-height:255px;padding:28px}.marca img{width:148px;height:154px;border-radius:24px}.marca strong{font-size:1.85rem;line-height:1}.menu nav{padding:42px 24px;gap:12px}.menu nav::before{margin:0 14px 20px;font-size:1.45rem}.menu .enlace-menu{grid-template-columns:52px minmax(0,1fr);min-height:68px;gap:16px;padding:14px 17px;border-radius:16px}.menu .enlace-menu .menu-icono{width:52px;height:48px}.menu .enlace-menu .menu-icono svg{width:29px;height:29px}.menu .enlace-menu .enlace-texto{font-size:1.15rem;font-weight:800}.submenus-proyectos-supervision{margin-left:40px;padding-left:21px}.submenus-proyectos-supervision .enlace-menu{min-height:110px;padding:16px}.submenus-proyectos-supervision .enlace-texto{font-size:1.08rem}.pie-menu-supervision{padding:26px 24px}.pie-menu-supervision .enlace-menu{min-height:66px;font-size:1.15rem}.cabecera-titulo h1{font-size:1.95rem}.cabecera-titulo small{font-size:.82rem}.menu-plegado .menu{width:86px}.menu-plegado main{margin-left:86px}.menu-plegado .marca{min-height:106px}.menu-plegado .marca img{width:56px;height:62px}}
+
+/* Proporciones exactas de la navegación web de Interventor. */
+@media(min-width:761px){
+  .menu{width:260px;background:#17233f}
+  main{margin-left:260px}
+  .marca{min-height:162px;padding:18px 20px;border-bottom:1px solid #3b4a6c}
+  .marca img{width:76px;height:78px;padding:7px;border-radius:17px}
+  .marca strong{font-size:.84rem;line-height:1.15}
+  .menu nav{gap:6px;padding:25px 20px}
+  .menu nav::before{margin:0 12px 14px;font-size:.8rem}
+  .menu .enlace-menu{grid-template-columns:36px minmax(0,1fr);min-height:52px;gap:10px;padding:10px 14px;border-radius:12px}
+  .menu .enlace-menu .menu-icono{width:36px;height:36px}
+  .menu .enlace-menu .menu-icono svg{width:21px;height:21px}
+  .menu .enlace-menu .enlace-texto{font-size:.72rem;font-weight:750;line-height:1.25}
+  .submenus-proyectos-supervision{margin-left:20px;padding-left:14px}
+  .submenus-proyectos-supervision .enlace-menu{min-height:56px;padding:10px}
+  .submenus-proyectos-supervision .enlace-texto{font-size:.68rem}
+  .pie-menu-supervision{padding:18px 14px}
+  .pie-menu-supervision .enlace-menu{min-height:52px;font-size:.72rem}
+  .cabecera-titulo h1{font-size:1.1rem}
+  .cabecera-titulo small{font-size:.63rem}
+  .menu-plegado .menu{width:76px}
+  .menu-plegado main{margin-left:76px}
+  .menu-plegado .marca{min-height:94px;padding:14px 10px}
+  .menu-plegado .marca img{width:48px;height:52px}
+}
+
+/* La ficha conserva la misma jerarquía tipográfica de la ficha de Interventor. */
+@media(min-width:761px){
+  .ficha-proyecto-supervision>header{padding:24px 26px}
+  .ficha-proyecto-supervision header small{font-size:.57rem}
+  .ficha-proyecto-supervision header h2{font-size:.76rem!important}
+  .ficha-proyecto-supervision header p{font-size:.58rem!important}
+  .ficha-proyecto-supervision header>span{font-size:.58rem}
+  .datos-ficha-proyecto{gap:9px;padding:18px}
+  .datos-ficha-proyecto article{padding:13px}
+  .datos-ficha-proyecto small{font-size:.54rem}
+  .datos-ficha-proyecto b{font-size:.55rem!important}
+  .componentes-ficha-proyecto h3{font-size:.92rem}
+  .componentes-ficha-proyecto strong{font-size:.76rem}
+  .componentes-ficha-proyecto span{font-size:.62rem}
+}
+
+/* Ficha consolidada: misma escala de lectura que Interventor. */
+@media(min-width:761px){
+  .ficha-completa-supervision{gap:14px}
+  .hero-ficha-supervision{gap:20px;padding:24px;border-radius:17px}
+  .hero-ficha-supervision small,.panel-ficha small{font-size:.58rem}
+  .hero-ficha-supervision h2{font-size:1.6rem!important}
+  .hero-ficha-supervision p{font-size:.68rem}
+  .actualizacion-ficha strong{font-size:.88rem}
+  .actualizacion-ficha p{font-size:.62rem}
+  .etiquetas-ficha span{font-size:.55rem}
+  .metricas-ficha-completa{gap:10px}
+  .metricas-ficha-completa article{padding:16px;border-radius:13px}
+  .metricas-ficha-completa span{font-size:.56rem}
+  .metricas-ficha-completa strong{margin-top:9px;font-size:1.28rem}
+  .panel-ficha{border-radius:13px}
+  .panel-ficha>header{padding:16px 18px}
+  .panel-ficha>header h3{font-size:.9rem}
+}
+
+/* Referencias verticales y nombres de las fases en la Curva S. */
+.curva-ficha .divisor-fase{stroke:#55739d;stroke-width:1;stroke-dasharray:4 5}.curva-ficha .etiquetas-fase text{font-size:11px;letter-spacing:.02em}
