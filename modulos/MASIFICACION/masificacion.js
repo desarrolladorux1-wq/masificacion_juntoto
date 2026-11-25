@@ -2168,19 +2168,53 @@
     $('modalPotencial').showModal();
   }
 
+  function detalleReporteProyecto(proyecto) {
+    const indice=Math.max(0,ciudades.findIndex(item=>item.codigo===proyecto?.codigo));
+    const ficha=leerFichasCompartidas()[proyecto?.codigo]||construirFichaCompartida(proyecto||{});
+    const componentes=ficha.componentes||{};
+    const avanceBase=porcentajeFicha(proyecto?.avance,0);
+    const avanceRedes=porcentajeFicha(componentes.redes?.avance,avanceBase);
+    const avancePcr=porcentajeFicha(componentes.psr?.avance,avanceBase);
+    const avanceTdc=porcentajeFicha(componentes.tcs?.avance,avanceBase);
+    const liquidacion=datosLiquidacionProyecto(proyecto);
+    const montoNeto=Math.max(0,liquidacion.contratado-liquidacion.penalidades);
+    const anexoBase=`Anexo 1 · Liquidación ${liquidacion.componente==='redes'?'de Redes':liquidacion.componente==='tc'?'de TDC':'PCR/PSR-GNL'}`;
+    return {
+      fase:proyecto?.faseSeleccionada||fasePrincipalProyecto(proyecto,indice),
+      longitudRed:Number(proyecto?.longitud)||0,
+      avanceRedes,
+      cantidadPcr:componentes.psr?.cantidad||'—',
+      avancePcr,
+      cantidadTdc:componentes.tcs?.cantidad||'—',
+      avanceTdc,
+      montoContrato:liquidacion.contratado,
+      monto80:montoNeto*.8,
+      monto100:montoNeto,
+      anexo80:`${anexoBase} · nivel 80%`,
+      anexo100:`${anexoBase} · nivel 100%`
+    };
+  }
+
   function filaProyecto(p) {
+    const detalle=detalleReporteProyecto(p);
     return {
       Código:p.codigo||'—',
       Tipo:p.tipo||'Proyecto',
       Nombre:p.nombre||'—',
       Departamento:p.departamento||'—',
       Provincia:p.provincia||'—',
-      Distrito:p.distrito||p.detalle||'—',
-      Estado:p.estado||p.detalle||'—',
-      Avance:p.avance!==undefined?`${p.avance}%`:'—',
-      'Longitud de red':p.longitud!==undefined?`${p.longitud} km`:'—',
-      Latitud:Number.isFinite(p.lat)?p.lat.toFixed(5):'—',
-      Longitud:Number.isFinite(p.lng)?p.lng.toFixed(5):'—'
+      Fase:detalle.fase,
+      'Longitud de red (km)':detalle.longitudRed.toFixed(2),
+      'Avance Red (%)':`${detalle.avanceRedes}%`,
+      'PCR / PSR-GNL':detalle.cantidadPcr,
+      'Avance PCR (%)':`${detalle.avancePcr}%`,
+      TDC:detalle.cantidadTdc,
+      'Avance TDC (%)':`${detalle.avanceTdc}%`,
+      'Monto contractual (US$)':formatoMoneda(detalle.montoContrato),
+      'Liquidación 80% (US$)':formatoMoneda(detalle.monto80),
+      'Anexo liquidación 80%':detalle.anexo80,
+      'Liquidación 100% (US$)':formatoMoneda(detalle.monto100),
+      'Anexo liquidación 100%':detalle.anexo100
     };
   }
 
@@ -2202,7 +2236,7 @@
     datosExportacionActual=resultado.datos;
     $('alcanceExportacionMasificacion').textContent=resultado.alcance;
     $('cantidadExportacionMasificacion').textContent=datosExportacionActual.length.toLocaleString('es-PE');
-    $('descripcionExportacionMasificacion').textContent=`${resultado.alcance}. El archivo incluirá únicamente ${datosExportacionActual.length} registro(s).`;
+    $('descripcionExportacionMasificacion').textContent=`${resultado.alcance}. El reporte incluirá datos principales, avances de Red/PCR/TDC y liquidación con anexos para ${datosExportacionActual.length} registro(s).`;
     if($('modalPotencial').open)$('modalPotencial').close();
     $('modalExportacionMasificacion').showModal();
   }
@@ -2233,11 +2267,27 @@
   function exportarPdfMasificacion(datos) {
     if(!window.jspdf?.jsPDF){window.print();return;}
     const {jsPDF}=window.jspdf,doc=new jsPDF({orientation:'landscape'});
-    const columnas=Object.keys(datos[0]||{Código:''});
-    doc.setTextColor(28,42,72);doc.setFontSize(17);doc.text('MASIFICACIÓN · Reporte de selección',14,18);
-    doc.setFontSize(9);doc.setTextColor(93,108,132);doc.text(`Alcance: ${$('alcanceExportacionMasificacion').textContent}`,14,25);
-    doc.text(`Registros: ${datos.length} · Fecha: ${new Date().toLocaleDateString('es-PE')}`,14,31);
-    doc.autoTable({startY:37,head:[columnas],body:datos.map(f=>columnas.map(c=>f[c])),styles:{fontSize:7,cellPadding:2},headStyles:{fillColor:[47,137,171]},alternateRowStyles:{fillColor:[239,246,250]}});
+    const tabla=(titulo,columnas,filas,y)=>{
+      doc.setFontSize(11);doc.setTextColor(28,42,72);doc.text(titulo,14,y);
+      doc.autoTable({startY:y+4,head:[columnas],body:filas,styles:{fontSize:8,cellPadding:2.4},headStyles:{fillColor:[47,137,171]},alternateRowStyles:{fillColor:[239,246,250]}});
+      return doc.lastAutoTable.finalY;
+    };
+    datos.forEach((dato,indice)=>{
+      if(indice)doc.addPage();
+      doc.setTextColor(28,42,72);doc.setFontSize(17);doc.text('MASIFICACIÓN · Reporte de proyecto',14,18);
+      doc.setFontSize(9);doc.setTextColor(93,108,132);
+      doc.text(`Alcance: ${$('alcanceExportacionMasificacion').textContent} · Fecha: ${new Date().toLocaleDateString('es-PE')}`,14,25);
+      let y=tabla('1. Datos principales',['Código','Tipo','Nombre','Departamento','Provincia','Fase'],[[dato.Código,dato.Tipo,dato.Nombre,dato.Departamento,dato.Provincia,dato.Fase]],31)+10;
+      y=tabla('2. Avances físicos',['Métrica','Cantidad / longitud','Avance'],[
+        ['Longitud de red',`${dato['Longitud de red (km)']} km`,dato['Avance Red (%)']],
+        ['PCR / PSR-GNL',dato['PCR / PSR-GNL'],dato['Avance PCR (%)']],
+        ['TDC',dato.TDC,dato['Avance TDC (%)']]
+      ],y)+10;
+      tabla('3. Liquidación y anexos vinculados',['Nivel de liquidación','Monto','Anexo vinculado'],[
+        ['80%',dato['Liquidación 80% (US$)'],dato['Anexo liquidación 80%']],
+        ['100%',dato['Liquidación 100% (US$)'],dato['Anexo liquidación 100%']]
+      ],y);
+    });
     doc.save('reporte_masificacion.pdf');
   }
 
