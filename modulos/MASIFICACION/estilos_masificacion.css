@@ -1401,6 +1401,13 @@ html[data-tema="paulet"] body.pagina-masificacion .detalle-proyecto button:not(.
 #modalLiquidaciones .acciones-liquidacion .principal{border:0;background:#4bb5d6}
 /* Liquidaciones compactas: prioriza la lectura de partidas sin perder edición. */
 #modalLiquidaciones .panel-liquidacion{gap:11px;padding:14px 18px 18px}
+#modalLiquidaciones .selector-tipo-liquidacion{display:flex;gap:10px;padding:0;margin:0;border:0;background:transparent}
+#modalLiquidaciones .selector-tipo-liquidacion button{flex:1;display:grid;gap:5px;padding:14px 16px;border:1px solid #40557f;border-radius:16px;color:#b9c9e7;background:#17213f;text-align:left;cursor:pointer}
+#modalLiquidaciones .selector-tipo-liquidacion button b{color:inherit;font-size:.82rem}
+#modalLiquidaciones .selector-tipo-liquidacion button small{color:#9caed0;font-size:.65rem;font-weight:700}
+#modalLiquidaciones .selector-tipo-liquidacion button.activo{border-color:#68cbe5;background:linear-gradient(110deg,#23566f,#276684);box-shadow:inset 4px 0 #8ce5f3;color:#fff}
+#modalLiquidaciones .selector-tipo-liquidacion button.activo small{color:#d9f6fb}
+.modal-liquidacion-redes-ficha .liq-ficha-vistas{display:grid;gap:14px}.modal-liquidacion-redes-ficha .liq-ficha-tabs{display:flex;gap:10px}.modal-liquidacion-redes-ficha .liq-ficha-tabs button{flex:1;display:grid;gap:4px;padding:13px 15px;border:1px solid #405b85;border-radius:13px;color:#b9cce6;background:#142747;text-align:left;cursor:pointer}.modal-liquidacion-redes-ficha .liq-ficha-tabs button b{font-size:.78rem}.modal-liquidacion-redes-ficha .liq-ficha-tabs button small{color:#91adca;font-size:.62rem}.modal-liquidacion-redes-ficha .liq-ficha-tabs button.activo{border-color:#79d5e6;background:linear-gradient(110deg,#21566f,#2e7390);box-shadow:inset 4px 0 #9aeaf4;color:#fff}.modal-liquidacion-redes-ficha .liq-ficha-tabs button.activo small{color:#d7f7fb}.modal-liquidacion-redes-ficha .liq-ficha-vistas section>header button{min-height:34px;padding:0 11px;border:1px solid #72cbe1;border-radius:8px;color:#edfbff;background:#2c7195;font:800 .66rem inherit;cursor:pointer}.modal-liquidacion-redes-ficha .carga-liquidacion-ficha{display:inline-flex;min-width:112px;min-height:32px;align-items:center;justify-content:center;padding:0 8px;border:1px dashed #70c5dc;border-radius:7px;color:#d9f5fa;background:#13314d;font-size:.62rem;font-weight:800;cursor:pointer}.modal-liquidacion-redes-ficha .sin-registros-liquidacion{text-align:center;padding:22px!important;color:#b9cde4}
 #modalLiquidaciones .titulo-anexo{padding:14px 18px;border-radius:18px}
 #modalLiquidaciones .titulo-anexo strong{font-size:.58rem}
 #modalLiquidaciones .titulo-anexo p{margin:6px 0 4px;font-size:.84rem}
