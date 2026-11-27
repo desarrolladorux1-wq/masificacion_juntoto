@@ -2581,13 +2581,12 @@
     };
     $('abrirCrearProyecto').addEventListener('click',abrirCrearProyecto);
     document.querySelector('.enlace-menu[href="#dashboard"]')?.addEventListener('click',evento=>{evento.preventDefault();mostrarVistaDashboardMasificacion();});
-    document.querySelector('.enlace-menu[href="#bandeja-entrada"]')?.addEventListener('click',evento=>{evento.preventDefault();mostrarVistaBandejaMasificacion();});
     document.querySelector('.enlace-menu[href="#satcontrol"]')?.addEventListener('click',evento=>{evento.preventDefault();mostrarVistaSatcontrol();});
     document.querySelectorAll('[data-ir-satcontrol]').forEach(boton=>boton.addEventListener('click',mostrarVistaSatcontrol));
     // Mantiene las vistas del módulo sincronizadas también cuando se llega por URL.
     const actualizarVistaPorRuta=()=>{
       if(location.hash==='#dashboard')mostrarVistaDashboardMasificacion();
-      else if(location.hash==='#bandeja-entrada')mostrarVistaBandejaMasificacion();
+      else if(location.hash==='#bandeja-entrada')mostrarVistaDashboardMasificacion();
       else if(location.hash==='#satcontrol')mostrarVistaSatcontrol();
     };
     window.addEventListener('hashchange',actualizarVistaPorRuta);
