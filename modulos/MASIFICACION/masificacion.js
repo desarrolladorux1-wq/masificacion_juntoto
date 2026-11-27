@@ -646,6 +646,54 @@
   });
   $('volverPlaneamiento')?.addEventListener('click',()=>vistaPlaneamientoMasificacion.querySelector('.cabecera-planeamiento').hidden=false);
   const proyectoFichaPlaneamientoActivo=()=>proyectoPlaneamientoSeleccionado||proyectosPlaneamientoSatcontrol().find(proyecto=>proyecto.distrito===$('distritoPlaneamiento').value)||null;
+  const fasesPlaneamientoBase=[
+    {nombre:'Diagnóstico territorial',detalle:'Identificación del predio, ubicación y actores locales.',estado:'Completada'},
+    {nombre:'Formulación de alternativa',detalle:'Definición preliminar de alcance, demanda y componentes.',estado:'En proceso'},
+    {nombre:'Evaluación técnica',detalle:'Validación de requisitos técnicos, trámites y estudios.',estado:'Pendiente'},
+    {nombre:'Aprobación de planeamiento',detalle:'Consolidación del expediente y pase a la siguiente etapa.',estado:'Pendiente'}
+  ];
+  const fasesPlaneamiento=proyecto=>{
+    const guardadas=Array.isArray(proyecto?.fasesPlaneamiento)?proyecto.fasesPlaneamiento:[];
+    return guardadas.length?guardadas.map((fase,indice)=>Object.assign({},fasesPlaneamientoBase[indice]||{nombre:'Nueva fase',detalle:'Describa el alcance de esta fase.',estado:'Pendiente'},fase)):fasesPlaneamientoBase.map(fase=>Object.assign({},fase));
+  };
+  const crearFilaFasePlaneamiento=(fase,indice)=>'<article data-fase-planeamiento="'+indice+'"><i>'+String(indice+1).padStart(2,'0')+'</i><div class="campos-edicion-fase"><label>Nombre de la fase<input data-nombre-fase value="'+escapePlanificacion(fase.nombre)+'"></label><label>Descripción<textarea data-detalle-fase rows="2">'+escapePlanificacion(fase.detalle)+'</textarea></label></div><label>Estado<select><option'+(fase.estado==='Pendiente'?' selected':'')+'>Pendiente</option><option'+(fase.estado==='En proceso'?' selected':'')+'>En proceso</option><option'+(fase.estado==='Completada'?' selected':'')+'>Completada</option></select></label></article>';
+  const renderFasesPlaneamiento=proyecto=>{
+    const fases=fasesPlaneamiento(proyecto),activas=fases.filter(fase=>fase.estado==='Completada'||fase.estado==='En proceso').length;
+    $('subtituloFasesPlaneamiento').textContent=(proyecto?.codigo||'Proyecto')+' · '+activas+' de '+fases.length+' fases con avance registrado.';
+    $('lineaFasesPlaneamiento').innerHTML=fases.map((fase,indice)=>'<span class="'+(fase.estado==='Completada'?'completada':fase.estado==='En proceso'?'activa':'')+'"><b>'+(indice+1)+'</b><small>'+escapePlanificacion(fase.nombre)+'</small></span>').join('');
+    $('listaFasesPlaneamiento').innerHTML=fases.map(crearFilaFasePlaneamiento).join('');
+    let comentario=$('comentarioFasesPlaneamiento');
+    if(!comentario){comentario=document.createElement('label');comentario.className='comentario-fases-planeamiento';comentario.innerHTML='Comentarios<textarea id="comentarioFasesPlaneamiento" rows="3" placeholder="Registre observaciones, acuerdos o acciones pendientes de las fases."></textarea>';$('listaFasesPlaneamiento').after(comentario);}
+    $('comentarioFasesPlaneamiento').value=proyecto?.comentarioFasesPlaneamiento||'';
+  };
+  $('abrirFasesPlaneamiento')?.addEventListener('click',()=>{
+    const proyecto=proyectoFichaPlaneamientoActivo();
+    if(!proyecto)return;
+    renderFasesPlaneamiento(proyecto);
+    $('modalFasesPlaneamiento').showModal();
+  });
+  ['cerrarFasesPlaneamiento','cancelarFasesPlaneamiento'].forEach(id=>$(id)?.addEventListener('click',()=>$('modalFasesPlaneamiento').close()));
+  if(!$('agregarFasePlaneamiento')){$('guardarFasesPlaneamiento').insertAdjacentHTML('beforebegin','<button type="button" id="agregarFasePlaneamiento">＋ Agregar fase</button>');}
+  $('agregarFasePlaneamiento')?.addEventListener('click',()=>{
+    const lista=$('listaFasesPlaneamiento'),indice=lista.querySelectorAll('[data-fase-planeamiento]').length;
+    lista.insertAdjacentHTML('beforeend',crearFilaFasePlaneamiento({nombre:'Nueva fase',detalle:'Describa el alcance de esta fase.',estado:'Pendiente'},indice));
+    lista.lastElementChild?.querySelector('[data-nombre-fase]')?.focus();
+  });
+  $('guardarFasesPlaneamiento')?.addEventListener('click',()=>{
+    const proyecto=proyectoFichaPlaneamientoActivo();
+    if(!proyecto)return;
+    proyecto.fasesPlaneamiento=[...$('listaFasesPlaneamiento').querySelectorAll('[data-fase-planeamiento]')].map((fila,indice)=>{
+      const fase=fasesPlaneamiento(proyecto)[indice]||{nombre:'Nueva fase',detalle:'Describa el alcance de esta fase.',estado:'Pendiente'},selector=fila.querySelector('select');
+      return Object.assign({},fase,{nombre:fila.querySelector('[data-nombre-fase]')?.value.trim()||fase.nombre,detalle:fila.querySelector('[data-detalle-fase]')?.value.trim()||fase.detalle,estado:selector?.value||fase.estado});
+    });
+    proyecto.comentarioFasesPlaneamiento=$('comentarioFasesPlaneamiento').value.trim();
+    guardarProyectoSatcontrol(proyecto);
+    $('modalFasesPlaneamiento').close();
+    const aviso=$('aviso');if(aviso){aviso.textContent='Fases de planeamiento guardadas.';aviso.classList.add('visible');setTimeout(()=>aviso.classList.remove('visible'),2600);}
+  });
+  $('modalFasesPlaneamiento')?.addEventListener('click',evento=>{if(evento.target===$('modalFasesPlaneamiento'))$('modalFasesPlaneamiento').close();});
+  document.head.insertAdjacentHTML('beforeend','<style>.acciones-cabecera-predio>#abrirFasesPlaneamiento{display:none!important}.acciones-visita-planeamiento{display:flex;flex-wrap:wrap;gap:10px}.acciones-visita-planeamiento .boton-fases-planeamiento{padding:10px 14px;color:#e7f6ff;border:1px solid #6daed0;border-radius:10px;background:#285b86;font-weight:850;cursor:pointer}.acciones-visita-planeamiento .boton-fases-planeamiento:hover{border-color:#9edcf0;background:#32759d}.campos-edicion-fase{display:grid;gap:8px}.campos-edicion-fase label{display:grid;gap:4px;color:#b9d7ed;font-size:10px;font-weight:900;text-transform:uppercase}.campos-edicion-fase input,.campos-edicion-fase textarea{width:100%;padding:8px;color:#eff8ff;border:1px solid #53769e;border-radius:8px;background:#10203b;font:inherit;resize:vertical;text-transform:none}.campos-edicion-fase input{font-weight:850}.comentario-fases-planeamiento{display:grid;gap:7px;padding:13px;color:#c5dcf1;border:1px solid #3e608b;border-radius:11px;background:#172a49;font-size:11px;font-weight:900;text-transform:uppercase}.comentario-fases-planeamiento textarea{min-height:78px;padding:10px;color:#eff8ff;border:1px solid #53769e;border-radius:8px;background:#10203b;font:inherit;resize:vertical;text-transform:none}</style>');
+  document.head.insertAdjacentHTML('beforeend','<style>.acciones-cabecera-predio{display:flex;align-items:center;gap:10px}.acciones-cabecera-predio>button{padding:10px 14px;color:#eaf7ff;border:1px solid #7ab5d4;border-radius:10px;background:#285b86;font-weight:850;cursor:pointer}.modal-fases-planeamiento{width:min(900px,calc(100vw - 28px));padding:0;color:#edf6ff;border:1px solid #4c6d9c;border-radius:18px;background:#12213d}.modal-fases-planeamiento::backdrop{background:#051020bb}.modal-fases-planeamiento>header{display:flex;justify-content:space-between;gap:16px;padding:22px 26px;border-bottom:1px solid #3d5e8a;background:linear-gradient(115deg,#1d365e,#327493)}.modal-fases-planeamiento header small{color:#9cdaeb;font-size:11px;font-weight:900;letter-spacing:.09em}.modal-fases-planeamiento h2{margin:4px 0;color:#fff}.modal-fases-planeamiento header p{margin:0;color:#cae2f0}.modal-fases-planeamiento header button{width:38px;height:38px;color:#fff;border:1px solid #89b9d1;border-radius:10px;background:#ffffff14;font-size:23px;cursor:pointer}.cuerpo-fases-planeamiento{display:grid;gap:24px;padding:25px}.linea-fases-planeamiento{display:grid;grid-template-columns:repeat(4,1fr);gap:0}.linea-fases-planeamiento span{position:relative;display:grid;justify-items:center;gap:8px;color:#90a9c7;text-align:center;font-size:11px;font-weight:800}.linea-fases-planeamiento span:not(:last-child):after{position:absolute;top:17px;left:calc(50% + 18px);width:calc(100% - 36px);height:3px;background:#395473;content:""}.linea-fases-planeamiento b{z-index:1;display:grid;width:36px;height:36px;place-items:center;color:#bdcce1;border:2px solid #58769d;border-radius:50%;background:#1a2c4b}.linea-fases-planeamiento span.completada,.linea-fases-planeamiento span.activa{color:#dbf9e7}.linea-fases-planeamiento span.completada b{border-color:#6ecb8f;background:#28734e}.linea-fases-planeamiento span.activa b{border-color:#83cdec;background:#28688c}.lista-fases-planeamiento{display:grid;gap:10px}.lista-fases-planeamiento article{display:grid;grid-template-columns:34px minmax(0,1fr) 150px;align-items:center;gap:13px;padding:13px;border:1px solid #3e608b;border-radius:11px;background:#172a49}.lista-fases-planeamiento i{display:grid;width:30px;height:30px;place-items:center;color:#d5e7fa;border-radius:50%;background:#294873;font-size:11px;font-style:normal;font-weight:900}.lista-fases-planeamiento strong,.lista-fases-planeamiento small{display:block}.lista-fases-planeamiento strong{color:#fff}.lista-fases-planeamiento small{margin-top:4px;color:#adc4dc;font-size:12px}.lista-fases-planeamiento label{display:grid;gap:5px;color:#b9d7ed;font-size:10px;font-weight:900;text-transform:uppercase}.lista-fases-planeamiento select{padding:8px;color:#eff8ff;border:1px solid #53769e;border-radius:8px;background:#10203b;font:inherit}.modal-fases-planeamiento>footer{display:flex;justify-content:flex-end;gap:10px;padding:16px 26px;border-top:1px solid #3d5e8a}.modal-fases-planeamiento>footer button{padding:10px 15px;color:#e9f6ff;border:1px solid #6083aa;border-radius:9px;background:#28436d;font-weight:850;cursor:pointer}.modal-fases-planeamiento>footer #guardarFasesPlaneamiento{border-color:#76d1a0;background:#287653}@media(max-width:700px){.acciones-cabecera-predio{margin-top:12px;flex-wrap:wrap}.linea-fases-planeamiento{grid-template-columns:1fr 1fr;gap:14px}.linea-fases-planeamiento span:after{display:none}.lista-fases-planeamiento article{grid-template-columns:34px 1fr}.lista-fases-planeamiento label{grid-column:2}.modal-fases-planeamiento>header,.cuerpo-fases-planeamiento,.modal-fases-planeamiento>footer{padding:17px}}</style>');
   $('editarFichaPredio')?.addEventListener('click',()=>{
     const proyecto=proyectoFichaPlaneamientoActivo();
     if(!proyecto)return;
@@ -2433,18 +2481,31 @@
   let pestanaInformeDiarioActiva='generales';
   function mostrarPestanaInformeDiario(pestana='generales') {
     const modal=$('modalInformesSupervision');
-    const esIdtDirecto=modal.classList.contains('formulario-directo')&&tipoInformeSupervisionActivo()==='diario';
+    const tipo=tipoInformeSupervisionActivo();
+    // El formato ISO usa la misma navegación por secciones que el IDT.
+    // Se asignan aquí porque sus bloques son compartidos por el visor semanal.
+    const semanal=modal.querySelector('.campos-especificos-informe[data-campo-informe="semanal"]');
+    if(semanal)semanal.dataset.idtSeccion='calidad';
+    const bloquesSemanales=[...modal.querySelectorAll('.matriz-campos-informe[data-campo-informe="semanal"] fieldset')];
+    ['recursos','avance','firmas'].forEach((seccion,indice)=>{if(bloquesSemanales[indice])bloquesSemanales[indice].dataset.idtSeccion=seccion;});
+    const fotos=modal.querySelector('.supervision-movil');
+    if(fotos)fotos.dataset.idtSeccion='fotos';
+    const esIdtDirecto=modal.classList.contains('formulario-directo')&&(tipo==='diario'||tipo==='semanal');
     const navegacion=$('pestanasInformeDiario');
+    const secciones=[...modal.querySelectorAll('[data-idt-seccion]')].filter(seccion=>{
+      const grupo=seccion.closest('[data-campo-informe]');
+      return !grupo||grupo.dataset.campoInforme===tipo;
+    });
     if(!esIdtDirecto){
       navegacion.hidden=true;
-      modal.querySelectorAll('[data-idt-seccion]').forEach(seccion=>seccion.hidden=false);
+      secciones.forEach(seccion=>seccion.hidden=false);
       return;
     }
     pestanaInformeDiarioActiva=pestana;
     navegacion.hidden=false;
     navegacion.querySelectorAll('[data-idt-pestana]').forEach(boton=>boton.classList.toggle('activo',boton.dataset.idtPestana===pestana));
-    modal.querySelectorAll('[data-idt-seccion]').forEach(seccion=>seccion.hidden=seccion.dataset.idtSeccion!==pestana);
-    const matrizIdt=modal.querySelector('.matriz-campos-informe[data-campo-informe="diario"]');
+    secciones.forEach(seccion=>seccion.hidden=seccion.dataset.idtSeccion!==pestana);
+    const matrizIdt=tipo==='diario'?modal.querySelector('.matriz-campos-informe[data-campo-informe="diario"]'):null;
     if(matrizIdt)matrizIdt.hidden=pestana==='generales';
   }
 
@@ -2464,19 +2525,28 @@
   function abrirInformesSupervision(tipo='diario',formularioDirecto=false) {
     const modal=$('modalInformesSupervision');
     const marcoIdt=$('marcoInformeDiarioIdt');
+    // Ambos formularios conservan la maqueta de seis pasos aprobada.
     const usarReferenciaCompleta=formularioDirecto&&(tipo==='diario'||tipo==='semanal');
     modal.classList.toggle('idt-referencia-completa',usarReferenciaCompleta);
     marcoIdt.hidden=!usarReferenciaCompleta;
     if(usarReferenciaCompleta){
-      const fuenteReferencia=`Paulet_Modal_IDT_Funcional.html?tipo=${tipo}`;
+      // El formulario se carga en modo embebido: el panel de listado interno
+      // nunca debe ser visible dentro del modal principal.
+      const fuenteReferencia=`Paulet_Modal_IDT_Funcional.html?tipo=${tipo}&embed=1`;
       if(marcoIdt.getAttribute('src')!==fuenteReferencia)marcoIdt.setAttribute('src',fuenteReferencia);
       if(!marcoIdt.dataset.vinculado){
         marcoIdt.dataset.vinculado='true';
         marcoIdt.addEventListener('load',()=>{
+          // El documento de referencia siempre debe abrir su formulario, aun
+          // si el iframe conserva estado de una apertura anterior.
+          marcoIdt.contentDocument?.getElementById('openModal')?.click();
           const cerrar=marcoIdt.contentDocument?.getElementById('closeModal');
           cerrar?.addEventListener('click',()=>modal.close(),{capture:true});
         });
       }
+      // Si ya estaba cargado (por ejemplo al reabrir el mismo informe), el
+      // evento load no vuelve a dispararse; solicitamos de nuevo el formulario.
+      marcoIdt.contentDocument?.getElementById('openModal')?.click();
       modal.classList.remove('formulario-directo');
       modal.showModal();
       return;
@@ -2495,7 +2565,8 @@
     modal.querySelector('.supervision-editor').open=true;
     modal.querySelector('header h2').textContent=formularioDirecto?(tipo==='diario'?'Formulario de informe diario IDT':'Formulario de informe semanal ISO'):'Generación de informes';
     modal.querySelector('header p').textContent=formularioDirecto?(tipo==='diario'?'Complete los datos del IDT y genere el PDF del informe diario.':'Complete los datos del ISO y genere el PDF del informe semanal.'):'Formatos técnicos IDT diario e ISO semanal.';
-    ['validarInformeDiario','guardarBorradorInformeDiario','generarPdfInformeDiario'].forEach(id=>$(id).hidden=!(formularioDirecto&&tipo==='diario'));
+    ['validarInformeDiario','guardarBorradorInformeDiario','generarPdfInformeDiario'].forEach(id=>$(id).hidden=!(formularioDirecto&&(tipo==='diario'||tipo==='semanal')));
+    if(formularioDirecto)pestanaInformeDiarioActiva='generales';
     mostrarPestanaInformeDiario(pestanaInformeDiarioActiva);
     normalizarCamposNumericosIdt();
     renderizarGaleriaSupervision();
@@ -3385,7 +3456,7 @@
     $('contenidoResumenProyecto').insertAdjacentHTML('beforeend',`<section class="acciones-finales-ficha"><div><small>FICHA CONSOLIDADA DEL PROYECTO</small><h3>Descarga e impresión de ficha</h3><p>Incluye el sello de trazabilidad blockchain <b>${selloBlockchain}</b>.</p></div><div><button type="button" id="descargarFichaProyectoResumen">Descargar ficha PDF</button><button type="button" id="imprimirFichaProyectoResumen">Imprimir ficha + blockchain</button></div></section>`);
     $('contenidoResumenProyecto').querySelector('.acciones-finales-ficha p').innerHTML=`Incluye sello blockchain demostrativo de maqueta <b>${selloBlockchain}</b>.`;
     $('descargarFichaProyectoResumen').textContent='Guardar ficha como PDF';
-    const descargarFichaProyecto=()=>{if(!window.jspdf?.jsPDF){window.print();return;}const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'}),filas=[['Código',datos.codigo],['Proyecto',datos.nombre],['Ubicación',`${datos.departamento} · ${datos.provincia} · ${datos.distrito}`],['Contrato',datos.contrato],['Contratista',datos.contratista],['Interventor',datos.interventor],['Estado PAP',$('proyectoIncluidoPap').value||'Pendiente'],['Trazabilidad blockchain',selloBlockchain]];doc.setFontSize(16);doc.setTextColor(23,49,83);doc.text('FICHA DEL PROYECTO · MASIFICACIÓN FISE',14,18);doc.setFontSize(9);doc.setTextColor(75,96,123);doc.text(`Emitida: ${new Date().toLocaleString('es-PE')}`,14,24);doc.autoTable({startY:30,head:[['Campo','Información']],body:filas,styles:{fontSize:8,cellPadding:3},headStyles:{fillColor:[41,92,126]}});const y=(doc.lastAutoTable?.finalY||95)+12;doc.setFontSize(10);doc.setTextColor(23,49,83);doc.text('Fases del proyecto',14,y);doc.autoTable({startY:y+4,head:[['Fase','Inicio','Fin']],body:fasesLinea.map(fase=>[fase.nombre||'—',fase.inicio||'Por definir',fase.fin||'Por definir']),styles:{fontSize:8,cellPadding:3},headStyles:{fillColor:[41,92,126]}});doc.setFontSize(8);doc.setTextColor(61,89,111);doc.text(`Sello de trazabilidad blockchain: ${selloBlockchain}`,14,(doc.lastAutoTable?.finalY||y+35)+10);doc.save(`ficha_${String(datos.codigo||'proyecto').replace(/[^a-z0-9_-]+/gi,'_')}.pdf`);};
+    const descargarFichaProyecto=()=>{if(!window.jspdf?.jsPDF){window.print();return;}const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'}),filas=[['Código',datos.codigo],['Proyecto',datos.nombre],['Ubicación',`${datos.departamento} · ${datos.provincia} · ${datos.distrito}`],['Contrato',datos.contrato],['Contratista',datos.contratista],['Interventor',datos.interventor],['Estado PAP',$('proyectoIncluidoPap').value||'Pendiente'],['Trazabilidad blockchain',selloBlockchain]];doc.setFontSize(16);doc.setTextColor(23,49,83);doc.text('FICHA DEL PROYECTO · MASIFICACIÓN FISE',14,18);doc.setFontSize(9);doc.setTextColor(75,96,123);doc.text(`Emitida: ${new Date().toLocaleString('es-PE')}`,14,24);doc.autoTable({startY:30,head:[['Campo','Información']],body:filas,styles:{fontSize:8,cellPadding:3},headStyles:{fillColor:[41,92,126]}});const y=(doc.lastAutoTable?.finalY||95)+12;doc.setFontSize(10);doc.setTextColor(23,49,83);doc.text('Fases de proyecto de ejecución',14,y);doc.autoTable({startY:y+4,head:[['Fase','Inicio','Fin']],body:fasesLinea.map(fase=>[fase.nombre||'—',fase.inicio||'Por definir',fase.fin||'Por definir']),styles:{fontSize:8,cellPadding:3},headStyles:{fillColor:[41,92,126]}});doc.setFontSize(8);doc.setTextColor(61,89,111);doc.text(`Sello de trazabilidad blockchain: ${selloBlockchain}`,14,(doc.lastAutoTable?.finalY||y+35)+10);doc.save(`ficha_${String(datos.codigo||'proyecto').replace(/[^a-z0-9_-]+/gi,'_')}.pdf`);};
     const imprimirFichaProyecto=()=>{const ventana=window.open('','_blank','width=1200,height=900');if(!ventana){window.print();return;}const estilos=[...document.querySelectorAll('link[rel="stylesheet"]')].map(enlace=>`<link rel="stylesheet" href="${enlace.href}">`).join(''),estilosLocales=[...document.querySelectorAll('style')].map(estilo=>`<style>${estilo.textContent}</style>`).join(''),ficha=$('contenidoResumenProyecto').innerHTML;ventana.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Ficha del proyecto · ${escapePlanificacion(datos.codigo)}</title>${estilos}${estilosLocales}<style>@page{size:A4 landscape;margin:11mm}body{margin:0;background:#fff!important}.resumen-final-proyecto{padding:0!important}.acciones-mapa-resumen,.acciones-finales-ficha button,.boton-componente-seguimiento{pointer-events:none}.modal-vista-pdf,dialog{display:none!important}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}.resumen-maestro-proyecto{gap:10px}.hero-resumen-proyecto,.panel-resumen,.linea-fases-resumen,.acciones-finales-ficha{break-inside:avoid}.mapa-resumen #mapaResumenProyecto{height:270px!important}}</style></head><body><main class="resumen-final-proyecto">${ficha}</main><script>window.onload=()=>{setTimeout(()=>{window.focus();window.print();},300)};<\/script></body></html>`);ventana.document.close();};
     $('descargarFichaProyectoResumen').addEventListener('click',imprimirFichaProyecto);
     $('imprimirFichaProyectoResumen').addEventListener('click',imprimirFichaProyecto);
@@ -4183,6 +4254,43 @@
     $('abrirPotencial').addEventListener('click',abrirModalPotencial);
     inicializarTrazabilidad();
     $('abrirTrazabilidad').addEventListener('click',()=>$('modalTrazabilidad').showModal());
+    async function generarInformeConPlantilla(datos) {
+      let marco=$('generadorIsoNativo');
+      if(!marco){
+        marco=document.createElement('iframe');
+        marco.id='generadorIsoNativo';
+        marco.hidden=true;
+        marco.setAttribute('aria-hidden','true');
+        marco.src='../INTERVENTOR/SATCONTROL/masificacion_idt_native.html';
+        document.body.append(marco);
+      }
+      const disponible=()=>typeof marco.contentWindow?.generarPdfSupervisionOriginal==='function';
+      if(!disponible())await new Promise((resolver,rechazar)=>{
+        const limite=setTimeout(()=>rechazar(new Error('No se pudo cargar la plantilla del informe.')),15000);
+        marco.addEventListener('load',()=>{clearTimeout(limite);resolver();},{once:true});
+      });
+      if(!disponible())throw new Error('La plantilla del informe no está disponible.');
+      await marco.contentWindow.generarPdfSupervisionOriginal(datos);
+    }
+    window.addEventListener('message',evento=>{
+      const mensaje=evento.data;
+      if(mensaje?.tipo!=='paulet-generar-informe'||evento.source!==$('marcoInformeDiarioIdt')?.contentWindow)return;
+      const datos=mensaje.datos||{},meta=datos.meta||{},progreso=datos.progress||{},resumen=datos.summary||{},calidad=datos.quality||{},seguridad=datos.safety||{};
+      const tipoInforme=mensaje.informe==='semanal'?'semanal':'diario';
+      const asignar=(id,valor)=>{if($(id)&&valor!==undefined&&valor!==null)$(id).value=String(valor);};
+      const selector=$('supervisionProyecto');
+      if(!selector.options.length)selector.replaceChildren(...ciudades.map(proyecto=>new Option(`${proyecto.codigo} · ${proyecto.nombre}`,proyecto.codigo)));
+      const proyecto=[...selector.options].find(opcion=>opcion.textContent===meta.project)||selector.options[0];
+      if(proyecto)selector.value=proyecto.value;
+      configurarInformeSupervision(tipoInforme);
+      asignar('supervisionNumero',meta.reportId);asignar('supervisionFecha',meta.date);asignar('supervisionPeriodo',`${meta.periodStart||meta.date||''} – ${meta.periodEnd||meta.date||''}`);asignar('supervisionContratista',meta.contractor);asignar('supervisionSupervisor',meta.supervision);asignar('supervisionCliente',meta.client);asignar('supervisionLugar',meta.location);asignar('supervisionAvanceCivil',progreso.civil);asignar('supervisionAvanceMecanico',progreso.mechanical);asignar('supervisionPersonal',(datos.personnel||[]).reduce((total,fila)=>total+(Number(fila.qty)||0),0));asignar('supervisionEquipos',(datos.equipment||[]).reduce((total,fila)=>total+(Number(fila.qty)||0),0));asignar('supervisionIncidentes',seguridad.incidentCount);asignar('supervisionAccidentes',seguridad.accidentCount);asignar('supervisionObservaciones',calidad.rncNotes);asignar('supervisionConclusiones',resumen.schedule||progreso.constraints);asignar('supervisionPlazo',meta.serviceTerm);asignar('supervisionMontoContractual',meta.contractAmount);asignar('supervisionAvanceFases',`${meta.phaseOne||''}% / ${meta.phaseTwo||''}%`);asignar('supervisionAvanceHermeticidad',meta.hermeticity?`${meta.hermeticity}%`:'');asignar('supervisionCompromisosSemanal',resumen.meetings||resumen.commitments);
+      generarInformeConPlantilla({
+        tipo:tipoInforme,numero:meta.reportId,fecha:meta.date,periodo:`${meta.periodStart||meta.date||''} – ${meta.periodEnd||meta.date||''}`,
+        proyecto:selector.value,proyectoTexto:meta.project||proyecto?.textContent,contratista:meta.contractor,supervisor:meta.supervision,cliente:meta.client,lugar:meta.location,plazo:meta.serviceTerm,montoContractual:meta.contractAmount,avanceFaseUno:meta.phaseOne,avanceFaseDos:meta.phaseTwo,avanceHermeticidad:meta.hermeticity,
+        avanceCivil:progreso.civil,avanceMecanico:progreso.mechanical,personal:(datos.personnel||[]).reduce((total,fila)=>total+(Number(fila.qty)||0),0),equipos:(datos.equipment||[]).reduce((total,fila)=>total+(Number(fila.qty)||0),0),incidentes:seguridad.incidentCount,accidentes:seguridad.accidentCount,observaciones:calidad.rncNotes,conclusiones:resumen.schedule||progreso.constraints,
+        detalles:{gestionTiempo:resumen.schedule||progreso.constraints,permisos:resumen.permits,senalizacion:resumen.signaling,calicatas:resumen.calicatas,rncAbiertas:calidad.rncOpen,rncCerradas:calidad.rncClosed,charla:seguridad.talk?'Charla de seguridad':'',temaSeguridad:seguridad.talkTopic,compromisos:resumen.meetings||resumen.commitments,proyecto:meta.project,proyectoTexto:meta.project||proyecto?.textContent,plazo:meta.serviceTerm,montoContractual:meta.contractAmount,avanceFaseUno:meta.phaseOne,avanceFaseDos:meta.phaseTwo,avanceHermeticidad:meta.hermeticity}
+      }).then(()=>{$('estadoInformeSupervision').textContent=`PDF ${tipoInforme==='semanal'?'ISO':'IDT'} generado con la plantilla técnica.`;}).catch(error=>{$('estadoInformeSupervision').textContent='No se pudo generar el PDF técnico.';console.error(error);});
+    });
     $('abrirInformesSupervision').addEventListener('click',abrirInformesSupervision);
     $('abrirInformeDiarioSupervision').addEventListener('click',()=>abrirInformesSupervision('diario',true));
     $('abrirInformeSemanalSupervision').addEventListener('click',()=>abrirInformesSupervision('semanal',true));
