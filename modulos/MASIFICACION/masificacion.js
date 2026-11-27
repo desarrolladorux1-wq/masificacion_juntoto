@@ -2280,13 +2280,11 @@
     const cabecera=[
       'Código','Tipo','Nombre','Departamento','Provincia','Fase',
       'Red (km)','PCR / PSR-GNL (unid.)','TDC (unid.)',
-      'Avance Red','Avance PCR','Avance TDC',
       'Monto contractual','Liquidación 80%','Liquidación 100%'
     ];
     const valores=datos.map(dato=>[
         dato.Código,dato.Tipo,dato.Nombre,dato.Departamento,dato.Provincia,dato.Fase,
         dato['Longitud de red (km)'],dato['PCR / PSR-GNL'],dato.TDC,
-        dato['Avance Red (%)'],dato['Avance PCR (%)'],dato['Avance TDC (%)'],
         dato['Monto contractual (US$)'],dato['Liquidación 80% (US$)'],dato['Liquidación 100% (US$)']
       ]);
     doc.autoTable({startY:31,head:[cabecera],body:valores,styles:{fontSize:7,cellPadding:2,overflow:'linebreak'},headStyles:{fillColor:[47,137,171],fontSize:7},alternateRowStyles:{fillColor:[239,246,250]}});

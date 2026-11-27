@@ -1041,7 +1041,7 @@
   function exportarPdfMasificacion(datos) {
     if(!window.jspdf?.jsPDF){window.print();return;}
     const {jsPDF}=window.jspdf,doc=new jsPDF({orientation:'landscape'});
-    const columnas=Object.keys(datos[0]||{Código:''});
+    const columnas=Object.keys(datos[0]||{Código:''}).filter(columna=>!['Avance Red (%)','Avance PCR (%)','Avance TDC (%)'].includes(columna));
     doc.setTextColor(28,42,72);doc.setFontSize(17);doc.text('MASIFICACIÓN · Reporte de selección',14,18);
     doc.setFontSize(9);doc.setTextColor(93,108,132);doc.text(`Alcance: ${$('alcanceExportacionMasificacion').textContent}`,14,25);
     doc.text(`Registros: ${datos.length} · Fecha: ${new Date().toLocaleDateString('es-PE')}`,14,31);
