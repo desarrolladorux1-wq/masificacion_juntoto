@@ -1,12 +1,108 @@
 <!doctype html>
 <html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Petroperú móvil | FISE</title><link rel="stylesheet" href="estilos.css"><link rel="stylesheet" href="petroperu.css"><link rel="stylesheet" href="login.css"></head>
-<body><main class="telefono">
-  <section id="pantallaLoginPetro" class="pantalla-login-petro"><div class="marca-login-petro"><img src="../logo_fise.png" alt="FISE"></div><form id="formLoginPetro"><p>MASIFICACIÓN DE GAS NATURAL</p><h1>Bienvenido Petroperú</h1><label>Correo Gmail<input id="correoPetro" type="email" placeholder="nombre@gmail.com"></label><label>Contraseña<input id="clavePetro" type="password" placeholder="Ingrese su contraseña"></label><button id="olvidoClavePetro" class="enlace-login-petro" type="button">¿Olvidó su contraseña?</button><button class="ingresar-petro" type="submit">Ingresar</button></form><small>Aplicativo móvil de Petroperú</small></section>
-  <div id="app" hidden><header><img src="../logo_fise.png" alt="FISE"><div><small>MASIFICACIÓN</small><h1>Petroperú</h1><p>Gestión de No Conformidades</p></div><b>PP</b></header><div class="contenido">
-    <section class="vista activa" id="inicio"><p class="eyebrow">GESTIÓN PETROPERÚ</p><h2>Inicio</h2><div class="kpis"><article><small>NC abiertas</small><b id="contadorNcAbiertas">0</b></article><article><small>En subsanación</small><b>0</b></article><article><small>Cerradas</small><b>0</b></article></div><section class="alerta"><b>!</b><div><strong>Control de No Conformidades</strong><p>Registre hallazgos y realice seguimiento a las acciones del contratista.</p></div></section><button class="boton" data-ir="noConformidades" type="button">Gestionar No Conformidades</button></section>
-    <section class="vista" id="noConformidades"><p class="eyebrow">CONTROL DE CALIDAD</p><h2>No Conformidades</h2><p>Registre hallazgos, comunique la acción requerida y revise los sustentos del contratista.</p><form id="formNcPetro" class="form-nc-petro"><label>Código NC<input id="codigoNcPetro" readonly></label><label>Proyecto<select id="proyectoNcPetro"><option>Proyecto Especial de Masificación · Cusco</option></select></label><label>Componente<select id="componenteNcPetro"><option>Redes de distribución</option><option>PSR-GNL</option><option>Tuberías de conexión</option></select></label><label>Tipo de NC<select id="tipoNcPetro"><option>Incumplimiento técnico</option><option>Seguridad y medio ambiente</option><option>Documental</option></select></label><label>Fecha de detección<input id="fechaNcPetro" type="date" required></label><label>Ubicación<input id="ubicacionNcPetro" placeholder="Frente, sector o coordenada"></label><label>Descripción detallada<textarea id="descripcionNcPetro" required placeholder="Describa el hallazgo"></textarea></label><label>Acción requerida al contratista<textarea id="accionNcPetro" placeholder="Indique la subsanación solicitada"></textarea></label><label>Evidencias<input id="evidenciasNcPetro" type="file" accept="image/*,.pdf" multiple></label><button class="boton" type="submit">Registrar NC</button></form><div id="listaNcPetroMovil"></div></section>
-    <section class="vista" id="perfil"><p class="eyebrow">CUENTA DE USUARIO</p><h2>Mi perfil</h2><form id="formPerfilPetro" class="form-nc-petro"><label>Nombres<input value="Valeria"></label><label>Apellidos<input value="Cárdenas"></label><label>Entidad<input value="PETROPERÚ"></label><label>Correo<input type="email" value="valeria.cardenas@petroperu.com.pe"></label><label>Teléfono<input value="999 555 222"></label><button class="boton" type="submit">Guardar cambios</button><button id="cerrarSesionPetro" class="boton secundario" type="button">Cerrar sesión</button></form></section>
-  </div><nav aria-label="Navegación principal"><button class="activo" type="button" data-ir="inicio"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Inicio</span></button><button type="button" data-ir="noConformidades"><svg viewBox="0 0 24 24"><path d="M12 3 3 20h18L12 3ZM12 9v4M12 17h.01"/></svg><span>NC</span></button><button type="button" data-ir="perfil"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21c.7-4 3.1-6 7.5-6s6.8 2 7.5 6"/></svg><span>Perfil</span></button></nav></div>
-</main><div id="aviso"></div><script src="app.js"></script></body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Petroperú móvil | FISE</title>
+  <link rel="stylesheet" href="estilos.css">
+  <link rel="stylesheet" href="petroperu.css">
+  <link rel="stylesheet" href="login.css">
+  <style>
+    .selector-proyecto-nc{margin:15px 0;padding:13px;border:1px solid #aac8df;border-radius:14px;background:#fff}.selector-proyecto-nc label{display:grid;gap:6px;color:#355978;font-size:12px;font-weight:800}.selector-proyecto-nc select{width:100%;padding:10px;border:1px solid #769fc0;border-radius:9px;color:#1e466d;background:#f8fcff;font:inherit}.detalle-proyecto-nc{margin-top:10px;padding:10px;border-radius:9px;background:#eaf5fb;color:#4b6680;font-size:12px;line-height:1.4}.detalle-proyecto-nc b{display:block;color:#254e77}.detalle-proyecto-nc span{display:inline-block;margin-top:5px;padding:3px 7px;border-radius:99px;background:#d2e9f6;color:#286484;font-size:10px;font-weight:800}.resumen-nc-movil{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}.resumen-nc-movil article{border:1px solid #29466f;border-radius:12px;padding:10px;background:#132442}.resumen-nc-movil small{display:block;color:#abc0db;font-size:10px}.resumen-nc-movil b{font-size:22px;color:#fff}.accion-nueva-nc{width:100%;margin:4px 0 14px}.ficha-nc-movil{margin-top:16px;border:1px solid #426998;border-radius:16px;background:#101d36;padding:14px}.ficha-nc-cabecera{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:12px}.ficha-nc-cabecera h3{margin:3px 0;color:#fff}.ficha-nc-cabecera small{color:#a9c5e5}.bloque-nc{border:1px solid #29466f;border-radius:12px;padding:13px;margin:12px 0}.bloque-nc h4{margin:0 0 5px;color:#fff}.bloque-nc>p{font-size:12px;margin:0 0 10px;color:#a9c5e5}.grilla-nc{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grilla-nc .ancho-completo{grid-column:1/-1}.ficha-nc-movil label{display:flex;flex-direction:column;gap:5px;color:#d9e8fa;font-size:12px;font-weight:700}.ficha-nc-movil input,.ficha-nc-movil select,.ficha-nc-movil textarea{box-sizing:border-box;width:100%;min-height:39px;border:1px solid #385786;border-radius:9px;background:#172744;color:#fff;padding:9px;font:inherit}.ficha-nc-movil textarea{min-height:84px;resize:vertical}.opciones-nc{display:flex;flex-wrap:wrap;gap:7px}.opciones-nc label{display:flex;flex-direction:row;align-items:center;gap:5px;background:#172744;border:1px solid #385786;border-radius:8px;padding:7px 8px;font-size:11px;font-weight:500}.opciones-nc input{width:auto;min-height:auto;accent-color:#47d995}.archivos-nc{display:grid;gap:8px}.archivos-nc input[type=file]{padding:7px;font-size:11px}.acciones-ficha-nc{display:grid;grid-template-columns:1fr 1.3fr;gap:10px;margin-top:14px}.nc-petro-item{width:100%;text-align:left;border:1px solid #35557f;border-left:4px solid #efb34f;border-radius:12px;background:#142440;color:#fff;padding:12px;margin:9px 0}.nc-petro-item.estado-en-subsanación{border-left-color:#68b8ef}.nc-petro-item.estado-cerrada{border-left-color:#47d995}.nc-petro-item>*{display:block}.nc-petro-item small{color:#f5c967;text-transform:uppercase;font-weight:700}.nc-petro-item b{margin-top:4px}.nc-petro-item span,.nc-petro-item p{color:#b8cbe1;font-size:12px;margin:5px 0}.nc-petro-item em{color:#65dca4;font-size:12px;font-style:normal;font-weight:700}@media(max-width:360px){.grilla-nc{grid-template-columns:1fr}.grilla-nc .ancho-completo{grid-column:auto}}
+  </style>
+</head>
+<body>
+<main class="telefono">
+  <section id="pantallaLoginPetro" class="pantalla-login-petro">
+    <div class="marca-login-petro"><img src="../logo_fise.png" alt="FISE"></div>
+    <form id="formLoginPetro"><p>MASIFICACIÓN DE GAS NATURAL</p><h1>Bienvenido Petroperú</h1><label>Correo Gmail<input id="correoPetro" type="email" placeholder="nombre@gmail.com"></label><label>Contraseña<input id="clavePetro" type="password" placeholder="Ingrese su contraseña"></label><button id="olvidoClavePetro" class="enlace-login-petro" type="button">¿Olvidó su contraseña?</button><button class="ingresar-petro" type="submit">Ingresar</button></form>
+    <small>Aplicativo móvil de Petroperú</small>
+  </section>
+  <div id="app" hidden>
+    <header><img src="../logo_fise.png" alt="FISE"><div><small>MASIFICACIÓN</small><h1>Petroperú</h1><p>Gestión de No Conformidades</p></div><b>PP</b></header>
+    <div class="contenido">
+      <section class="vista activa" id="inicio">
+        <p class="eyebrow">GESTIÓN PETROPERÚ</p><h2>Inicio</h2>
+        <div class="kpis"><article><small>NC abiertas</small><b id="contadorNcAbiertas">0</b></article><article><small>En subsanación</small><b id="contadorNcSubsanacion">0</b></article><article><small>Cerradas</small><b id="contadorNcCerradas">0</b></article></div>
+        <section class="alerta"><b>!</b><div><strong>Control de No Conformidades</strong><p>Registre hallazgos y realice seguimiento a las acciones del contratista.</p></div></section>
+        <button class="boton" data-ir="noConformidades" type="button">Gestionar No Conformidades</button>
+      </section>
+
+      <section class="vista" id="noConformidades">
+        <p class="eyebrow">PETROPERÚ · REDES EXTERNAS</p><h2>No Conformidades</h2>
+        <p>Identificación y tratamiento de producto no conforme.</p>
+        <section class="selector-proyecto-nc"><label>Proyecto asignado / elemento CORE<select id="filtroProyectoNc"></select></label><div id="detalleProyectoNc" class="detalle-proyecto-nc"></div></section>
+        <div class="resumen-nc-movil"><article><small>Abiertas</small><b id="contadorNcAbiertasFicha">0</b></article><article><small>En subsanación</small><b id="contadorNcSubsanacionFicha">0</b></article><article><small>Cerradas</small><b id="contadorNcCerradasFicha">0</b></article></div>
+        <button id="nuevaNcPetro" class="boton accion-nueva-nc" type="button">+ Registrar No Conformidad</button>
+        <div id="listaNcPetroMovil"></div>
+
+        <form id="formNcPetro" class="ficha-nc-movil" hidden novalidate>
+          <div class="ficha-nc-cabecera"><div><small>FORM01-864 · v.0</small><h3 id="tituloFichaNc">Registrar No Conformidad</h3><small>Complete la misma ficha de tratamiento disponible en la web.</small></div><button id="cancelarNcPetroSuperior" class="boton secundario" type="button">Cerrar</button></div>
+
+          <section class="bloque-nc">
+            <h4>1. Información referencial</h4><p>Identificación de la no conformidad, proyecto y responsables.</p>
+            <div class="grilla-nc">
+              <label>Número de NC<input id="numeroNcPetro" name="numeroNc" readonly></label>
+              <label>Estado<select id="estadoNcPetro" name="estado"><option>Abierta</option><option>En subsanación</option><option>Cerrada</option></select></label>
+              <label>Código del proyecto<input name="codigoProyecto" placeholder="Código de proyecto"></label>
+              <label>Fecha de apertura<input id="fechaAperturaPetro" name="fechaApertura" type="date" required></label>
+              <label>Proyecto asignado<select id="proyectoNcPetro" name="proyecto" required></select></label>
+              <label>Ciudad<input name="ciudad" placeholder="Ciudad"></label>
+              <label>Distrito<input name="distrito" placeholder="Distrito"></label>
+              <label>Fecha de cierre<input name="fechaCierre" type="date"></label>
+              <label class="ancho-completo">Ubicación específica<input name="ubicacionEspecifica" placeholder="Frente, sector, tramo o coordenada"></label>
+              <label>Actividad<input name="actividad" placeholder="Actividad inspeccionada"></label>
+              <label>Empresa contratista<input name="empresaContratista" placeholder="Empresa responsable"></label>
+              <label class="ancho-completo">Responsable<input name="responsable" placeholder="Nombre y cargo"></label>
+            </div>
+          </section>
+
+          <section class="bloque-nc">
+            <h4>2. Identificación de la NC</h4><p>Detalle el hallazgo, el requisito afectado y su causa.</p>
+            <div class="grilla-nc">
+              <label>Identificado por<input name="identificadoPor" placeholder="Nombre y cargo"></label>
+              <label>Fecha<input id="fechaIdentificacionPetro" name="fechaIdentificacion" type="date"></label>
+              <div class="ancho-completo"><label>Tipo de red</label><div class="opciones-nc"><label><input name="tipoRed" value="Externa AC" type="checkbox"> Externa AC</label><label><input name="tipoRed" value="Externa PE" type="checkbox"> Externa PE</label><label><input name="tipoRed" value="TC-AIE" type="checkbox"> TC-AIE</label></div></div>
+              <div class="ancho-completo"><label>Afectación</label><div class="opciones-nc"><label><input name="afectacion" value="Tubería" type="checkbox"> Tubería</label><label><input name="afectacion" value="Válvula" type="checkbox"> Válvula</label><label><input name="afectacion" value="Conexión" type="checkbox"> Conexión</label><label><input name="afectacion" value="Gabinete/ERM" type="checkbox"> Gabinete / ERM</label><label><input name="afectacion" value="Pavimentos" type="checkbox"> Pavimentos</label><label><input name="afectacion" value="Triducto" type="checkbox"> Triducto</label><label><input name="afectacion" value="Empalme" type="checkbox"> Empalme</label><label><input name="afectacion" value="Documentación" type="checkbox"> Documentación</label><label><input name="afectacion" value="Otro" type="checkbox"> Otro</label></div></div>
+              <div class="ancho-completo"><label>Especialidad</label><div class="opciones-nc"><label><input name="especialidad" value="Civil" type="checkbox"> Civil</label><label><input name="especialidad" value="Mecánica" type="checkbox"> Mecánica</label><label><input name="especialidad" value="Eléctrica" type="checkbox"> Eléctrica</label><label><input name="especialidad" value="Seguridad" type="checkbox"> Seguridad</label><label><input name="especialidad" value="Calidad" type="checkbox"> Calidad</label></div></div>
+              <label class="ancho-completo">Descripción de la no conformidad<textarea name="descripcionNc" required placeholder="Describa el producto, proceso o requisito no conforme"></textarea></label>
+              <label class="ancho-completo">Norma o requisito incumplido<textarea name="normaIncumplida" placeholder="Especifique norma, plano, procedimiento o contrato"></textarea></label>
+              <label class="ancho-completo">Causa identificada<textarea name="causaNc" placeholder="Indique la causa del hallazgo"></textarea></label>
+            </div>
+          </section>
+
+          <section class="bloque-nc">
+            <h4>3. Tratamiento de la NC</h4><p>Defina la acción y registre a quienes la aprueban y ejecutan.</p>
+            <div class="grilla-nc">
+              <div class="ancho-completo"><label>Acción a tomar</label><div class="opciones-nc"><label><input name="accionTratamiento" value="Eliminar" type="radio"> Eliminar</label><label><input name="accionTratamiento" value="Reparar" type="radio"> Reparar</label><label><input name="accionTratamiento" value="Reprocesar" type="radio"> Reprocesar</label></div></div>
+              <label class="ancho-completo">Descripción del tratamiento<textarea name="descripcionTratamiento" placeholder="Describa la subsanación acordada"></textarea></label>
+              <label>Definido por<input name="definidoPor" placeholder="Nombre y cargo"></label>
+              <label>Fecha de definición<input name="fechaDefinido" type="date"></label>
+              <label>Ejecutado por<input name="ejecutadoPor" placeholder="Nombre y cargo"></label>
+              <label>Fecha de ejecución<input name="fechaEjecutado" type="date"></label>
+              <div class="ancho-completo"><label>¿Requiere acción correctiva?</label><div class="opciones-nc"><label><input name="accionCorrectiva" value="Sí" type="radio"> Sí</label><label><input name="accionCorrectiva" value="No" type="radio"> No</label></div></div>
+            </div>
+          </section>
+
+          <section class="bloque-nc">
+            <h4>4. Verificación y evidencias</h4><p>Adjunte sustento y deje constancia del cierre o seguimiento.</p>
+            <div class="grilla-nc">
+              <label class="ancho-completo">Observaciones de verificación<textarea name="observacionesVerificacion" placeholder="Resultado de la verificación"></textarea></label>
+              <label>Verificado por<input name="verificadoPor" placeholder="Nombre y cargo"></label>
+              <label>Fecha de verificación<input name="fechaVerificacion" type="date"></label>
+              <div class="ancho-completo archivos-nc"><label>Firma de identificación<input name="firmaIdentificacion" type="file" accept="image/*,.pdf"></label><label>Firma de definición / ejecución<input name="firmaTratamiento" type="file" accept="image/*,.pdf"></label><label>Evidencias y formulario PDF<input name="evidencias" type="file" accept="image/*,.pdf" multiple></label></div>
+            </div>
+          </section>
+          <div class="acciones-ficha-nc"><button id="cancelarNcPetro" class="boton secundario" type="button">Cancelar</button><button id="guardarNcPetro" class="boton" type="submit">Registrar NC</button></div>
+        </form>
+      </section>
+
+      <section class="vista" id="perfil"><p class="eyebrow">CUENTA DE USUARIO</p><h2>Mi perfil</h2><form id="formPerfilPetro" class="form-nc-petro"><label>Nombres<input value="Valeria"></label><label>Apellidos<input value="Cárdenas"></label><label>Entidad<input value="PETROPERÚ"></label><label>Correo<input type="email" value="valeria.cardenas@petroperu.com.pe"></label><label>Teléfono<input value="999 555 222"></label><button class="boton" type="submit">Guardar cambios</button><button id="cerrarSesionPetro" class="boton secundario" type="button">Cerrar sesión</button></form></section>
+    </div>
+    <nav aria-label="Navegación principal"><button class="activo" type="button" data-ir="inicio"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Inicio</span></button><button type="button" data-ir="noConformidades"><svg viewBox="0 0 24 24"><path d="M12 3 3 20h18L12 3ZM12 9v4M12 17h.01"/></svg><span>NC</span></button><button type="button" data-ir="perfil"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21c.7-4 3.1-6 7.5-6s6.8 2 7.5 6"/></svg><span>Perfil</span></button></nav>
+  </div>
+</main>
+<div id="aviso"></div>
+<script src="app.js"></script>
+</body>
 </html>

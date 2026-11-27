@@ -35,10 +35,19 @@
       <section class="tarjeta"><h3>Acceso rápido</h3><p>Seleccione la infraestructura para abrir el formato correspondiente.</p><div class="rapidos"><button data-vista="formularios" data-grupo="psr">Plantas PSR-GNL</button><button data-vista="formularios" data-grupo="redes">Redes de distribución</button><button data-vista="formularios" data-grupo="tc">Tuberías de conexión</button></div></section>
     </section>
     <section class="vista" id="formularios" hidden><div class="encabezado"><h2>Formularios de Supervisor PETROPERÚ</h2><p>Seleccione un formato para la validación contractual o supervisión selectiva.</p></div><div id="catalogoFormularios"></div></section>
+    <section class="vista vista-perfil-petro" id="perfilSupervisor" hidden>
+      <header class="perfil-hero-petro"><div class="perfil-icono-petro">◯</div><div><small>CUENTA DE USUARIO</small><h2>Mi perfil</h2><p>Administra tus datos, seguridad y apariencia.</p></div><button type="button" id="volverPerfilPetro">← Volver</button></header>
+      <div class="perfil-paneles-petro">
+        <form id="formDatosPerfilPetro" class="perfil-panel-petro"><header><b>01</b><div><h3>Datos personales</h3><p>Información principal de tu cuenta.</p></div></header><div class="perfil-campos-petro"><label>Nombres<input name="nombres"></label><label>Apellidos<input name="apellidos"></label><label class="ancho">Dirección<input name="direccion"></label><label>Correo<input name="correo" type="email"></label><label>Teléfono<input name="telefono"></label></div><button type="submit" class="guardar-perfil-petro">Guardar cambios</button></form>
+        <form id="formSeguridadPerfilPetro" class="perfil-panel-petro"><header><b>02</b><div><h3>Seguridad</h3><p>Tu contraseña no se mostrará. Usa “Modificar contraseña” para actualizarla.</p></div></header><div class="perfil-campos-petro una-columna"><label>Contraseña actual<input name="actual" type="password"></label><label>Nueva contraseña<input name="nueva" type="password"></label><label>Repetir nueva contraseña<input name="repetir" type="password"></label></div><button type="submit" class="modificar-clave-petro">Modificar contraseña</button></form>
+      </div>
+    </section>
   </main>
   <dialog id="modalFormulario"></dialog>
   <div id="aviso"></div>
   <script src="app.js?v=20261105-visitas-terreno-3"></script>
   <script src="ui.js?v=20261109-documento-petroperu-1"></script>
+  <script src="menu_perfil.js?v=20261127-menu-petroperu-1"></script>
+  <script src="ajuste_logo.js?v=20261127-logo-petroperu-1"></script>
 </body>
 </html>

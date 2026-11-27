@@ -1,0 +1,1 @@
+document.head.insertAdjacentHTML('beforeend','<style>.menu .marca{min-height:220px!important;padding:18px!important}.menu .marca img{width:112px!important;height:112px!important;padding:10px!important;border-radius:24px!important}@media(max-width:980px){.menu .marca{min-height:170px!important}.menu .marca img{width:94px!important;height:94px!important}}</style>');
