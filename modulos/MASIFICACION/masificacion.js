@@ -312,16 +312,22 @@
     do{codigo=`PLN-${anio}-${String(correlativo++).padStart(3,'0')}`;}while(codigos.has(codigo));
     return codigo;
   };
-  const equiposPlaneamientoReferenciales=['Equipo GIS, Equipo Social, Mesa Técnica','Equipo Técnico, Equipo Legal, Mesa Técnica','Equipo de Campo, Equipo Ambiental, Equipo Social'];
   const estimarBeneficiariosReferenciales=punto=>{
     const lat=Math.abs(Number(punto?.lat)||0),lng=Math.abs(Number(punto?.lng)||0),semilla=Math.round(lat*100000)+Math.round(lng*100000)*7;
     return 450+Math.abs(semilla)%2850;
   };
-  const equipoPropuestoPlaneamiento=proyecto=>{
-    const equipo=Array.isArray(proyecto?.equipo)?proyecto.equipo.filter(Boolean).join(', '):String(proyecto?.equipo||'').trim();
-    if(equipo)return equipo;
-    const referencia=String(proyecto?.codigo||proyecto?.nombre||'').split('').reduce((total,caracter)=>total+caracter.charCodeAt(0),0);
-    return equiposPlaneamientoReferenciales[referencia%equiposPlaneamientoReferenciales.length];
+  let personasEquipoPlaneamiento=[];
+  const renderPersonasPlaneamiento=()=>{
+    const contenedor=$('etiquetasPersonasPlaneamiento');
+    if(!contenedor)return;
+    contenedor.innerHTML=personasEquipoPlaneamiento.length?personasEquipoPlaneamiento.map(persona=>`<span>${escapePlanificacion(persona)}<button type="button" data-quitar-persona-planeamiento="${escapePlanificacion(persona)}" aria-label="Quitar ${escapePlanificacion(persona)}">×</button></span>`).join(''):'<small>Aún no se asignaron personas.</small>';
+  };
+  const agregarPersonaPlaneamiento=()=>{
+    const selector=$('programacionPersona'),persona=selector?.value;
+    if(!persona||personasEquipoPlaneamiento.includes(persona))return;
+    personasEquipoPlaneamiento.push(persona);
+    selector.value='';
+    renderPersonasPlaneamiento();
   };
   const abrirFichaInicialPlaneamiento=punto=>{
     puntoProgramacionPlaneamiento={lat:punto.lat,lng:punto.lng,...datosTerritorialesDesdePunto(punto)};
@@ -339,7 +345,8 @@
     const responsable=usuarioResponsableSistema(),selectorResponsable=$('programacionResponsable');
     if(![...selectorResponsable.options].some(opcion=>opcion.value===responsable))selectorResponsable.add(new Option(responsable,responsable),0);
     selectorResponsable.value=responsable;
-    $('programacionEquipo').value=equipoPropuestoPlaneamiento({codigo:$('programacionCodigoProyecto').value});
+    personasEquipoPlaneamiento=[responsable];
+    renderPersonasPlaneamiento();
     $('programacionCoordenadas').value=`${punto.lat.toFixed(6)}, ${punto.lng.toFixed(6)}`;
     $('modalNuevaProgramacionPlaneamiento').showModal();
     $('programacionNombreProyecto').focus();
@@ -361,7 +368,7 @@
     if(!nombre){$('programacionNombreProyecto').focus();return;}
     const punto=puntoProgramacionPlaneamiento;
     if(!punto)return;
-    const equipo=$('programacionEquipo').value.split(',').map(item=>item.trim()).filter(Boolean);
+    const equipo=[...personasEquipoPlaneamiento];
     const proyecto=prepararVersionesProyecto({...proyectoReferenciaFicha(),codigo:$('programacionCodigoProyecto').value,nombre,departamento:punto.departamento,provincia:punto.provincia,distrito:punto.distrito,centroPoblado:$('programacionCentroPoblado').value.trim(),beneficiariosReniec:Number($('programacionBeneficiariosReniec').dataset.total)||0,lat:punto.lat,lng:punto.lng,localizacion:`${punto.lat.toFixed(6)}, ${punto.lng.toFixed(6)}`,responsableLider:$('programacionResponsable').value,estado:'En evaluación',avance:0,longitud:0,equipo});
     ciudades.unshift(proyecto);guardarProyectoSatcontrol(proyecto);proyectoPlaneamientoSeleccionado=proyecto;
     if(marcadorProgramacionPlaneamiento){marcadorProgramacionPlaneamiento.remove();marcadorProgramacionPlaneamiento=null;}
@@ -398,6 +405,9 @@
       });
       $('volverPlaneamiento').addEventListener('click',()=>{vistaPlaneamientoMasificacion.querySelector('.planeamiento-contenido').hidden=false;$('fichaPredioPlaneamiento').hidden=true;setTimeout(()=>mapaPlaneamiento.invalidateSize(),80);});
       $('programarPlaneamiento').addEventListener('click',()=>{modoProgramarPlaneamiento=!modoProgramarPlaneamiento;$('programarPlaneamiento').classList.toggle('activo',modoProgramarPlaneamiento);$('programarPlaneamiento').textContent=modoProgramarPlaneamiento?'✓ Seleccionar un punto':'＋ Programar nueva';$('ayudaPlaneamiento').textContent=modoProgramarPlaneamiento?'Seleccione un punto en el mapa para crear el proyecto.':'Seleccione un distrito o un punto del mapa para consultar su planeamiento.';});
+      $('agregarPersonaPlaneamiento').addEventListener('click',agregarPersonaPlaneamiento);
+      $('programacionPersona').addEventListener('change',agregarPersonaPlaneamiento);
+      $('etiquetasPersonasPlaneamiento').addEventListener('click',evento=>{const boton=evento.target.closest('[data-quitar-persona-planeamiento]');if(!boton)return;personasEquipoPlaneamiento=personasEquipoPlaneamiento.filter(persona=>persona!==boton.dataset.quitarPersonaPlaneamiento);renderPersonasPlaneamiento();});
       $('cancelarNuevaProgramacionPlaneamiento').addEventListener('click',cerrarFichaInicialPlaneamiento);
       $('guardarNuevaProgramacionPlaneamiento').addEventListener('click',guardarNuevaProgramacionPlaneamiento);
     }
